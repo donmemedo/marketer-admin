@@ -7,9 +7,11 @@ metadata:
     instance: marketer-admin
 data:
   VERSION: "0.0.1"
+  MONGO_CONNECTION_STRING: "mongodb://root:root@mongo-marketer.stg-marketer-db.svc.cluster.local:27017/"
   MONGO_DATABASE: "brokerage"
   SWAGGER_TITLE: "Marketer Admin"
   API_PREFIX: ""
+  ORIGINS: "*"
   DOCS_URL: ""
   OPENAPI_URL: ""
   ROOT_PATH: ""
