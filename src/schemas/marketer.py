@@ -55,3 +55,21 @@ class UserTradesOut(BaseModel):
     TradeSymbol: str
     TradeStationType: str
 
+
+@dataclass
+class Pages:
+    size: int = Query(10)
+    page: int = Query(1)
+
+
+@dataclass
+class UsersListIn(Pages):
+    from_date: str = Query("1401-12-01")
+    to_date: str = Query("1401-12-01")
+
+
+@dataclass
+class UsersTotalPureIn:
+    # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
+    from_date: str = Query("1401-12-01")
+    to_date: str = Query("1401-12-01")

@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from src.tools.tokens import JWTBearer, get_sub
 from src.tools.database import get_database
-from src.schemas.marketer import MarketerOut, ModifyMarketerIn
+from src.schemas.marketer import MarketerOut, ModifyMarketerIn, UsersTotalPureIn
+from src.tools.utils import peek, to_gregorian_
+from datetime import datetime, timedelta
 from fastapi_pagination import Page, add_pagination
 from fastapi_pagination.ext.pymongo import paginate
 
@@ -51,6 +53,170 @@ async def modify_marketer(request: Request, args: ModifyMarketerIn = Depends(Mod
 
     
     return modified_record.raw_result
+
+
+@profile.get("/marketer-total", dependencies=[Depends(JWTBearer())], tags=["Profile"])
+def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)):
+    # get all current marketers
+    db = get_database()
+
+    customers_coll = db["customers"]
+    trades_coll = db["trades"]
+    marketers_coll = db["marketers"]
+
+    # get all marketers IdpId
+
+    marketers_query = marketers_coll.find(
+        {"IdpId": { "$exists": True, "$not": {"$size": 0} } }, 
+        {"FirstName": 1, "LastName": 1 ,"_id": 0}
+        )
+    marketers_list = list(marketers_query)
+
+    results = []
+    for marketer in marketers_list:
+        response_dict = {}
+        if marketer.get("FirstName") == "":
+            marketer_fullname = marketer.get("LastName")
+        elif marketer.get("LastName") == "":
+            marketer_fullname = marketer.get("FirstName")
+        else:
+            marketer_fullname = marketer.get("FirstName") + " " + marketer.get("LastName")
+
+
+        # Check if customer exist
+        query = {"Referer": {"$regex": marketer_fullname}} 
+
+        fields = {"PAMCode": 1}
+
+        customers_records = customers_coll.find(query, fields)
+        trade_codes = [c.get('PAMCode') for c in customers_records]
+
+        from_gregorian_date = to_gregorian_(args.from_date)
+        to_gregorian_date = to_gregorian_(args.to_date)
+        to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(days=1)
+        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+        buy_pipeline = [ 
+            {
+                "$match": {
+                    "$and": [
+                        {"TradeCode": {"$in": trade_codes}}, 
+                        {"TradeDate": {"$gte": from_gregorian_date}},
+                        {"TradeDate": {"$lte": to_gregorian_date}},
+                        {"TradeType": 1}
+                        ]
+                    }
+                },
+            {
+                "$project": {
+                    "Price": 1,
+                    "Volume": 1,
+                    "Total" : {"$multiply": ["$Price", "$Volume"]},
+                    "TotalCommission": 1,
+                    "TradeItemBroker": 1,
+                    "Buy": {
+                        "$add": [
+                            "$TotalCommission",
+                            {"$multiply": ["$Price", "$Volume"]}
+                            ]
+                        }
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$id", 
+                    "TotalFee": {
+                        "$sum": "$TradeItemBroker"
+                    },
+                    "TotalBuy": {
+                        "$sum": "$Buy"
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "TotalBuy": 1,
+                    "TotalFee": 1
+                }
+            }
+        ]
+
+        sell_pipeline = [ 
+            {
+                "$match": {
+                    "$and": [
+                        {"TradeCode": {"$in": trade_codes}}, 
+                        {"TradeDate": {"$gte": from_gregorian_date}},
+                        {"TradeDate": {"$lte": to_gregorian_date}},
+                        {"TradeType": 2}
+                        ]
+                    }
+                },
+            {
+                "$project": {
+                    "Price": 1,
+                    "Volume": 1,
+                    "Total" : {"$multiply": ["$Price", "$Volume"]},
+                    "TotalCommission": 1,
+                    "TradeItemBroker": 1,
+                    "Sell": {
+                        "$subtract": [
+                            {"$multiply": ["$Price", "$Volume"]},
+                            "$TotalCommission"
+                            ]
+                        }
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$id", 
+                    "TotalFee": {
+                     "$sum": "$TradeItemBroker"
+                    },
+                    "TotalSell": {
+                        "$sum": "$Sell"
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "TotalSell": 1,
+                    "TotalFee": 1
+                }
+            }
+        ]
+
+        buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
+        sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
+
+        buy_dict = {
+            "vol": 0,
+            "fee": 0
+        }
+
+        sell_dict = {
+            "vol": 0,
+            "fee": 0
+        }
+
+        if buy_agg_result:
+            buy_dict['vol'] = buy_agg_result.get("TotalBuy")
+            buy_dict['fee'] = buy_agg_result.get("TotalFee")
+
+        if sell_agg_result:
+            sell_dict['vol'] = sell_agg_result.get("TotalSell")
+            sell_dict['fee'] = sell_agg_result.get("TotalFee")
+
+        response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
+        response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
+        response_dict["FirstName"] = marketer.get("FirstName")
+        response_dict["LastName"] = marketer.get("LastName")
+
+        results.append(response_dict)
+
+    return results
 
 
 add_pagination(profile)
