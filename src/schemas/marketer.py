@@ -4,9 +4,6 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-@dataclass
-class MarketersProfileIn:
-    ...
 
 
 class MarketerOut(BaseModel):
@@ -21,6 +18,12 @@ class MarketerOut(BaseModel):
     IdpId: Optional[str]
     Mobile: Optional[str]
 
+@dataclass
+class MarketersProfileIn:
+    first_name: str = Query("")
+    last_name:  str = Query("")
+    mobile:  int = Query("")
+    register_date:  str = Query("")
 
 @dataclass
 class ModifyMarketerIn:

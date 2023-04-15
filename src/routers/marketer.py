@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from src.tools.tokens import JWTBearer, get_sub
 from src.tools.database import get_database
-from src.schemas.marketer import MarketerOut, ModifyMarketerIn, UsersTotalPureIn
+from src.schemas.marketer import MarketerOut, ModifyMarketerIn, UsersTotalPureIn, MarketersProfileIn
 from src.tools.utils import peek, to_gregorian_
 from datetime import datetime, timedelta
 from fastapi_pagination import Page, add_pagination
@@ -63,6 +63,7 @@ def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends
     customers_coll = db["customers"]
     trades_coll = db["trades"]
     marketers_coll = db["marketers"]
+    firms_coll = db["firms"]
 
     # get all marketers IdpId
 
@@ -89,7 +90,8 @@ def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends
         fields = {"PAMCode": 1}
 
         customers_records = customers_coll.find(query, fields)
-        trade_codes = [c.get('PAMCode') for c in customers_records]
+        firms_records = firms_coll.find(query, fields)
+        trade_codes = [c.get('PAMCode') for c in customers_records] + [c.get('PAMCode') for c in firms_records]
 
         from_gregorian_date = to_gregorian_(args.from_date)
         to_gregorian_date = to_gregorian_(args.to_date)
@@ -219,4 +221,196 @@ def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends
     return results
 
 
+
+@profile.get("/search/", dependencies=[Depends(JWTBearer())], response_model=Page[MarketerOut], tags=["Profile"])
+async def search_user_profile(request: Request, args: MarketersProfileIn = Depends(MarketersProfileIn)):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (UserIn, optional): _description_. Defaults to Depends(UserIn).
+
+    Returns:
+        _type_: _description_
+    """
+    # get user id
+    marketer_id = get_sub(request)
+    brokerage = get_database()
+
+    # customer_coll = brokerage["customers"]
+    marketer_coll = brokerage["marketers"]
+
+    # check if marketer exists and return his name
+    # query_result = marketers_coll.find({"IdpId": marketer_id})
+
+    # marketer_dict = peek(query_result)
+
+    # marketer_fullname = marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
+
+    # query = {"$and": [
+    #     {"Referer": marketer_fullname},
+    #     {"FirstName": {"$regex": args.first_name}},
+    #     {"LastName": {"$regex": args.last_name}}
+    #     ]
+    # }
+
+    filter = {
+        'FirstName': {
+            '$regex': args.first_name
+        },
+        'LastName': {
+            '$regex': args.last_name
+        },
+        'RegisterDate': {
+            '$regex': args.register_date
+        }
+        # },
+        # 'Mobile': {
+        #     '$regex': args.mobile
+        # }
+    }
+    print(filter)
+    # return paginate(marketer_coll, {})
+    return paginate(marketer_coll, filter, sort=[("RegisterDate", -1)])
+
 add_pagination(profile)
+
+
+
+
+def totaliter(marketer_fullname,from_gregorian_date,to_gregorian_date):
+    db = get_database()
+
+    customers_coll = db["customers"]
+    trades_coll = db["trades"]
+    marketers_coll = db["marketers"]
+    firms_coll = db["firms"]
+
+    query = {"Referer": {"$regex": marketer_fullname}}
+
+    fields = {"PAMCode": 1}
+
+    customers_records = customers_coll.find(query, fields)
+    firms_records = firms_coll.find(query, fields)
+    trade_codes = [c.get('PAMCode') for c in customers_records] + [c.get('PAMCode') for c in firms_records]
+
+
+    buy_pipeline = [
+        {
+            "$match": {
+                "$and": [
+                    {"TradeCode": {"$in": trade_codes}},
+                    {"TradeDate": {"$gte": from_gregorian_date}},
+                    {"TradeDate": {"$lte": to_gregorian_date}},
+                    {"TradeType": 1}
+                ]
+            }
+        },
+        {
+            "$project": {
+                "Price": 1,
+                "Volume": 1,
+                "Total": {"$multiply": ["$Price", "$Volume"]},
+                "TotalCommission": 1,
+                "TradeItemBroker": 1,
+                "Buy": {
+                    "$add": [
+                        "$TotalCommission",
+                        {"$multiply": ["$Price", "$Volume"]}
+                    ]
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$id",
+                "TotalFee": {
+                    "$sum": "$TradeItemBroker"
+                },
+                "TotalBuy": {
+                    "$sum": "$Buy"
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "TotalBuy": 1,
+                "TotalFee": 1
+            }
+        }
+    ]
+    sell_pipeline = [
+        {
+            "$match": {
+                "$and": [
+                    {"TradeCode": {"$in": trade_codes}},
+                    {"TradeDate": {"$gte": from_gregorian_date}},
+                    {"TradeDate": {"$lte": to_gregorian_date}},
+                    {"TradeType": 2}
+                ]
+            }
+        },
+        {
+            "$project": {
+                "Price": 1,
+                "Volume": 1,
+                "Total": {"$multiply": ["$Price", "$Volume"]},
+                "TotalCommission": 1,
+                "TradeItemBroker": 1,
+                "Sell": {
+                    "$subtract": [
+                        {"$multiply": ["$Price", "$Volume"]},
+                        "$TotalCommission"
+                    ]
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$id",
+                "TotalFee": {
+                    "$sum": "$TradeItemBroker"
+                },
+                "TotalSell": {
+                    "$sum": "$Sell"
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "TotalSell": 1,
+                "TotalFee": 1
+            }
+        }
+    ]
+    buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
+    sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
+
+    buy_dict = {
+        "vol": 0,
+        "fee": 0
+    }
+
+    sell_dict = {
+        "vol": 0,
+        "fee": 0
+    }
+
+    if buy_agg_result:
+        buy_dict['vol'] = buy_agg_result.get("TotalBuy")
+        buy_dict['fee'] = buy_agg_result.get("TotalFee")
+
+    if sell_agg_result:
+        sell_dict['vol'] = sell_agg_result.get("TotalSell")
+        sell_dict['fee'] = sell_agg_result.get("TotalFee")
+    response_dict = {}
+    response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
+    response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
+    # response_dict["FirstName"] = marketer.get("FirstName")
+    # response_dict["LastName"] = marketer.get("LastName")
+
+    # results.append(response_dict)
+
+    return response_dict
