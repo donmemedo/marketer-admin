@@ -4,6 +4,7 @@ from src.tools.database import get_database
 from src.schemas.marketer import MarketerOut, ModifyMarketerIn, UsersTotalPureIn, MarketersProfileIn
 from src.tools.utils import peek, to_gregorian_
 from datetime import datetime, timedelta
+from khayyam import JalaliDatetime as jd
 from fastapi_pagination import Page, add_pagination
 from fastapi_pagination.ext.pymongo import paginate
 
@@ -94,11 +95,24 @@ def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends
         trade_codes = [c.get('PAMCode') for c in customers_records] + [c.get('PAMCode') for c in firms_records]
 
         from_gregorian_date = to_gregorian_(args.from_date)
+
+#####################
+        args.to_date = jd.today().date().isoformat()
+#####################
+
         to_gregorian_date = to_gregorian_(args.to_date)
+
         to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(days=1)
+        cc=jd.strptime(args.to_date, '%Y-%m-%d').month - 1
+        if cc < 1: cc = cc + 12
+        if cc < 10: cc = "0"+str(cc)
+        ddo = str(jd.strptime(args.to_date, '%Y-%m-%d').year) + str(cc)
+        if cc ==12: ddo = str(jd.strptime(args.to_date, '%Y-%m-%d').year - 1) + str(cc)
         to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
-        buy_pipeline = [ 
+
+
+        buy_pipeline = [
             {
                 "$match": {
                     "$and": [
@@ -217,6 +231,11 @@ def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends
         response_dict["LastName"] = marketer.get("LastName")
 
         results.append(response_dict)
+    if args.sorted:
+        results.sort(key=lambda x: x["TotalFee"], reverse=args.asc_desc_TF)
+        results.sort(key=lambda x: x["TotalPureVolume"], reverse=args.asc_desc_TPV)
+        results.sort(key=lambda x: x["FirstName"], reverse=args.asc_desc_FN)
+        results.sort(key=lambda x: x["LastName"], reverse=args.asc_desc_LN)
 
     return results
 
@@ -247,12 +266,14 @@ async def search_user_profile(request: Request, args: MarketersProfileIn = Depen
 
     # marketer_fullname = marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
 
-    # query = {"$and": [
-    #     {"Referer": marketer_fullname},
-    #     {"FirstName": {"$regex": args.first_name}},
-    #     {"LastName": {"$regex": args.last_name}}
-    #     ]
-    # }
+    query = {"$and": [
+        # {"Referer": marketer_fullname},
+        {"FirstName": {"$regex": args.first_name}},
+        {"LastName": {"$regex": args.last_name}},
+        {'CreateDate': {'$regex': args.register_date}}
+        # {'Mobile': {'$regex': args.mobile}}
+        ]
+    }
 
     filter = {
         'FirstName': {
@@ -271,7 +292,7 @@ async def search_user_profile(request: Request, args: MarketersProfileIn = Depen
     }
     print(filter)
     # return paginate(marketer_coll, {})
-    return paginate(marketer_coll, filter, sort=[("RegisterDate", -1)])
+    return paginate(marketer_coll, query, sort=[("RegisterDate", -1)])
 
 add_pagination(profile)
 
