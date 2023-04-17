@@ -74,10 +74,14 @@ class UsersListIn(Pages):
 @dataclass
 class UsersTotalPureIn:
     # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
+    # to_date: str = Query("1401-12-01")
+    to_date: str = None
     from_date: str = Query("1401-12-01")
-    to_date: str = Query("1401-12-01")
     asc_desc_TPV: Optional[bool] = False
     asc_desc_TF: Optional[bool] = False
+    asc_desc_LMTPV: Optional[bool] = False
+    asc_desc_LMTF: Optional[bool] = False
     asc_desc_FN: Optional[bool] = False
     asc_desc_LN: Optional[bool] = False
+    asc_desc_UC: Optional[bool] = False
     sorted: bool = False

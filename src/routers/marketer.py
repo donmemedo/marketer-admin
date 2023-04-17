@@ -65,12 +65,13 @@ def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends
     trades_coll = db["trades"]
     marketers_coll = db["marketers"]
     firms_coll = db["firms"]
+    totals_coll = db["totals"]
 
     # get all marketers IdpId
 
     marketers_query = marketers_coll.find(
         {"IdpId": { "$exists": True, "$not": {"$size": 0} } }, 
-        {"FirstName": 1, "LastName": 1 ,"_id": 0}
+        {"FirstName": 1, "LastName": 1 ,"_id": 0,"IdpId":1}
         )
     marketers_list = list(marketers_query)
 
@@ -97,17 +98,17 @@ def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends
         from_gregorian_date = to_gregorian_(args.from_date)
 
 #####################
-        args.to_date = jd.today().date().isoformat()
+        if not args.to_date: args.to_date = jd.today().date().isoformat()
 #####################
 
         to_gregorian_date = to_gregorian_(args.to_date)
 
         to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(days=1)
-        cc=jd.strptime(args.to_date, '%Y-%m-%d').month - 1
-        if cc < 1: cc = cc + 12
-        if cc < 10: cc = "0"+str(cc)
-        ddo = str(jd.strptime(args.to_date, '%Y-%m-%d').year) + str(cc)
-        if cc ==12: ddo = str(jd.strptime(args.to_date, '%Y-%m-%d').year - 1) + str(cc)
+        last_month=jd.strptime(args.to_date, '%Y-%m-%d').month - 1
+        if last_month < 1: last_month = last_month + 12
+        if last_month < 10: last_month = "0"+str(last_month)
+        last_month_str = str(jd.strptime(args.to_date, '%Y-%m-%d').year) + str(last_month)
+        if last_month ==12: last_month_str = str(jd.strptime(args.to_date, '%Y-%m-%d').year - 1) + str(last_month)
         to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
 
@@ -229,13 +230,24 @@ def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends
         response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
         response_dict["FirstName"] = marketer.get("FirstName")
         response_dict["LastName"] = marketer.get("LastName")
-
+###########
+        lmtpv = last_month_str + "TPV"
+        lmtf = last_month_str + "TF"
+        response_dict["LMTPV"] = totals_coll.find_one({
+            'MarketerID': marketer.get("IdpId")})[lmtpv]
+        response_dict["LMTF"] = totals_coll.find_one({
+            'MarketerID': marketer.get("IdpId")})[lmtf]
+        response_dict["UsersCount"] = customers_coll.count_documents({"Referer": {"$regex": marketer_fullname}})
+###########
         results.append(response_dict)
     if args.sorted:
         results.sort(key=lambda x: x["TotalFee"], reverse=args.asc_desc_TF)
         results.sort(key=lambda x: x["TotalPureVolume"], reverse=args.asc_desc_TPV)
+        results.sort(key=lambda x: x["LMTF"], reverse=args.asc_desc_LMTF)
+        results.sort(key=lambda x: x["LMTPV"], reverse=args.asc_desc_LMTPV)
         results.sort(key=lambda x: x["FirstName"], reverse=args.asc_desc_FN)
         results.sort(key=lambda x: x["LastName"], reverse=args.asc_desc_LN)
+        results.sort(key=lambda x: x["UsersCount"], reverse=args.asc_desc_UC)
 
     return results
 
