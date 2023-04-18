@@ -27,9 +27,18 @@ class MarketersProfileIn:
 
 @dataclass
 class ModifyMarketerIn:
-    IdpId: str
+    CurrentIdpId: str
     InvitationLink: Optional[str] = Query("")
     Mobile: Optional[str] = Query("")
+    FirstName: Optional[str] = Query("")
+    LastName: Optional[str] = Query("")
+    RefererType: Optional[str] = Query("")
+    CreatedBy: Optional[str] = Query("")
+    ModifiedDate: Optional[str] = Query("")
+    NewIdpId: Optional[str] = Query("")
+    Phone: Optional[str] = Query("")
+    ID: Optional[str] = Query("")
+    NationalID: Optional[str] = Query("")
 
 
 @dataclass
@@ -85,3 +94,27 @@ class UsersTotalPureIn:
     asc_desc_LN: Optional[bool] = False
     asc_desc_UC: Optional[bool] = False
     sorted: bool = False
+
+@dataclass
+class MarketerIn:
+    IdpID: str = None
+
+
+
+
+class ConstOut(BaseModel):
+    MarketerID: str
+    LastName: str
+    FirstName: str
+    FixIncome: int
+    Insurance: float
+    Collateral: float
+    Tax: float
+
+@dataclass
+class ModifyConstIn:
+    MarketerID: str = None
+    FixIncome: Optional[int] = 0
+    Insurance: Optional[float] = 0
+    Collateral: Optional[float] = 0.05
+    Tax: Optional[float] = 0.1

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from src.tools.tokens import JWTBearer, get_sub
 from src.tools.database import get_database
-from src.schemas.marketer import MarketerOut, ModifyMarketerIn, UsersTotalPureIn, MarketersProfileIn
+from src.schemas.marketer import MarketerOut, ModifyMarketerIn, UsersTotalPureIn, MarketersProfileIn, MarketerIn, ConstOut, ModifyConstIn
 from src.tools.utils import peek, to_gregorian_
 from datetime import datetime, timedelta
 from khayyam import JalaliDatetime as jd
@@ -11,6 +11,21 @@ from fastapi_pagination.ext.pymongo import paginate
 
 profile = APIRouter(prefix='/profile')
 
+@profile.get("/get-marketer/", dependencies=[Depends(JWTBearer())], tags=["Profile"], response_model=Page[MarketerOut])
+async def get_marketer_profile(request: Request, args: MarketerIn = Depends(MarketerIn)):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    marketer_id = args.IdpID
+    brokerage = get_database()
+    marketers_coll = brokerage["marketers"]
+    # check if marketer exists and return his name
+    return paginate(marketers_coll, {"IdpId": marketer_id})
 
 @profile.get("/marketers", dependencies=[Depends(JWTBearer())], tags=["Profile"], response_model=Page[MarketerOut])
 async def get_marketer(request: Request):
@@ -40,9 +55,8 @@ async def modify_marketer(request: Request, args: ModifyMarketerIn = Depends(Mod
 
     marketer_coll = database["marketers"]
 
-    filter = {"IdpId": args.IdpId}
+    filter = {"IdpId": args.CurrentIdpId}
     update = {"$set": {}}
-
 
     if args.InvitationLink != None:
         update["$set"]["InvitationLink"] = args.InvitationLink
@@ -50,9 +64,35 @@ async def modify_marketer(request: Request, args: ModifyMarketerIn = Depends(Mod
     if args.Mobile != None:
         update["$set"]["Mobile"] = args.Mobile
 
+    if args.FirstName != None:
+        update["$set"]["FirstName"] = args.FirstName
+
+    if args.LastName != None:
+        update["$set"]["LastName"] = args.LastName
+
+    if args.RefererType != None:
+        update["$set"]["RefererType"] = args.RefererType
+
+    if args.CreatedDate != None:
+        update["$set"]["CreatedDate"] = args.CreatedDate
+
+    if args.ModifiedBy != None:
+        update["$set"]["ModifiedBy"] = args.ModifiedBy
+
+    if args.NewIdpId != None:
+        update["$set"]["NewIdpId"] = args.NewIdpId
+
+    if args.Phone != None:
+        update["$set"]["Phone"] = args.Phone
+
+    if args.ID != None:
+        update["$set"]["ID"] = args.ID
+
+    if args.NationalID != None:
+        update["$set"]["NationalID"] = args.NationalID
+
     modified_record = marketer_coll.update_one(filter, update)
 
-    
     return modified_record.raw_result
 
 
@@ -305,6 +345,76 @@ async def search_user_profile(request: Request, args: MarketersProfileIn = Depen
     print(filter)
     # return paginate(marketer_coll, {})
     return paginate(marketer_coll, query, sort=[("RegisterDate", -1)])
+
+
+@profile.get("/get-factor-consts/", dependencies=[Depends(JWTBearer())], tags=["Factor"], response_model=Page[ConstOut])
+async def get_factors_consts(request: Request, args: MarketerIn = Depends(MarketerIn)):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    user_id = get_sub(request)
+
+    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
+    marketer_id = args.IdpID
+    brokerage = get_database()
+    consts_coll = brokerage["consts"]
+    # check if marketer exists and return his name
+    q=consts_coll.find_one({"MarketerID": marketer_id})
+    return paginate(consts_coll, {"MarketerID": marketer_id})
+    # return q
+
+
+@profile.get("/get-all-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"], response_model=Page[ConstOut])
+async def get_all_factors_consts(request: Request):
+    user_id = get_sub(request)
+
+    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
+    database = get_database()
+
+    consts_coll = database["consts"]
+
+    return paginate(consts_coll, {})
+
+
+@profile.put("/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+async def modify_factor_consts(request: Request, args: ModifyConstIn = Depends(ModifyConstIn)):
+    user_id = get_sub(request)
+
+    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
+    database = get_database()
+
+    consts_coll = database["consts"]
+
+    filter = {"IdpId": args.MarketerID}
+    update = {"$set": {}}
+
+    if args.FixIncome != None:
+        update["$set"]["FixIncome"] = args.FixIncome
+
+    if args.Insurance != None:
+        update["$set"]["Insurance"] = args.Insurance
+
+    if args.Collateral != None:
+        update["$set"]["Collateral"] = args.Collateral
+
+    if args.Tax != None:
+        update["$set"]["Tax"] = args.Tax
+
+    modified_record = consts_coll.update_one(filter, update)
+
+    return modified_record.raw_result
+
 
 add_pagination(profile)
 
