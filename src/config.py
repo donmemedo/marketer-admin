@@ -4,7 +4,7 @@ from pydantic import BaseSettings
 class Settings(BaseSettings):
     API_PREFIX = ""
     DOCS_URL = ""
-    MONGO_CONNECTION_STRING = "mongodb://root:1qaz1qaz@localhost:27017/"
+    MONGO_CONNECTION_STRING = "mongodb://root:root@172.24.65.106:30001/"
     MONGO_DATABASE = "brokerage"
     OPENAPI_URL = ""
     ORIGINS = "*"
