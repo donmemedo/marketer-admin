@@ -11,7 +11,7 @@ from fastapi_pagination.ext.pymongo import paginate
 
 marketer = APIRouter(prefix='/marketer')
 
-@marketer.get("/get-marketer/", dependencies=[Depends(JWTBearer())], tags=["Profile"], response_model=Page[MarketerOut])
+@marketer.get("/get-marketer/", dependencies=[Depends(JWTBearer())], tags=["Marketer"], response_model=Page[MarketerOut])
 async def get_marketer_profile(request: Request, args: MarketerIn = Depends(MarketerIn)):
     """_summary_
 
@@ -27,7 +27,7 @@ async def get_marketer_profile(request: Request, args: MarketerIn = Depends(Mark
     # check if marketer exists and return his name
     return paginate(marketers_coll, {"IdpId": marketer_id})
 
-@marketer.get("/marketers", dependencies=[Depends(JWTBearer())], tags=["Profile"], response_model=Page[MarketerOut])
+@marketer.get("/marketers", dependencies=[Depends(JWTBearer())], tags=["Marketer"], response_model=Page[MarketerOut])
 async def get_marketer(request: Request):
     user_id = get_sub(request)
 
@@ -42,7 +42,7 @@ async def get_marketer(request: Request):
     return paginate(marketer_coll, {})
 
 
-@marketer.put("/modify-marketer", dependencies=[Depends(JWTBearer())], tags=["Profile"])
+@marketer.put("/modify-marketer", dependencies=[Depends(JWTBearer())], tags=["Marketer"])
 async def modify_marketer(request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)):
 
     user_id = get_sub(request)
@@ -96,7 +96,7 @@ async def modify_marketer(request: Request, args: ModifyMarketerIn = Depends(Mod
     return modified_record.raw_result
 
 
-@marketer.get("/marketer-total", dependencies=[Depends(JWTBearer())], tags=["Profile"])
+@marketer.get("/marketer-total", dependencies=[Depends(JWTBearer())], tags=["Marketer"])
 def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)):
     # get all current marketers
     db = get_database()
@@ -293,7 +293,7 @@ def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends
 
 
 
-@marketer.get("/search/", dependencies=[Depends(JWTBearer())], response_model=Page[MarketerOut], tags=["Profile"])
+@marketer.get("/search/", dependencies=[Depends(JWTBearer())], response_model=Page[MarketerOut], tags=["Marketer"])
 async def search_user_profile(request: Request, args: MarketersProfileIn = Depends(MarketersProfileIn)):
     """_summary_
 

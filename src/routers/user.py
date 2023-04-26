@@ -3,7 +3,7 @@ from src.tools.tokens import JWTBearer, get_sub
 from src.tools.database import get_database
 from src.tools.utils import to_gregorian_, peek
 from datetime import datetime, timedelta
-from src.schemas.marketer import UserTradesIn, UserTradesOut, UsersListIn
+from src.schemas.user import UserTradesIn, UserTradesOut, UsersListIn
 from fastapi_pagination import Page, add_pagination
 from fastapi_pagination.ext.pymongo import paginate
 

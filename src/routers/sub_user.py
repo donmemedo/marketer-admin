@@ -6,7 +6,7 @@ Returns:
 from fastapi import APIRouter, Depends, Request
 from fastapi_pagination import Page, add_pagination
 from fastapi_pagination.ext.pymongo import paginate
-from src.schemas.subuser import SubUserIn, SubUserOut, MarketerOut, CostIn, SubCostIn, UsersTotalPureIn
+from src.schemas.sub_user import SubUserIn, SubUserOut, MarketerOut, CostIn, SubCostIn, UsersTotalPureIn
 from src.tools.database import get_database
 from src.tools.tokens import JWTBearer, get_sub
 from src.tools.utils import peek, to_gregorian_
