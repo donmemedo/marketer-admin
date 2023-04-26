@@ -9,9 +9,9 @@ from fastapi_pagination import Page, add_pagination
 from fastapi_pagination.ext.pymongo import paginate
 
 
-profile = APIRouter(prefix='/profile')
+marketer = APIRouter(prefix='/marketer')
 
-@profile.get("/get-marketer/", dependencies=[Depends(JWTBearer())], tags=["Profile"], response_model=Page[MarketerOut])
+@marketer.get("/get-marketer/", dependencies=[Depends(JWTBearer())], tags=["Profile"], response_model=Page[MarketerOut])
 async def get_marketer_profile(request: Request, args: MarketerIn = Depends(MarketerIn)):
     """_summary_
 
@@ -27,7 +27,7 @@ async def get_marketer_profile(request: Request, args: MarketerIn = Depends(Mark
     # check if marketer exists and return his name
     return paginate(marketers_coll, {"IdpId": marketer_id})
 
-@profile.get("/marketers", dependencies=[Depends(JWTBearer())], tags=["Profile"], response_model=Page[MarketerOut])
+@marketer.get("/marketers", dependencies=[Depends(JWTBearer())], tags=["Profile"], response_model=Page[MarketerOut])
 async def get_marketer(request: Request):
     user_id = get_sub(request)
 
@@ -42,7 +42,7 @@ async def get_marketer(request: Request):
     return paginate(marketer_coll, {})
 
 
-@profile.put("/modify-marketer", dependencies=[Depends(JWTBearer())], tags=["Profile"])
+@marketer.put("/modify-marketer", dependencies=[Depends(JWTBearer())], tags=["Profile"])
 async def modify_marketer(request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)):
 
     user_id = get_sub(request)
@@ -96,7 +96,7 @@ async def modify_marketer(request: Request, args: ModifyMarketerIn = Depends(Mod
     return modified_record.raw_result
 
 
-@profile.get("/marketer-total", dependencies=[Depends(JWTBearer())], tags=["Profile"])
+@marketer.get("/marketer-total", dependencies=[Depends(JWTBearer())], tags=["Profile"])
 def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)):
     # get all current marketers
     db = get_database()
@@ -293,7 +293,7 @@ def get_marketer_total_trades(request: Request, args: UsersTotalPureIn = Depends
 
 
 
-@profile.get("/search/", dependencies=[Depends(JWTBearer())], response_model=Page[MarketerOut], tags=["Profile"])
+@marketer.get("/search/", dependencies=[Depends(JWTBearer())], response_model=Page[MarketerOut], tags=["Profile"])
 async def search_user_profile(request: Request, args: MarketersProfileIn = Depends(MarketersProfileIn)):
     """_summary_
 
@@ -347,7 +347,7 @@ async def search_user_profile(request: Request, args: MarketersProfileIn = Depen
     return paginate(marketer_coll, query, sort=[("RegisterDate", -1)])
 
 
-@profile.get("/get-factor-consts/", dependencies=[Depends(JWTBearer())], tags=["Factor"], response_model=Page[ConstOut])
+@marketer.get("/get-factor-consts/", dependencies=[Depends(JWTBearer())], tags=["Factor"], response_model=Page[ConstOut])
 async def get_factors_consts(request: Request, args: MarketerIn = Depends(MarketerIn)):
     """_summary_
 
@@ -371,7 +371,7 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     # return q
 
 
-@profile.get("/get-all-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"], response_model=Page[ConstOut])
+@marketer.get("/get-all-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"], response_model=Page[ConstOut])
 async def get_all_factors_consts(request: Request):
     user_id = get_sub(request)
 
@@ -385,7 +385,7 @@ async def get_all_factors_consts(request: Request):
     return paginate(consts_coll, {})
 
 
-@profile.put("/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+@marketer.put("/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"])
 async def modify_factor_consts(request: Request, args: ModifyConstIn = Depends(ModifyConstIn)):
     user_id = get_sub(request)
 
@@ -416,7 +416,7 @@ async def modify_factor_consts(request: Request, args: ModifyConstIn = Depends(M
     return modified_record.raw_result
 
 
-add_pagination(profile)
+add_pagination(marketer)
 
 
 
