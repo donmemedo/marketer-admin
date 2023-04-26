@@ -4,8 +4,6 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-
-
 class MarketerOut(BaseModel):
     FirstName: str
     LastName: str
@@ -18,12 +16,14 @@ class MarketerOut(BaseModel):
     IdpId: Optional[str]
     Mobile: Optional[str]
 
+
 @dataclass
 class MarketersProfileIn:
     first_name: str = Query("")
-    last_name:  str = Query("")
-    mobile:  int = Query("")
-    register_date:  str = Query("")
+    last_name: str = Query("")
+    mobile: int = Query("")
+    register_date: str = Query("")
+
 
 @dataclass
 class ModifyMarketerIn:
@@ -95,11 +95,10 @@ class UsersTotalPureIn:
     asc_desc_UC: Optional[bool] = False
     sorted: bool = False
 
+
 @dataclass
 class MarketerIn:
     IdpID: str = None
-
-
 
 
 class ConstOut(BaseModel):
@@ -110,6 +109,7 @@ class ConstOut(BaseModel):
     Insurance: float
     Collateral: float
     Tax: float
+
 
 @dataclass
 class ModifyConstIn:
