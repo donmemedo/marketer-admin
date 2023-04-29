@@ -1,3 +1,8 @@
+"""_summary_
+
+Returns:
+    _type_: _description_
+"""
 from fastapi import APIRouter, Depends, Request, HTTPException
 from src.tools.tokens import JWTBearer, get_sub
 from src.tools.database import get_database
@@ -17,7 +22,7 @@ user_router = APIRouter(prefix="/user")
     tags=["User"],
     response_model=Page[UserTradesOut],
 )
-async def get_marketer(request: Request, args: UserTradesIn = Depends(UserTradesIn)):
+async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTradesIn)):
     user_id = get_sub(request)
 
     if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
@@ -26,8 +31,8 @@ async def get_marketer(request: Request, args: UserTradesIn = Depends(UserTrades
     database = get_database()
 
     trades_coll = database["trades"]
-
-    return paginate(trades_coll, {})
+    # filter ={"TradeCode": args.TradeCode}
+    return paginate(trades_coll, {"TradeCode": args.TradeCode})
 
 
 @user_router.get("/users-total", dependencies=[Depends(JWTBearer())])

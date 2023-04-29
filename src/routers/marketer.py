@@ -1,4 +1,13 @@
+"""_summary_
+
+Returns:
+    _type_: _description_
+"""
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi_pagination import Page, add_pagination
+from fastapi_pagination.ext.pymongo import paginate
+from khayyam import JalaliDatetime as jd
 from src.tools.tokens import JWTBearer, get_sub
 from src.tools.database import get_database
 from src.schemas.marketer import (
@@ -11,10 +20,6 @@ from src.schemas.marketer import (
     ModifyConstIn,
 )
 from src.tools.utils import peek, to_gregorian_
-from datetime import datetime, timedelta
-from khayyam import JalaliDatetime as jd
-from fastapi_pagination import Page, add_pagination
-from fastapi_pagination.ext.pymongo import paginate
 
 
 marketer = APIRouter(prefix="/marketer")
@@ -82,37 +87,37 @@ async def modify_marketer(
     filter = {"IdpId": args.CurrentIdpId}
     update = {"$set": {}}
 
-    if args.InvitationLink != None:
+    if args.InvitationLink is not None:
         update["$set"]["InvitationLink"] = args.InvitationLink
 
-    if args.Mobile != None:
+    if args.Mobile is not None:
         update["$set"]["Mobile"] = args.Mobile
 
-    if args.FirstName != None:
+    if args.FirstName is not None:
         update["$set"]["FirstName"] = args.FirstName
 
-    if args.LastName != None:
+    if args.LastName is not None:
         update["$set"]["LastName"] = args.LastName
 
-    if args.RefererType != None:
+    if args.RefererType is not None:
         update["$set"]["RefererType"] = args.RefererType
 
-    if args.CreatedDate != None:
+    if args.CreatedDate is not None:
         update["$set"]["CreatedDate"] = args.CreatedDate
 
-    if args.ModifiedBy != None:
-        update["$set"]["ModifiedBy"] = args.ModifiedBy
+    if args.Modifiedatabasey is not None:
+        update["$set"]["Modifiedatabasey"] = args.Modifiedatabasey
 
-    if args.NewIdpId != None:
+    if args.NewIdpId is not None:
         update["$set"]["NewIdpId"] = args.NewIdpId
 
-    if args.Phone != None:
+    if args.Phone is not None:
         update["$set"]["Phone"] = args.Phone
 
-    if args.ID != None:
+    if args.ID is not None:
         update["$set"]["ID"] = args.ID
 
-    if args.NationalID != None:
+    if args.NationalID is not None:
         update["$set"]["NationalID"] = args.NationalID
 
     modified_record = marketer_coll.update_one(filter, update)
@@ -125,13 +130,13 @@ def get_marketer_total_trades(
     request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
 ):
     # get all current marketers
-    db = get_database()
+    database = get_database()
 
-    customers_coll = db["customers"]
-    trades_coll = db["trades"]
-    marketers_coll = db["marketers"]
-    firms_coll = db["firms"]
-    totals_coll = db["totals"]
+    customers_coll = database["customers"]
+    trades_coll = database["trades"]
+    marketers_coll = database["marketers"]
+    firms_coll = database["firms"]
+    totals_coll = database["totals"]
 
     # get all marketers IdpId
 
@@ -326,7 +331,7 @@ async def search_user_profile(
         _type_: _description_
     """
     # get user id
-    marketer_id = get_sub(request)
+    # marketer_id = get_sub(request)
     brokerage = get_database()
 
     # customer_coll = brokerage["customers"]
@@ -387,7 +392,7 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     brokerage = get_database()
     consts_coll = brokerage["consts"]
     # check if marketer exists and return his name
-    q = consts_coll.find_one({"MarketerID": marketer_id})
+    # q = consts_coll.find_one({"MarketerID": marketer_id})
     return paginate(consts_coll, {"MarketerID": marketer_id})
     # return q
 
@@ -429,16 +434,16 @@ async def modify_factor_consts(
     filter = {"IdpId": args.MarketerID}
     update = {"$set": {}}
 
-    if args.FixIncome != None:
+    if args.FixIncome is not None:
         update["$set"]["FixIncome"] = args.FixIncome
 
-    if args.Insurance != None:
+    if args.Insurance is not None:
         update["$set"]["Insurance"] = args.Insurance
 
-    if args.Collateral != None:
+    if args.Collateral is not None:
         update["$set"]["Collateral"] = args.Collateral
 
-    if args.Tax != None:
+    if args.Tax is not None:
         update["$set"]["Tax"] = args.Tax
 
     modified_record = consts_coll.update_one(filter, update)
@@ -450,12 +455,12 @@ add_pagination(marketer)
 
 
 def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
-    db = get_database()
+    database = get_database()
 
-    customers_coll = db["customers"]
-    trades_coll = db["trades"]
-    marketers_coll = db["marketers"]
-    firms_coll = db["firms"]
+    customers_coll = database["customers"]
+    trades_coll = database["trades"]
+    # marketers_coll = database["marketers"]
+    firms_coll = database["firms"]
 
     query = {"Referer": {"$regex": marketer_fullname}}
 
