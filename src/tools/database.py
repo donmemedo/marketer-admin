@@ -7,4 +7,3 @@ def get_database():
     database = client[settings.MONGO_DATABASE]
 
     return database
-
