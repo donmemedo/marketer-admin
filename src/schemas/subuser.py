@@ -172,7 +172,7 @@ class MarketerInvitationIn:
 class MarketerIdpIdIn:
     """_summary_"""
 
-    id: int
+    # id: int
     idpid: str
 
 
@@ -299,6 +299,13 @@ class UsersListIn(Pages):
     from_date: str = Query(current_date)
     to_date: str = Query(current_date)
 
+@dataclass
+class TotalUsersListIn(Pages):
+    from_date: str = Query(current_date)
+    to_date: str = Query(current_date)
+    asc_desc_TPV: Optional[bool] = False
+    asc_desc_TF: Optional[bool] = False
+    sorted: bool = False
 
 @dataclass
 class UsersTotalPureIn:

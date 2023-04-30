@@ -15,7 +15,9 @@ from src.schemas.subuser import (
     # CostIn,
     SubCostIn,
     UsersTotalPureIn,
-    UsersListIn
+    UsersListIn,
+    TotalUsersListIn,
+    MarketerIdpIdIn
 )
 from src.tools.database import get_database
 from src.tools.tokens import JWTBearer, get_sub
@@ -25,9 +27,9 @@ subuser = APIRouter(prefix="/subuser")
 
 
 @subuser.get(
-    "/list/", dependencies=[Depends(JWTBearer())], response_model=Page[MarketerOut],tags=["SubUser"]
+    "/list/", dependencies=[Depends(JWTBearer())], response_model=Page[SubUserOut],tags=["SubUser"]
 )
-async def search_marketer_user(request: Request):
+async def search_marketer_user(request: Request, args: MarketerIdpIdIn = Depends(MarketerIdpIdIn)):
     """Gets List of ALL Marketers
 
     Args:
@@ -37,20 +39,22 @@ async def search_marketer_user(request: Request):
         _type_: MarketerOut
     """
     # get user id
-    # marketer_id = get_sub(request)
+    marketer_id = args.idpid
     brokerage = get_database()
-    # customer_coll = brokerage["customers"]
+    customer_coll = brokerage["customers"]
+    firms_coll = brokerage["firms"]
     marketers_coll = brokerage["marketers"]
 
     # check if marketer exists and return his name
-    # query_result = marketers_coll.find({"IdpId": marketer_id})
-    # marketer_dict = peek(query_result)
-    # marketer_fullname = (
-    #     marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
-    # )
-
-    # return paginate(customer_coll, {"Referer": marketer_fullname}, sort=[("RegisterDate", -1)])
-    return paginate(marketers_coll, sort=[("CreateDate", -1)])
+    query_result = marketers_coll.find({"IdpId": marketer_id})
+    marketer_dict = peek(query_result)
+    marketer_fullname = (
+        marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
+    )
+    # customer_coll.aggregate([{"$unionWith": {"coll": firms_coll}}, {"$out": "newCollection"}] )
+    return paginate(customer_coll, {"Referer": marketer_fullname}, sort=[("RegisterDate", -1)])
+    # return paginate(firms_coll, {"Referer": marketer_fullname}, sort=[("RegisterDate", -1)])
+    # return paginate(marketers_coll, sort=[("CreateDate", -1)])
 
 
 @subuser.get(
@@ -154,7 +158,7 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
     return paginate(customer_coll, filter, sort=[("RegisterDate", -1)])
 
 
-@subuser.get("/subuser/cost/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
+@subuser.get("/cost/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
 async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostIn)):
     """_summary_
 
@@ -291,7 +295,7 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
     }
 
 
-@subuser.get("/subuser/costlist/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
+@subuser.get("/costlist/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
 async def marketer_subuser_lists(
     request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
 ):
@@ -843,16 +847,22 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     # if aggre_dict is None:
     #     return {}
 
+<<<<<<< HEAD
     #aggre_dict["page"] = 1#args.page
     #aggre_dict["size"] = 1000000#args.size
     #aggre_dict["pages"] = - (aggre_dict.get("total") // - args.size)
+=======
+    # aggre_dict["page"] = 1#args.page
+    # aggre_dict["size"] = 1000000#args.size
+    # aggre_dict["pages"] = - (aggre_dict.get("total") // - args.size)
+>>>>>>> dev
 
     # return aggre_dict
     return results
 
 
 @subuser.get("/total-users/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
-def total_users_cost(request: Request, args: UsersListIn = Depends(UsersListIn)):
+def total_users_cost(request: Request, args: TotalUsersListIn = Depends(TotalUsersListIn)):
     # get user id
     marketer_id = get_sub(request)
     db = get_database()
@@ -1124,7 +1134,20 @@ def total_users_cost(request: Request, args: UsersListIn = Depends(UsersListIn))
     # aggre_dict["pages"] = - (aggre_dict.get("total") // - args.size)
 
     # return aggre_dict
-    return results
+    dicter =[]
+    # dicter['itemss']= {}
+    for i in range(len(results)):
+        # dicter['itemss'][i]=results[i]['items'][0]
+        dicter.append(results[i]['items'][0])
+
+    if args.sorted:
+    # if 1==1:
+        dicter.sort(key=lambda x: x["TotalFee"], reverse=args.asc_desc_TF)
+        dicter.sort(key=lambda x: x["TotalPureVolume"], reverse=args.asc_desc_TPV)
+
+
+
+    return dicter
 
 
 add_pagination(subuser)
