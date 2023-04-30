@@ -13,11 +13,11 @@ from fastapi_pagination import Page, add_pagination
 from fastapi_pagination.ext.pymongo import paginate
 
 
-user_router = APIRouter(prefix="/user")
+user = APIRouter(prefix="/user")
 
 
-@user_router.get(
-    "/user-trades",
+@user.get(
+    "/user-trades/",
     dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=Page[UserTradesOut],
@@ -35,7 +35,7 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     return paginate(trades_coll, {"TradeCode": args.TradeCode})
 
 
-@user_router.get("/users-total", dependencies=[Depends(JWTBearer())])
+@user.get("/users-list-by-volume/", dependencies=[Depends(JWTBearer())],tags=["User"])
 def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersListIn)):
     # get user id
     marketer_id = get_sub(request)
@@ -181,7 +181,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     return aggre_dict
 
 
-@user_router.get("/users-total", dependencies=[Depends(JWTBearer())], tags=["User"])
+@user.get("/users-total", dependencies=[Depends(JWTBearer())], tags=["User"])
 def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     # get user id
     marketer_id = get_sub(request)
@@ -328,4 +328,4 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     return aggre_dict
 
 
-add_pagination(user_router)
+add_pagination(user)

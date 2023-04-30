@@ -50,7 +50,7 @@ async def get_marketer_profile(
 
 
 @marketer.get(
-    "/marketers",
+    "/marketers/",
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=Page[MarketerOut],
@@ -69,7 +69,7 @@ async def get_marketer(request: Request):
 
 
 @marketer.put(
-    "/modify-marketer", dependencies=[Depends(JWTBearer())], tags=["Marketer"]
+    "/modify-marketer/", dependencies=[Depends(JWTBearer())], tags=["Marketer"]
 )
 async def modify_marketer(
     request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)
@@ -125,7 +125,7 @@ async def modify_marketer(
     return modified_record.raw_result
 
 
-@marketer.get("/marketer-total", dependencies=[Depends(JWTBearer())], tags=["Marketer"])
+@marketer.get("/marketer-total/", dependencies=[Depends(JWTBearer())], tags=["Marketer"])
 def get_marketer_total_trades(
     request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
 ):
@@ -398,7 +398,7 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
 
 
 @marketer.get(
-    "/get-all-factor-consts",
+    "/get-all-factor-consts/",
     dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
     response_model=Page[ConstOut],
@@ -417,7 +417,7 @@ async def get_all_factors_consts(request: Request):
 
 
 @marketer.put(
-    "/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"]
+    "/modify-factor-consts/", dependencies=[Depends(JWTBearer())], tags=["Factor"]
 )
 async def modify_factor_consts(
     request: Request, args: ModifyConstIn = Depends(ModifyConstIn)
