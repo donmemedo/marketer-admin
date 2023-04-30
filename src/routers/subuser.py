@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi_pagination import Page, add_pagination
 from fastapi_pagination.ext.pymongo import paginate
 from khayyam import JalaliDatetime as jd
-from src.schemas.sub_user import (
+from src.schemas.subuser import (
     SubUserIn,
     SubUserOut,
     MarketerOut,
@@ -21,11 +21,11 @@ from src.tools.database import get_database
 from src.tools.tokens import JWTBearer, get_sub
 from src.tools.utils import peek, to_gregorian_
 
-sub_user_router = APIRouter(prefix="/subuser", tags=["Sub User"])
+subuser = APIRouter(prefix="/subuser")
 
 
-@sub_user_router.get(
-    "/list/", dependencies=[Depends(JWTBearer())], response_model=Page[MarketerOut]
+@subuser.get(
+    "/list/", dependencies=[Depends(JWTBearer())], response_model=Page[MarketerOut],tags=["SubUser"]
 )
 async def search_marketer_user(request: Request):
     """Gets List of ALL Marketers
@@ -53,8 +53,8 @@ async def search_marketer_user(request: Request):
     return paginate(marketers_coll, sort=[("CreateDate", -1)])
 
 
-@sub_user_router.get(
-    "/profile/", dependencies=[Depends(JWTBearer())], response_model=Page[SubUserOut]
+@subuser.get(
+    "/profile/", dependencies=[Depends(JWTBearer())], response_model=Page[SubUserOut],tags=["SubUser"]
 )
 async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn)):
     """Gets List of Users of a Marketer and can search them
@@ -93,8 +93,8 @@ async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn
     return paginate(customer_coll, query, sort=[("RegisterDate", -1)])
 
 
-@sub_user_router.get(
-    "/search/", dependencies=[Depends(JWTBearer())], response_model=Page[SubUserOut]
+@subuser.get(
+    "/search/", dependencies=[Depends(JWTBearer())], response_model=Page[SubUserOut],tags=["SubUser"]
 )
 async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn)):
     """_summary_
@@ -154,7 +154,7 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
     return paginate(customer_coll, filter, sort=[("RegisterDate", -1)])
 
 
-@sub_user_router.get("/subuser/cost/", dependencies=[Depends(JWTBearer())])
+@subuser.get("/subuser/cost/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
 async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostIn)):
     """_summary_
 
@@ -291,7 +291,7 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
     }
 
 
-@sub_user_router.get("/subuser/costlist/", dependencies=[Depends(JWTBearer())])
+@subuser.get("/subuser/costlist/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
 async def marketer_subuser_lists(
     request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
 ):
@@ -584,7 +584,7 @@ async def marketer_subuser_lists(
 
     return results
 
-@sub_user_router.get("/users-total", dependencies=[Depends(JWTBearer())])
+@subuser.get("/users-total/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
 def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersListIn)):
     # get user id
     marketer_id = get_sub(request)
@@ -792,7 +792,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
                     "FirmTitle": "$FirmProfile.FirmTitle",
                     # "FirmRegisterDate": "$FirmTitle.RegisterDate",
                     # "FirmBankAccountNumber": "$FirmTitle.BankAccountNumber",
-                    "FirmRegisterDate": "$FirmProfile.RegisterDate",
+                    "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
                     "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
                     "FirstName": "$UserProfile.FirstName",
                     "LastName": "$UserProfile.LastName",
@@ -851,7 +851,283 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     return results
 
 
-add_pagination(sub_user_router)
+@subuser.get("/total-users/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
+def total_users_cost(request: Request, args: UsersListIn = Depends(UsersListIn)):
+    # get user id
+    marketer_id = get_sub(request)
+    db = get_database()
+
+    customers_coll = db["customers"]
+    trades_coll = db["trades"]
+    firms_coll = db["firms"]
+    marketers_coll = db["marketers"]
+
+    # check if marketer exists and return his name
+    # query_result = marketers_coll.find({"IdpId": marketer_id})
+
+    marketers_query = marketers_coll.find(
+        {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
+        {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+    )
+    marketers_list = list(marketers_query)
+
+    # marketer_dict = peek(query_result)
+
+    results = []
+    total_codes = []
+    for marketer in marketers_list:
+        response_dict = {}
+        if marketer.get("FirstName") == "":
+            marketer_fullname = marketer.get("LastName")
+        elif marketer.get("LastName") == "":
+            marketer_fullname = marketer.get("FirstName")
+        else:
+            marketer_fullname = (
+                marketer.get("FirstName") + " " + marketer.get("LastName")
+            )
+        """
+        customers_query = customers_coll.find(
+            {"Referer": {"$regex": marketer_fullname}},
+            {"FirstName": 1, "LastName": 1, "_id": 0, "PAMCode": 1},
+        )
+        customers_list = list(customers_query)
+
+        firms_query = firms_coll.find(
+            {"Referer": {"$regex": marketer_fullname}},
+            {"FirstName": 1, "LastName": 1, "_id": 0, "PAMCode": 1},
+        )
+        firms_list = list(firms_query)
+
+        for customer in customers_list:
+            vv
+
+
+        for firm in firms_list:
+            vv
+        # Check if customer exist
+        query = {"Referer": {"$regex": marketer_fullname}}
+
+        fields = {"PAMCode": 1}
+
+        customers_records = customers_coll.find(query, fields)
+        firms_records = firms_coll.find(query, fields)
+        trade_codes = [c.get("PAMCode") for c in customers_records] + [
+            c.get("PAMCode") for c in firms_records
+        ]
+
+        """
+        from_gregorian_date = to_gregorian_(args.from_date)
+        to_gregorian_date = to_gregorian_(args.to_date)
+        to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(days=1)
+        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+        # get all customers' TradeCodes
+        query = {"$and": [
+            {"Referer": marketer_fullname}
+        ]
+        }
+
+        fields = {"PAMCode": 1}
+
+        customers_records = customers_coll.find(query, fields)
+        firms_records = firms_coll.find(query, fields)
+        total_codes = total_codes + [c.get('PAMCode') for c in customers_records] + [c.get('PAMCode') for c in firms_records]
+
+
+    for trade_codes in total_codes:
+
+
+        pipeline = [
+            {
+                "$match": {
+                    # "TradeCode": {"$in": trade_codes}
+                    "$and": [
+                        # {"TradeCode": {"$in": trade_codes}},
+                        {"TradeCode": trade_codes},
+                        {"TradeDate": {"$gte": from_gregorian_date}},
+                        {"TradeDate": {"$lte": to_gregorian_date}}
+                    ]
+                }
+            },
+            {
+                "$project": {
+                    "Price": 1,
+                    "Volume": 1,
+                    "Total": {"$multiply": ["$Price", "$Volume"]},
+                    "TotalCommission": 1,
+                    "TradeItemBroker": 1,
+                    "TradeCode": 1,
+                    "Commission": {
+                        "$cond": {
+                            "if": {"$eq": ["$TradeType", 1]},
+                            "then": {
+                                "$add": [
+                                    "$TotalCommission",
+                                    {"$multiply": ["$Price", "$Volume"]}
+                                ]
+                            },
+                            "else": {
+                                "$subtract": [
+                                    {"$multiply": ["$Price", "$Volume"]},
+                                    "$TotalCommission"
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$TradeCode",
+                    "TotalFee": {
+                        "$sum": "$TradeItemBroker"
+                    },
+                    "TotalPureVolume": {"$sum": "$Commission"}
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "TradeCode": "$_id",
+                    "TotalPureVolume": 1,
+                    "TotalFee": 1
+                }
+            },
+            #########Danial's Code########
+            # {
+            #     "$lookup": {
+            #         "from": "customers",
+            #         "localField": "TradeCode",
+            #         "foreignField": "PAMCode",
+            #         "as": "UserProfile"
+            #     }
+            # },
+            # {
+            #     "$unwind": "$UserProfile"
+            # },
+            # {
+            #     "$project": {
+            #         "TradeCode": 1,
+            #         "TotalFee": 1,
+            #         "TotalPureVolume": 1,
+            #         "FirstName": "$UserProfile.FirstName",
+            #         "LastName": "$UserProfile.LastName",
+            #         "Username": "$UserProfile.Username",
+            #         "Mobile": "$UserProfile.Mobile",
+            #         "RegisterDate": "$UserProfile.RegisterDate",
+            #         "BankAccountNumber": "$UserProfile.BankAccountNumber",
+            #     }
+            # },
+            # {
+            #     "$sort": {
+            #         "TotalPureVolume": 1,
+            #         "RegisterDate": 1,
+            #         "TradeCode": 1
+            #     }
+            # },
+            ##############END of Danial's Code#########
+            ##############Refactored Code#########
+            {
+                "$lookup": {
+                    "from": "firms",
+                    "localField": "TradeCode",
+                    "foreignField": "PAMCode",
+                    "as": "FirmProfile"
+                },
+            },
+            {
+                "$unwind": {
+                    "path": "$FirmProfile",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "customers",
+                    "localField": "TradeCode",
+                    "foreignField": "PAMCode",
+                    "as": "UserProfile"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$UserProfile",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+            {
+                "$project": {
+                    "TradeCode": 1,
+                    "TotalFee": 1,
+                    "TotalPureVolume": 1,
+                    "Refferer": "$FirmProfile.Referer",
+                    "Referer": "$UserProfile.Referer",
+                    "FirmTitle": "$FirmProfile.FirmTitle",
+                    # "FirmRegisterDate": "$FirmTitle.RegisterDate",
+                    # "FirmBankAccountNumber": "$FirmTitle.BankAccountNumber",
+                    "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
+                    "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
+                    "FirstName": "$UserProfile.FirstName",
+                    "LastName": "$UserProfile.LastName",
+                    "Username": "$UserProfile.Username",
+                    "Mobile": "$UserProfile.Mobile",
+                    "RegisterDate": "$UserProfile.RegisterDate",
+                    "BankAccountNumber": "$UserProfile.BankAccountNumber",
+
+                }
+
+            },
+
+            {
+                "$sort": {
+                    "TotalPureVolume": 1,
+                    "RegisterDate": 1,
+                    "TradeCode": 1
+                }
+            },
+            ###########END of Refactor############
+            {
+                "$facet": {
+                    "metadata": [{"$count": "total"}],
+                    "items": [
+                        {"$skip": (args.page - 1) * args.size},
+                        {"$limit": args.size}
+                    ]
+                }
+            },
+            {
+                "$unwind": "$metadata"
+            },
+            {
+                "$project": {
+                    # "total": "$metadata.total",
+                    "items": 1,
+                }
+            }
+        ]
+
+
+        # aggr_result = trades_coll.aggregate(pipeline=pipeline)
+        aggr_result = peek(trades_coll.aggregate(pipeline=pipeline))
+        # aggre_dict = next(aggr_result, None)
+        # if aggre_dict is not None:
+        #     results.append(aggre_dict)
+        if aggr_result is not None:
+            results.append(aggr_result)
+        # results.append(aggre_dict)
+    # aggre_dict = next(aggr_result, None)
+
+    # if aggre_dict is None:
+    #     return {}
+    # aggre_dict["page"] = 1#args.page
+    # aggre_dict["size"] = 1000000#args.size
+    # aggre_dict["pages"] = - (aggre_dict.get("total") // - args.size)
+
+    # return aggre_dict
+    return results
+
+
+add_pagination(subuser)
 
 
 def buy_pipe(customers_records, from_gregorian_date, to_gregorian_date):
