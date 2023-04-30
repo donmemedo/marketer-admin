@@ -1141,6 +1141,7 @@ def total_users_cost(request: Request, args: TotalUsersListIn = Depends(TotalUse
 
 
 
+
     return dicter
 
 
