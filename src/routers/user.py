@@ -181,7 +181,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     return aggre_dict
 
 
-@user.get("/users-total", dependencies=[Depends(JWTBearer())], tags=["User"])
+@user.get("/users-total/", dependencies=[Depends(JWTBearer())], tags=["User"])
 def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     # get user id
     marketer_id = get_sub(request)
