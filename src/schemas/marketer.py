@@ -1,8 +1,21 @@
 from fastapi import Query
 from dataclasses import dataclass
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Optional, Any, List, Dict
+from enum import Enum, IntEnum
+from khayyam import JalaliDatetime
 
+
+current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+current_month = JalaliDatetime.today().month
+current_year = JalaliDatetime.today().year
+
+
+
+@dataclass
+class UserTotalOut:
+    TotalPureVolume: float
+    TotalFee: float
 
 class MarketerOut(BaseModel):
     FirstName: str
@@ -28,22 +41,22 @@ class MarketersProfileIn:
 @dataclass
 class ModifyMarketerIn:
     CurrentIdpId: str
-    InvitationLink: Optional[str] = Query("")
-    Mobile: Optional[str] = Query("")
-    FirstName: Optional[str] = Query("")
-    LastName: Optional[str] = Query("")
-    RefererType: Optional[str] = Query("")
-    CreatedBy: Optional[str] = Query("")
-    ModifiedDate: Optional[str] = Query("")
-    NewIdpId: Optional[str] = Query("")
-    Phone: Optional[str] = Query("")
-    ID: Optional[str] = Query("")
-    NationalID: Optional[str] = Query("")
+    InvitationLink: Optional[str] = None
+    FirstName: Optional[str] = None
+    LastName: Optional[str] = None
+    RefererType: Optional[str] = None
+    CreatedBy: Optional[str] = None
+    ModifiedDate: Optional[str] = None
+    CreateDate: Optional[str] = None
+    ModifiedBy: Optional[str] = None
+    NewIdpId: Optional[str] = None
+    NationalID: Optional[int] = None
+
 
 
 @dataclass
 class UserTradesIn:
-    TradeCode: str
+    TradeCode: str = Query(alias="TradeCode")
 
 
 class UserTradesOut(BaseModel):
@@ -70,22 +83,36 @@ class UserTradesOut(BaseModel):
 
 @dataclass
 class Pages:
-    size: int = Query(10)
-    page: int = Query(1)
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
+
+
+class UserTypeEnum(str, Enum):
+    active = "active"
+    inactive = "inactive"
+
+class SortField(str, Enum):
+    REGISTRATION_DATE = "RegisterDate"
+    TotalPureVolume = "TotalPureVolume"
+
+
+class SortOrder(IntEnum):
+    ASCENDING = 1
+    DESCENDING = -1
 
 
 @dataclass
 class UsersListIn(Pages):
-    from_date: str = Query("1401-12-01")
-    to_date: str = Query("1401-12-01")
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
 
 
 @dataclass
 class UsersTotalPureIn:
     # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
     # to_date: str = Query("1401-12-01")
-    to_date: str = None
-    from_date: str = Query("1401-12-01")
+    to_date: str = Query(default=None, alias="EndDate")
+    from_date: str = Query(default=current_date, alias="StartDate")
     asc_desc_TPV: Optional[bool] = False
     asc_desc_TF: Optional[bool] = False
     asc_desc_LMTPV: Optional[bool] = False
@@ -118,3 +145,17 @@ class ModifyConstIn:
     Insurance: Optional[float] = 0
     Collateral: Optional[float] = 0.05
     Tax: Optional[float] = 0.1
+
+
+@dataclass
+class ResponseOut:
+    timeGenerated: JalaliDatetime
+    result: List[UserTotalOut] = List[Any]
+    error: str = Query("nothing")
+
+@dataclass
+class ResponseListOut:
+    result: Dict
+    timeGenerated: JalaliDatetime
+    error: str = Query("nothing")
+

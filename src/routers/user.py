@@ -8,7 +8,8 @@ from src.tools.tokens import JWTBearer, get_sub
 from src.tools.database import get_database
 from src.tools.utils import to_gregorian_, peek
 from datetime import datetime, timedelta
-from src.schemas.user import UserTradesIn, UserTradesOut, UsersListIn
+from khayyam import JalaliDatetime as jd
+from src.schemas.user import UserTradesIn, UserTradesOut, UsersListIn, ResponseOut, ResponseListOut
 from fastapi_pagination import Page, add_pagination
 from fastapi_pagination.ext.pymongo import paginate
 
@@ -20,7 +21,8 @@ user = APIRouter(prefix="/user")
     "/user-trades/",
     dependencies=[Depends(JWTBearer())],
     tags=["User"],
-    response_model=Page[UserTradesOut],
+    # response_model=Page[UserTradesOut],
+    response_model=None
 )
 async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTradesIn)):
     user_id = get_sub(request)
@@ -35,13 +37,16 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     return paginate(trades_coll, {"TradeCode": args.TradeCode})
 
 
-@user.get("/users-list-by-volume/", dependencies=[Depends(JWTBearer())],tags=["User"])
+@user.get("/users-list-by-volume/", dependencies=[Depends(JWTBearer())],tags=["User"], response_model=None)
 def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersListIn)):
     # get user id
     marketer_id = get_sub(request)
+
     db = get_database()
 
     customers_coll = db["customers"]
+    firms_coll = db["firms"]
+
     trades_coll = db["trades"]
     marketers_coll = db["marketers"]
 
@@ -65,22 +70,121 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         days=1
     )
     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    query = {"$and": [{"Referer": marketer_fullname}]}
+    if args.marketername:
+        query = {"Referer": {"$regex": args.marketername}}
 
     # get all customers' TradeCodes
-    query = {"$and": [{"Referer": marketer_fullname}]}
+    # query = {"$and": [{"Referer": marketer_fullname}]}
+
 
     fields = {"PAMCode": 1}
 
     customers_records = customers_coll.find(query, fields)
-    trade_codes = [c.get("PAMCode") for c in customers_records]
+    firms_records = firms_coll.find(query, fields)
+    trade_codes = [c.get("PAMCode") for c in customers_records] + [c.get("PAMCode") for c in firms_records]
+    #
+    # pipeline = [
+    #     {
+    #         "$match": {
+    #             "$and": [
+    #                 {"TradeCode": {"$in": trade_codes}},
+    #                 {"TradeDate": {"$gte": from_gregorian_date}},
+    #                 {"TradeDate": {"$lte": to_gregorian_date}},
+    #             ]
+    #         }
+    #     },
+    #     {
+    #         "$project": {
+    #             "Price": 1,
+    #             "Volume": 1,
+    #             "Total": {"$multiply": ["$Price", "$Volume"]},
+    #             "TotalCommission": 1,
+    #             "TradeItemBroker": 1,
+    #             "TradeCode": 1,
+    #             "Commission": {
+    #                 "$cond": {
+    #                     "if": {"$eq": ["$TradeType", 1]},
+    #                     "then": {
+    #                         "$add": [
+    #                             "$TotalCommission",
+    #                             {"$multiply": ["$Price", "$Volume"]},
+    #                         ]
+    #                     },
+    #                     "else": {
+    #                         "$subtract": [
+    #                             {"$multiply": ["$Price", "$Volume"]},
+    #                             "$TotalCommission",
+    #                         ]
+    #                     },
+    #                 }
+    #             },
+    #         }
+    #     },
+    #     {
+    #         "$group": {
+    #             "_id": "$TradeCode",
+    #             "TotalFee": {"$sum": "$TradeItemBroker"},
+    #             "TotalPureVolume": {"$sum": "$Commission"},
+    #         }
+    #     },
+    #     {
+    #         "$project": {
+    #             "_id": 0,
+    #             "TradeCode": "$_id",
+    #             "TotalPureVolume": 1,
+    #             "TotalFee": 1,
+    #         }
+    #     },
+    #     {
+    #         "$lookup": {
+    #             "from": "customers",
+    #             "localField": "TradeCode",
+    #             "foreignField": "PAMCode",
+    #             "as": "UserProfile",
+    #         }
+    #     },
+    #     {"$unwind": "$UserProfile"},
+    #     {
+    #         "$project": {
+    #             "TradeCode": 1,
+    #             "TotalFee": 1,
+    #             "TotalPureVolume": 1,
+    #             "FirstName": "$UserProfile.FirstName",
+    #             "LastName": "$UserProfile.LastName",
+    #             "Username": "$UserProfile.Username",
+    #             "Mobile": "$UserProfile.Mobile",
+    #             "RegisterDate": "$UserProfile.RegisterDate",
+    #             "BankAccountNumber": "$UserProfile.BankAccountNumber",
+    #         }
+    #     },
+    #     {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
+    #     {
+    #         "$facet": {
+    #             "metadata": [{"$count": "total"}],
+    #             "items": [
+    #                 {"$skip": (args.page - 1) * args.size},
+    #                 {"$limit": args.size},
+    #             ],
+    #         }
+    #     },
+    #     {"$unwind": "$metadata"},
+    #     {
+    #         "$project": {
+    #             "total": "$metadata.total",
+    #             "items": 1,
+    #         }
+    #     },
+    # ]
 
     pipeline = [
         {
             "$match": {
+                # "TradeCode": {"$in": trade_codes}
                 "$and": [
                     {"TradeCode": {"$in": trade_codes}},
                     {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
+                    {"TradeDate": {"$lte": to_gregorian_date}}
                 ]
             }
         },
@@ -98,24 +202,26 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
                         "then": {
                             "$add": [
                                 "$TotalCommission",
-                                {"$multiply": ["$Price", "$Volume"]},
+                                {"$multiply": ["$Price", "$Volume"]}
                             ]
                         },
                         "else": {
                             "$subtract": [
                                 {"$multiply": ["$Price", "$Volume"]},
-                                "$TotalCommission",
+                                "$TotalCommission"
                             ]
-                        },
+                        }
                     }
-                },
+                }
             }
         },
         {
             "$group": {
                 "_id": "$TradeCode",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalPureVolume": {"$sum": "$Commission"},
+                "TotalFee": {
+                    "$sum": "$TradeItemBroker"
+                },
+                "TotalPureVolume": {"$sum": "$Commission"}
             }
         },
         {
@@ -123,7 +229,55 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
                 "_id": 0,
                 "TradeCode": "$_id",
                 "TotalPureVolume": 1,
-                "TotalFee": 1,
+                "TotalFee": 1
+            }
+        },
+        #########Danial's Code########
+        # {
+        #     "$lookup": {
+        #         "from": "customers",
+        #         "localField": "TradeCode",
+        #         "foreignField": "PAMCode",
+        #         "as": "UserProfile"
+        #     }
+        # },
+        # {
+        #     "$unwind": "$UserProfile"
+        # },
+        # {
+        #     "$project": {
+        #         "TradeCode": 1,
+        #         "TotalFee": 1,
+        #         "TotalPureVolume": 1,
+        #         "FirstName": "$UserProfile.FirstName",
+        #         "LastName": "$UserProfile.LastName",
+        #         "Username": "$UserProfile.Username",
+        #         "Mobile": "$UserProfile.Mobile",
+        #         "RegisterDate": "$UserProfile.RegisterDate",
+        #         "BankAccountNumber": "$UserProfile.BankAccountNumber",
+        #     }
+        # },
+        # {
+        #     "$sort": {
+        #         "TotalPureVolume": 1,
+        #         "RegisterDate": 1,
+        #         "TradeCode": 1
+        #     }
+        # },
+        ##############END of Danial's Code#########
+        ##############Refactored Code#########
+        {
+            "$lookup": {
+                "from": "firms",
+                "localField": "TradeCode",
+                "foreignField": "PAMCode",
+                "as": "FirmProfile"
+            },
+        },
+        {
+            "$unwind": {
+                "path": "$FirmProfile",
+                "preserveNullAndEmptyArrays": True
             }
         },
         {
@@ -131,40 +285,64 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
                 "from": "customers",
                 "localField": "TradeCode",
                 "foreignField": "PAMCode",
-                "as": "UserProfile",
+                "as": "UserProfile"
             }
         },
-        {"$unwind": "$UserProfile"},
+        {
+            "$unwind": {
+                "path": "$UserProfile",
+                "preserveNullAndEmptyArrays": True
+            }
+        },
         {
             "$project": {
                 "TradeCode": 1,
                 "TotalFee": 1,
                 "TotalPureVolume": 1,
+                "Refferer": "$FirmProfile.Referer",
+                "Referer": "$UserProfile.Referer",
+                "FirmTitle": "$FirmProfile.FirmTitle",
+                # "FirmRegisterDate": "$FirmTitle.RegisterDate",
+                # "FirmBankAccountNumber": "$FirmTitle.BankAccountNumber",
+                "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
+                "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
                 "FirstName": "$UserProfile.FirstName",
                 "LastName": "$UserProfile.LastName",
                 "Username": "$UserProfile.Username",
                 "Mobile": "$UserProfile.Mobile",
                 "RegisterDate": "$UserProfile.RegisterDate",
                 "BankAccountNumber": "$UserProfile.BankAccountNumber",
+
+            }
+
+        },
+
+        {
+            "$sort": {
+                "TotalPureVolume": 1,
+                "RegisterDate": 1,
+                "TradeCode": 1
             }
         },
-        {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
+        ###########END of Refactor############
         {
             "$facet": {
                 "metadata": [{"$count": "total"}],
                 "items": [
                     {"$skip": (args.page - 1) * args.size},
-                    {"$limit": args.size},
-                ],
+                    {"$limit": args.size}
+                ]
             }
         },
-        {"$unwind": "$metadata"},
+        {
+            "$unwind": "$metadata"
+        },
         {
             "$project": {
                 "total": "$metadata.total",
                 "items": 1,
             }
-        },
+        }
     ]
 
     aggr_result = trades_coll.aggregate(pipeline=pipeline)
@@ -178,10 +356,16 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("total") // -args.size)
 
-    return aggre_dict
+    # return aggre_dict
+    return ResponseOut(
+        result=aggre_dict,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
 
 
-@user.get("/users-total/", dependencies=[Depends(JWTBearer())], tags=["User"])
+
+@user.get("/users-total/", dependencies=[Depends(JWTBearer())], tags=["User"], response_model=None)
 def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     # get user id
     marketer_id = get_sub(request)
