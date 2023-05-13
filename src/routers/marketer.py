@@ -420,10 +420,13 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     marketer_id = args.IdpID
     brokerage = get_database()
     consts_coll = brokerage["consts"]
-    # check if marketer exists and return his name
-    # q = consts_coll.find_one({"MarketerID": marketer_id})
-    return paginate(consts_coll, {"MarketerID": marketer_id})
-    # return q
+    query_result = consts_coll.find_one({"MarketerID": marketer_id}, {'_id': False})
+    return ResponseListOut(
+        result=query_result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
+
 
 
 @marketer.get(
@@ -440,10 +443,19 @@ async def get_all_factors_consts(request: Request):
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
-
+    results=[]
     consts_coll = database["consts"]
+    query_result = consts_coll.find({}, {'_id': False})
+    consts = dict(enumerate(query_result))
+    for i in range(len(consts)):
+        results.append((consts[i]))
 
-    return paginate(consts_coll, {})
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
+
 
 
 @marketer.put(
@@ -461,7 +473,7 @@ async def modify_factor_consts(
 
     consts_coll = database["consts"]
 
-    filter = {"IdpId": args.MarketerID}
+    filter = {"MarketerID": args.MarketerID}
     update = {"$set": {}}
 
     if args.FixIncome is not None:
@@ -476,11 +488,11 @@ async def modify_factor_consts(
     if args.Tax is not None:
         update["$set"]["Tax"] = args.Tax
 
-    modified_record = consts_coll.update_one(filter, update)
-
-    # return modified_record.raw_result
-    return ResponseOut(
-        result=modified_record.raw_result,
+    consts_coll.update_one(filter, update)
+    query_result = consts_coll.find_one({"MarketerID": args.MarketerID}, {'_id': False})
+    # marketer_dict = peek(query_result)
+    return ResponseListOut(
+        result= query_result,#marketer_entity(marketer_dict),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error=""
         )
