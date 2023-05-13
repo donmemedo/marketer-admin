@@ -27,7 +27,7 @@ marketer = APIRouter(prefix="/marketer")
 
 
 @marketer.get(
-    "/get-marketer/",
+    "/get-marketer",
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None
@@ -58,7 +58,7 @@ async def get_marketer_profile(
 
 
 @marketer.get(
-    "/marketers/",
+    "/marketers",
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None
@@ -84,7 +84,7 @@ async def get_marketer(request: Request):
 
 
 @marketer.put(
-    "/modify-marketer/", dependencies=[Depends(JWTBearer())], tags=["Marketer"]#, response_model=None
+    "/modify-marketer", dependencies=[Depends(JWTBearer())], tags=["Marketer"]#, response_model=None
 )
 async def modify_marketer(
     request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)
@@ -144,7 +144,7 @@ async def modify_marketer(
         )
 
 
-@marketer.get("/marketer-total/", dependencies=[Depends(JWTBearer())], tags=["Marketer"], response_model=None)
+@marketer.get("/marketer-total", dependencies=[Depends(JWTBearer())], tags=["Marketer"], response_model=None)
 def get_marketer_total_trades(
     request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
 ):
@@ -340,7 +340,7 @@ def get_marketer_total_trades(
 
 
 @marketer.get(
-    "/search/",
+    "/search",
     dependencies=[Depends(JWTBearer())],
     # response_model=Page[MarketerOut],
     response_model=None,
@@ -397,7 +397,7 @@ async def search_user_profile(
 
 
 @marketer.get(
-    "/get-factor-consts/",
+    "/get-factor-consts",
     dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
     # response_model=Page[ConstOut],
@@ -427,7 +427,7 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
 
 
 @marketer.get(
-    "/get-all-factor-consts/",
+    "/get-all-factor-consts",
     dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
     # response_model=Page[ConstOut],
@@ -447,7 +447,7 @@ async def get_all_factors_consts(request: Request):
 
 
 @marketer.put(
-    "/modify-factor-consts/", dependencies=[Depends(JWTBearer())], tags=["Factor"]
+    "/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"]
 )
 async def modify_factor_consts(
     request: Request, args: ModifyConstIn = Depends(ModifyConstIn)

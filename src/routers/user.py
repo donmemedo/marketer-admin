@@ -18,7 +18,7 @@ user = APIRouter(prefix="/user")
 
 
 @user.get(
-    "/user-trades/",
+    "/user-trades",
     dependencies=[Depends(JWTBearer())],
     tags=["User"],
     # response_model=Page[UserTradesOut],
@@ -37,7 +37,7 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     return paginate(trades_coll, {"TradeCode": args.TradeCode})
 
 
-@user.get("/users-list-by-volume/", dependencies=[Depends(JWTBearer())],tags=["User"], response_model=None)
+@user.get("/users-list-by-volume", dependencies=[Depends(JWTBearer())],tags=["User"], response_model=None)
 def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersListIn)):
     # get user id
     marketer_id = get_sub(request)
@@ -365,7 +365,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
 
 
 
-@user.get("/users-total/", dependencies=[Depends(JWTBearer())], tags=["User"], response_model=None)
+@user.get("/users-total", dependencies=[Depends(JWTBearer())], tags=["User"], response_model=None)
 def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     # get user id
     marketer_id = get_sub(request)
