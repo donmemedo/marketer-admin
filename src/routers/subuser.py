@@ -53,10 +53,21 @@ async def search_marketer_user(request: Request, args: MarketerIdpIdIn = Depends
     marketer_fullname = (
         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
     )
-    # customer_coll.aggregate([{"$unionWith": {"coll": firms_coll}}, {"$out": "newCollection"}] )
-    return paginate(customer_coll, {"Referer": marketer_fullname}, sort=[("RegisterDate", -1)])
-    # return paginate(firms_coll, {"Referer": marketer_fullname}, sort=[("RegisterDate", -1)])
-    # return paginate(marketers_coll, sort=[("CreateDate", -1)])
+    results = []
+    query_result1 = customer_coll.find({"Referer": marketer_fullname}, {'_id': False})
+    users=dict(enumerate(query_result1))
+    query_result2 = firms_coll.find({"Referer": marketer_fullname}, {'_id': False})
+    firms=dict(enumerate(query_result2))
+    for i in range(len(users)):
+        results.append(users[i])
+    for i in range(len(firms)):
+        results.append(firms[i])
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
+
 
 
 @subuser.get(
@@ -77,6 +88,7 @@ async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn
     brokerage = get_database()
 
     customer_coll = brokerage["customers"]
+    firms_coll = brokerage["firms"]
     marketers_coll = brokerage["marketers"]
 
     # check if marketer exists and return his name
@@ -93,10 +105,18 @@ async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn
             {"Referer": marketer_fullname},
             {"FirstName": {"$regex": args.first_name}},
             {"LastName": {"$regex": args.last_name}},
+            {"PAMCode": args.pamcode}
         ]
     }
-    # print(query)
-    return paginate(customer_coll, query, sort=[("RegisterDate", -1)])
+    query_result = customer_coll.find_one(query, {'_id': False})
+    if query_result is None:
+        query_result = firms_coll.find_one(query, {'_id': False})
+    return ResponseListOut(
+        result=query_result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
+
 
 
 @subuser.get(
@@ -386,7 +406,7 @@ async def marketer_subuser_lists(
             last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year - 1) + str(
                 last_month
             )
-        print(last_month_str)
+        # print(last_month_str)
         to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
         lmd_to_gregorian_date = lmd_to_gregorian_date.strftime("%Y-%m-%d")
 
@@ -587,6 +607,12 @@ async def marketer_subuser_lists(
         results.sort(key=lambda x: x["FirstName"], reverse=args.asc_desc_FN)
         results.sort(key=lambda x: x["LastName"], reverse=args.asc_desc_LN)
         results.sort(key=lambda x: x["TradesCount"], reverse=args.asc_desc_UC)
+
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
 
     return results
 
@@ -854,6 +880,14 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     # aggre_dict["pages"] = - (aggre_dict.get("total") // - args.size)
 
     # return aggre_dict
+
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
+
+
     return results
 
 
@@ -1142,6 +1176,13 @@ def total_users_cost(request: Request, args: TotalUsersListIn = Depends(TotalUse
         dicter.sort(key=lambda x: x["TotalPureVolume"], reverse=args.asc_desc_TPV)
 
 
+
+
+    return ResponseListOut(
+        result=dicter,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
 
 
     return dicter

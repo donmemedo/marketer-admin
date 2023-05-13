@@ -31,10 +31,31 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
-
+    results=[]
+    from_gregorian_date = to_gregorian_(args.from_date)
+    to_gregorian_date = to_gregorian_(args.to_date)
+    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+        days=1
+    )
+    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
     trades_coll = database["trades"]
-    # filter ={"TradeCode": args.TradeCode}
-    return paginate(trades_coll, {"TradeCode": args.TradeCode})
+    query = {
+        "$and": [
+            {"TradeCode": args.TradeCode},
+            {"TradeDate": {"$gte": from_gregorian_date}},
+            {"TradeDate": {"$lte": to_gregorian_date}}
+        ]
+    }
+    query_result = trades_coll.find(query, {'_id': False})
+    trades = dict(enumerate(query_result))
+    for i in range(len(trades)):
+        results.append(trades[i])
+
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
 
 
 @user.get("/users-list-by-volume", dependencies=[Depends(JWTBearer())],tags=["User"], response_model=None)
