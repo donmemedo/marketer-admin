@@ -18,18 +18,19 @@ from src.schemas.marketer import (
     MarketerIn,
     ConstOut,
     ModifyConstIn,
+    ResponseOut, ResponseListOut
 )
-from src.tools.utils import peek, to_gregorian_
+from src.tools.utils import peek, to_gregorian_, marketer_entity
 
 
 marketer = APIRouter(prefix="/marketer")
 
 
 @marketer.get(
-    "/get-marketer/",
+    "/get-marketer",
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
-    response_model=Page[MarketerOut],
+    response_model=None
 )
 async def get_marketer_profile(
     request: Request, args: MarketerIn = Depends(MarketerIn)
@@ -42,18 +43,25 @@ async def get_marketer_profile(
     Returns:
         _type_: _description_
     """
-    marketer_id = args.IdpID
     brokerage = get_database()
     marketers_coll = brokerage["marketers"]
-    # check if marketer exists and return his name
-    return paginate(marketers_coll, {"IdpId": marketer_id})
+    results = []
+    query_result = marketers_coll.find({"IdpId": args.IdpID})
+    marketers=dict(enumerate(query_result))
+    for i in range(len(marketers)):
+        results.append(marketer_entity(marketers[i]))
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
 
 
 @marketer.get(
-    "/marketers/",
+    "/marketers",
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
-    response_model=Page[MarketerOut],
+    response_model=None
 )
 async def get_marketer(request: Request):
     user_id = get_sub(request)
@@ -62,14 +70,21 @@ async def get_marketer(request: Request):
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
-
-    marketer_coll = database["marketers"]
-
-    return paginate(marketer_coll, {})
+    marketers_coll = database["marketers"]
+    results = []
+    query_result = marketers_coll.find({})
+    marketers = dict(enumerate(query_result))
+    for i in range(len(marketers)):
+        results.append(marketer_entity(marketers[i]))
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
 
 
 @marketer.put(
-    "/modify-marketer/", dependencies=[Depends(JWTBearer())], tags=["Marketer"]
+    "/modify-marketer", dependencies=[Depends(JWTBearer())], tags=["Marketer"]#, response_model=None
 )
 async def modify_marketer(
     request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)
@@ -77,21 +92,16 @@ async def modify_marketer(
 
     user_id = get_sub(request)
 
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
     marketer_coll = database["marketers"]
 
     filter = {"IdpId": args.CurrentIdpId}
+    idpid = args.CurrentIdpId
     update = {"$set": {}}
-
-    if args.InvitationLink is not None:
-        update["$set"]["InvitationLink"] = args.InvitationLink
-
-    if args.Mobile is not None:
-        update["$set"]["Mobile"] = args.Mobile
 
     if args.FirstName is not None:
         update["$set"]["FirstName"] = args.FirstName
@@ -99,33 +109,42 @@ async def modify_marketer(
     if args.LastName is not None:
         update["$set"]["LastName"] = args.LastName
 
+    if args.InvitationLink is not None:
+        update["$set"]["InvitationLink"] = args.InvitationLink
+
     if args.RefererType is not None:
         update["$set"]["RefererType"] = args.RefererType
 
-    if args.CreatedDate is not None:
-        update["$set"]["CreatedDate"] = args.CreatedDate
+    if args.CreateDate is not None:
+        update["$set"]["CreateDate"] = args.CreateDate
 
-    if args.Modifiedatabasey is not None:
-        update["$set"]["Modifiedatabasey"] = args.Modifiedatabasey
+    if args.ModifiedBy is not None:
+        update["$set"]["ModifiedBy"] = args.ModifiedBy
+
+    if args.CreatedBy is not None:
+        update["$set"]["CreatedBy"] = args.CreatedBy
+
+    if args.ModifiedDate is not None:
+        update["$set"]["ModifiedDate"] = args.ModifiedDate
 
     if args.NewIdpId is not None:
-        update["$set"]["NewIdpId"] = args.NewIdpId
-
-    if args.Phone is not None:
-        update["$set"]["Phone"] = args.Phone
-
-    if args.ID is not None:
-        update["$set"]["ID"] = args.ID
+        update["$set"]["IdpId"] = args.NewIdpId
+        idpid=args.NewIdpId
 
     if args.NationalID is not None:
-        update["$set"]["NationalID"] = args.NationalID
+        update["$set"]["Id"] = args.NationalID
 
-    modified_record = marketer_coll.update_one(filter, update)
+    marketer_coll.update_one(filter, update)
+    query_result = marketer_coll.find({"IdpId": idpid})
+    marketer_dict = peek(query_result)
+    return ResponseListOut(
+        result= marketer_entity(marketer_dict),
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
 
-    return modified_record.raw_result
 
-
-@marketer.get("/marketer-total/", dependencies=[Depends(JWTBearer())], tags=["Marketer"])
+@marketer.get("/marketer-total", dependencies=[Depends(JWTBearer())], tags=["Marketer"], response_model=None)
 def get_marketer_total_trades(
     request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
 ):
@@ -309,13 +328,22 @@ def get_marketer_total_trades(
         results.sort(key=lambda x: x["LastName"], reverse=args.asc_desc_LN)
         results.sort(key=lambda x: x["UsersCount"], reverse=args.asc_desc_UC)
 
-    return results
+
+
+    # return results
+    return ResponseOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
+
 
 
 @marketer.get(
-    "/search/",
+    "/search",
     dependencies=[Depends(JWTBearer())],
-    response_model=Page[MarketerOut],
+    # response_model=Page[MarketerOut],
+    response_model=None,
     tags=["Marketer"],
 )
 async def search_user_profile(
@@ -369,10 +397,11 @@ async def search_user_profile(
 
 
 @marketer.get(
-    "/get-factor-consts/",
+    "/get-factor-consts",
     dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
-    response_model=Page[ConstOut],
+    # response_model=Page[ConstOut],
+    response_model=None,
 )
 async def get_factors_consts(request: Request, args: MarketerIn = Depends(MarketerIn)):
     """_summary_
@@ -398,10 +427,11 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
 
 
 @marketer.get(
-    "/get-all-factor-consts/",
+    "/get-all-factor-consts",
     dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
-    response_model=Page[ConstOut],
+    # response_model=Page[ConstOut],
+    response_model=None,
 )
 async def get_all_factors_consts(request: Request):
     user_id = get_sub(request)
@@ -417,7 +447,7 @@ async def get_all_factors_consts(request: Request):
 
 
 @marketer.put(
-    "/modify-factor-consts/", dependencies=[Depends(JWTBearer())], tags=["Factor"]
+    "/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"]
 )
 async def modify_factor_consts(
     request: Request, args: ModifyConstIn = Depends(ModifyConstIn)
@@ -448,7 +478,13 @@ async def modify_factor_consts(
 
     modified_record = consts_coll.update_one(filter, update)
 
-    return modified_record.raw_result
+    # return modified_record.raw_result
+    return ResponseOut(
+        result=modified_record.raw_result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
+
 
 
 add_pagination(marketer)
@@ -561,4 +597,10 @@ def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
 
     # results.append(response_dict)
 
-    return response_dict
+    # return response_dict
+    return ResponseOut(
+        result=response_dict,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
+

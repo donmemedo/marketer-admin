@@ -17,7 +17,9 @@ from src.schemas.subuser import (
     UsersTotalPureIn,
     UsersListIn,
     TotalUsersListIn,
-    MarketerIdpIdIn
+    MarketerIdpIdIn,
+    ResponseOut, ResponseListOut
+
 )
 from src.tools.database import get_database
 from src.tools.tokens import JWTBearer, get_sub
@@ -27,7 +29,7 @@ subuser = APIRouter(prefix="/subuser")
 
 
 @subuser.get(
-    "/list/", dependencies=[Depends(JWTBearer())], response_model=Page[SubUserOut],tags=["SubUser"]
+    "/list", dependencies=[Depends(JWTBearer())],tags=["SubUser"], response_model=None#, response_model=Page[SubUserOut]
 )
 async def search_marketer_user(request: Request, args: MarketerIdpIdIn = Depends(MarketerIdpIdIn)):
     """Gets List of ALL Marketers
@@ -58,7 +60,7 @@ async def search_marketer_user(request: Request, args: MarketerIdpIdIn = Depends
 
 
 @subuser.get(
-    "/profile/", dependencies=[Depends(JWTBearer())], response_model=Page[SubUserOut],tags=["SubUser"]
+    "/profile", dependencies=[Depends(JWTBearer())],tags=["SubUser"], response_model=None#, response_model=Page[SubUserOut]
 )
 async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn)):
     """Gets List of Users of a Marketer and can search them
@@ -98,7 +100,7 @@ async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn
 
 
 @subuser.get(
-    "/search/", dependencies=[Depends(JWTBearer())], response_model=Page[SubUserOut],tags=["SubUser"]
+    "/search", dependencies=[Depends(JWTBearer())],tags=["SubUser"], response_model=None#, response_model=Page[SubUserOut]
 )
 async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn)):
     """_summary_
@@ -158,7 +160,7 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
     return paginate(customer_coll, filter, sort=[("RegisterDate", -1)])
 
 
-@subuser.get("/cost/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
+@subuser.get("/cost", dependencies=[Depends(JWTBearer())],tags=["SubUser"], response_model=None)
 async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostIn)):
     """_summary_
 
@@ -295,7 +297,7 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
     }
 
 
-@subuser.get("/costlist/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
+@subuser.get("/costlist", dependencies=[Depends(JWTBearer())],tags=["SubUser"], response_model=None)
 async def marketer_subuser_lists(
     request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
 ):
@@ -588,7 +590,7 @@ async def marketer_subuser_lists(
 
     return results
 
-@subuser.get("/users-total/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
+@subuser.get("/users-total", dependencies=[Depends(JWTBearer())],tags=["SubUser"], response_model=None)
 def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersListIn)):
     # get user id
     marketer_id = get_sub(request)
@@ -852,7 +854,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     return results
 
 
-@subuser.get("/total-users/", dependencies=[Depends(JWTBearer())],tags=["SubUser"])
+@subuser.get("/total-users", dependencies=[Depends(JWTBearer())],tags=["SubUser"], response_model=None)
 def total_users_cost(request: Request, args: TotalUsersListIn = Depends(TotalUsersListIn)):
     # get user id
     marketer_id = get_sub(request)

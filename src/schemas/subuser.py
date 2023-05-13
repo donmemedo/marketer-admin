@@ -2,19 +2,24 @@
 """
 from dataclasses import dataclass
 from datetime import date
-from typing import Optional
+from typing import Optional, Any, List, Dict
 from fastapi import Query
 
 # from khayyam import *
 from khayyam import JalaliDatetime
-from pydantic import BaseModel
-
+from pydantic import BaseModel, Field
+from enum import Enum, IntEnum
 
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 # print(current_date)
 
+
+@dataclass
+class UserTotalOut:
+    TotalPureVolume: float
+    TotalFee: float
 
 @dataclass
 class MarketerIn:
@@ -55,8 +60,8 @@ class UsersTotalVolumeIn:
     """_summary_"""
 
     # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
-    from_date: date = Query(current_date)
-    to_date: date = Query(current_date)
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
     page_index: int = Query(0)
     page_size: int = Query(5)
 
@@ -65,10 +70,10 @@ class UsersTotalVolumeIn:
 class UserTotalVolumeIn:
     """_summary_"""
 
-    trade_code: str
+    trade_code: str = Query(alias="TradeCode")
     # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
-    from_date: str = Query(current_date)
-    to_date: str = Query(current_date)
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
 
 
 @dataclass
@@ -83,9 +88,9 @@ class SearchUserIn:
 class UserFee:
     """_summary_"""
 
-    trade_code: str
-    from_date: date = Query(current_date)
-    to_date: date = Query(current_date)
+    trade_code: str = Query(alias="TradeCode")
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
 
 
 @dataclass
@@ -93,8 +98,8 @@ class UserTotalFee:
     """_summary_"""
 
     # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
-    from_date: date = Query(current_date)
-    to_date: date = Query(current_date)
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
 
 
 @dataclass
@@ -102,8 +107,8 @@ class UsersTotalPureIn:
     """_summary_"""
 
     # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
-    from_date: str = Query(current_date)
-    to_date: str = Query(current_date)
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
 
 
 @dataclass
@@ -130,8 +135,8 @@ class CostIn:
     tax: int = Query(0)
     salary: int = Query(0)
     collateral: int = Query(0)
-    from_date: str = Query(current_date)
-    to_date: str = Query(current_date)
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
 
 
 @dataclass
@@ -156,8 +161,8 @@ class SubCostIn:
     mobile: str = Query("")
     user_id: str = Query("")
     username: str = Query("")
-    from_date: str = Query(current_date)
-    to_date: str = Query(current_date)
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
 
 
 @dataclass
@@ -290,19 +295,34 @@ class MarketerOut(BaseModel):
 
 @dataclass
 class Pages:
-    size: int = Query(10)
-    page: int = Query(1)
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
+
+
+class UserTypeEnum(str, Enum):
+    active = "active"
+    inactive = "inactive"
+
+class SortField(str, Enum):
+    REGISTRATION_DATE = "RegisterDate"
+    TotalPureVolume = "TotalPureVolume"
+
+
+class SortOrder(IntEnum):
+    ASCENDING = 1
+    DESCENDING = -1
+
 
 
 @dataclass
 class UsersListIn(Pages):
-    from_date: str = Query(current_date)
-    to_date: str = Query(current_date)
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
 
 @dataclass
 class TotalUsersListIn(Pages):
-    from_date: str = Query(current_date)
-    to_date: str = Query(current_date)
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
     asc_desc_TPV: Optional[bool] = False
     asc_desc_TF: Optional[bool] = False
     sorted: bool = False
@@ -311,8 +331,8 @@ class TotalUsersListIn(Pages):
 class UsersTotalPureIn:
     # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
     # to_date: str = Query("1401-12-01")
-    to_date: str = None
-    from_date: str = Query("1401-12-01")
+    to_date: str = Query(default=None, alias="EndDate")
+    from_date: str = Query(default=current_date, alias="StartDate")
     asc_desc_TPV: Optional[bool] = False
     asc_desc_TF: Optional[bool] = False
     asc_desc_LMTPV: Optional[bool] = False
@@ -321,3 +341,21 @@ class UsersTotalPureIn:
     asc_desc_LN: Optional[bool] = False
     asc_desc_UC: Optional[bool] = False
     sorted: bool = False
+
+@dataclass
+class ResponseOut:
+    timeGenerated: JalaliDatetime
+    result: List[UserTotalOut] = List[Any]
+    error: str = Query("nothing")
+
+@dataclass
+class ResponseListOut:
+    timeGenerated: JalaliDatetime
+    result: Dict
+    error: str = Query("nothing")
+
+
+@dataclass
+class UserTotalOut:
+    TotalPureVolume: float
+    TotalFee: float
