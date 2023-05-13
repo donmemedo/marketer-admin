@@ -55,6 +55,10 @@ class ModifyMarketerIn:
 @dataclass
 class UserTradesIn:
     TradeCode: str = Query(alias="TradeCode")
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
+
+
 
 
 class UserTradesOut(BaseModel):

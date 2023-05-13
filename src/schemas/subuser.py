@@ -212,6 +212,7 @@ class SubUserIn:
     mobile: str = Query("")
     user_id: str = Query("")
     username: str = Query("")
+    pamcode: str = Query("")
     page_size: int = Query(5)
     page_index: int = Query(0)
 
