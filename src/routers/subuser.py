@@ -1190,17 +1190,23 @@ def total_users_cost(request: Request, args: TotalUsersListIn = Depends(TotalUse
 
 add_pagination(subuser)
 
+def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
+    db = get_database()
+    trades_coll = db["trades"]
+    from_gregorian_date = to_gregorian_(from_date)
+    to_gregorian_date = to_gregorian_(to_date)
+    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+        days=1
+    )
+    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
-def buy_pipe(customers_records, from_gregorian_date, to_gregorian_date):
-    trade_codes = [c.get("PAMCode") for c in customers_records]
-    buy_pipeline = [
+    pipeline = [
         {
             "$match": {
                 "$and": [
                     {"TradeCode": {"$in": trade_codes}},
                     {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                    {"TradeType": 1},
+                    {"TradeDate": {"$lte": to_gregorian_date}}
                 ]
             }
         },
@@ -1211,58 +1217,209 @@ def buy_pipe(customers_records, from_gregorian_date, to_gregorian_date):
                 "Total": {"$multiply": ["$Price", "$Volume"]},
                 "TotalCommission": 1,
                 "TradeItemBroker": 1,
-                "Buy": {
-                    "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
-                },
+                "TradeCode": 1,
+                "Commission": {
+                    "$cond": {
+                        "if": {"$eq": ["$TradeType", 1]},
+                        "then": {
+                            "$add": [
+                                "$TotalCommission",
+                                {"$multiply": ["$Price", "$Volume"]}
+                            ]
+                        },
+                        "else": {
+                            "$subtract": [
+                                {"$multiply": ["$Price", "$Volume"]},
+                                "$TotalCommission"
+                            ]
+                        }
+                    }
+                }
             }
         },
         {
             "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalBuy": {"$sum": "$Buy"},
-            }
-        },
-        {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
-    ]
-    return buy_pipeline
-
-
-def sell_pipe(customers_records, from_gregorian_date, to_gregorian_date):
-    trade_codes = [c.get("PAMCode") for c in customers_records]
-    sell_pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                    {"TradeType": 2},
-                ]
+                "_id": "$TradeCode",
+                "TotalFee": {
+                    "$sum": "$TradeItemBroker"
+                },
+                "TotalPureVolume": {"$sum": "$Commission"}
             }
         },
         {
             "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "Sell": {
-                    "$subtract": [
-                        {"$multiply": ["$Price", "$Volume"]},
-                        "$TotalCommission",
-                    ]
-                },
+                "_id": 0,
+                "TradeCode": "$_id",
+                "TotalPureVolume": 1,
+                "TotalFee": 1
             }
         },
         {
-            "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalSell": {"$sum": "$Sell"},
+            "$lookup": {
+                "from": "firms",
+                "localField": "TradeCode",
+                "foreignField": "PAMCode",
+                "as": "FirmProfile"
+            },
+        },
+        {
+            "$unwind": {
+                "path": "$FirmProfile",
+                "preserveNullAndEmptyArrays": True
             }
         },
-        {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
+        {
+            "$lookup": {
+                "from": "customers",
+                "localField": "TradeCode",
+                "foreignField": "PAMCode",
+                "as": "UserProfile"
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$UserProfile",
+                "preserveNullAndEmptyArrays": True
+            }
+        },
+        {
+            "$project": {
+                "TradeCode": 1,
+                "TotalFee": 1,
+                "TotalPureVolume": 1,
+                "Refferer": "$FirmProfile.Referer",
+                "Referer": "$UserProfile.Referer",
+                "FirmTitle": "$FirmProfile.FirmTitle",
+                "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
+                "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
+                "FirstName": "$UserProfile.FirstName",
+                "LastName": "$UserProfile.LastName",
+                "Username": "$UserProfile.Username",
+                "Mobile": "$UserProfile.Mobile",
+                "RegisterDate": "$UserProfile.RegisterDate",
+                "BankAccountNumber": "$UserProfile.BankAccountNumber",
+
+            }
+
+        },
+
+        {
+            "$sort": {
+                "TotalPureVolume": 1,
+                "RegisterDate": 1,
+                "TradeCode": 1
+            }
+        },
+        {
+            "$facet": {
+                "metadata": [{"$count": "total"}],
+                "items": [
+                    {"$skip": (page - 1) * size},
+                    {"$limit": size}
+                ]
+            }
+        },
+        {
+            "$unwind": "$metadata"
+        },
+        {
+            "$project": {
+                "total": "$metadata.total",
+                "items": 1,
+            }
+        }
     ]
-    return sell_pipeline
+
+    aggr_result = trades_coll.aggregate(pipeline=pipeline)
+
+    aggre_dict = next(aggr_result, None)
+
+    if aggre_dict is None:
+        return {}
+
+    aggre_dict["page"] = page
+    aggre_dict["size"] = size
+    aggre_dict["pages"] = -(aggre_dict.get("total") // -size)
+    return aggre_dict
+
+    # return ResponseOut(
+    #     result=aggre_dict,
+    #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    #     error=""
+    #     )
+
+# def buy_pipe(customers_records, from_gregorian_date, to_gregorian_date):
+#     trade_codes = [c.get("PAMCode") for c in customers_records]
+#     buy_pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                     {"TradeType": 1},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "Buy": {
+#                     "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$id",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalBuy": {"$sum": "$Buy"},
+#             }
+#         },
+#         {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
+#     ]
+#     return buy_pipeline
+#
+#
+# def sell_pipe(customers_records, from_gregorian_date, to_gregorian_date):
+#     trade_codes = [c.get("PAMCode") for c in customers_records]
+#     sell_pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                     {"TradeType": 2},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "Sell": {
+#                     "$subtract": [
+#                         {"$multiply": ["$Price", "$Volume"]},
+#                         "$TotalCommission",
+#                     ]
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$id",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalSell": {"$sum": "$Sell"},
+#             }
+#         },
+#         {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
+#     ]
+#     return sell_pipeline
