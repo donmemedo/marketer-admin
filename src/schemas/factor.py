@@ -165,28 +165,6 @@ class ModifyFactorIn:
 
 
 @dataclass
-class MarketerRelations:
-
-    LeaderMarketerID: str
-    FollowerMarketerID: str
-    CommissionCoefficient: float
-    StartDate: str = Query(default=current_date)
-    EndDate: str = Query(default=None)
-    # CreateDate: str = Query(default=current_date)
-    # UpdateDate: str = Query(default=current_date)
-
-@dataclass
-class SearchMarketerRelations:
-
-    LeaderMarketerName: str = None
-    FollowerMarketerName: str = None
-    StartDate: str = Query(default="1301-01-01",example=current_date)
-    EndDate: str = Query(default="1501-12-29",example=current_date)
-    CreateDate: str = Query(default="1301-01-01")
-    # UpdateDate: str = Query(default=current_date)
-
-
-@dataclass
 class ResponseOut:
     timeGenerated: JalaliDatetime
     result: List[UserTotalOut] = List[Any]

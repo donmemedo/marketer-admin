@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from config import settings
 from fastapi.middleware.cors import CORSMiddleware
 from routers.marketer import marketer
+from routers.factor import factor
 from routers.user import user
 from routers.subuser import subuser
 
@@ -19,5 +20,7 @@ app.add_middleware(
 
 # Add all routers
 app.include_router(marketer, prefix="")
+app.include_router(factor, prefix="")
 app.include_router(user, prefix="")
 app.include_router(subuser, prefix="")
+

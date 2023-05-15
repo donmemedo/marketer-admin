@@ -21,6 +21,8 @@ from src.schemas.marketer import (
     ResponseOut,
     ResponseListOut,
     ModifyFactorIn,
+    MarketerRelations,
+    SearchMarketerRelations
 )
 from src.tools.utils import peek, to_gregorian_, marketer_entity
 
@@ -464,166 +466,199 @@ async def search_user_profile(
         #     '$regex': args.mobile
         # }
     }
-    print(filter)
+    # print(filter)
     # return paginate(marketer_coll, {})
     return paginate(marketer_coll, query, sort=[("RegisterDate", -1)])
 
 
-@marketer.get(
-    "/get-factor-consts",
+@marketer.put(
+    "/add-marketers-relations",
     dependencies=[Depends(JWTBearer())],
-    tags=["Factor"],
-    # response_model=Page[ConstOut],
-    response_model=None,
+    tags=["Marketer"],   response_model=None
 )
-async def get_factors_consts(request: Request, args: MarketerIn = Depends(MarketerIn)):
-    """_summary_
-
-    Args:
-        request (Request): _description_
-
-    Returns:
-        _type_: _description_
-    """
+async def add_marketers_relations(
+        request: Request, args: MarketerRelations = Depends(MarketerRelations)
+):
     user_id = get_sub(request)
 
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
-    marketer_id = args.IdpID
-    brokerage = get_database()
-    consts_coll = brokerage["consts"]
-    query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
-    return ResponseListOut(
-        result=query_result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
-
-
-@marketer.get(
-    "/get-all-factor-consts",
-    dependencies=[Depends(JWTBearer())],
-    tags=["Factor"],
-    # response_model=Page[ConstOut],
-    response_model=None,
-)
-async def get_all_factors_consts(request: Request):
-    user_id = get_sub(request)
-
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
-    results = []
-    consts_coll = database["consts"]
-    query_result = consts_coll.find({}, {"_id": False})
-    consts = dict(enumerate(query_result))
-    for i in range(len(consts)):
-        results.append((consts[i]))
+
+    marketers_relations_coll = database["mrelations"]
+
+    update = {"$set": {}}
+
+    update["$set"]["LeaderMarketerID"] = args.LeaderMarketerID
+    update["$set"]["FollowerMarketerID"] = args.FollowerMarketerID
+    if args.LeaderMarketerID == args.FollowerMarketerID:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="مارکترها نباید یکسان باشند.",
+        )
+    if marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID}):
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="این مارکتر زیرمجموعه نفر دیگری است.",
+        )
+    update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
+    update["$set"]["UpdateDate"] = str(jd.now())
+    update["$set"]["StartDate"] = str(jd.today().date())
+    update["$set"]["CreateDate"] = str(jd.now())
+
+    if args.StartDate is not None:
+        update["$set"]["StartDate"] = args.StartDate
+    if args.EndDate is not None:
+        update["$set"]["EndDate"] = args.EndDate
+        update["$set"]["GEndDate"] = to_gregorian_(args.EndDate)
+    update["$set"]["GStartDate"] = to_gregorian_(args.StartDate)
+    update["$set"]["GCreateDate"] = to_gregorian_(jd.strptime(update["$set"]["CreateDate"],"%Y-%m-%d %H:%M:%S.%f"))
+
+    marketers_relations_coll.insert_one(update["$set"])
 
     return ResponseListOut(
-        result=results,
+        result=marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID},{"_id":False}),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
 
 
 @marketer.put(
-    "/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"]
+    "/modify-marketers-relations",
+    dependencies=[Depends(JWTBearer())],
+    tags=["Marketer"],  response_model=None
 )
-async def modify_factor_consts(
-    request: Request, args: ModifyConstIn = Depends(ModifyConstIn)
+async def modify_marketers_relations(
+        request: Request, args: MarketerRelations = Depends(MarketerRelations)
 ):
     user_id = get_sub(request)
 
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
-    consts_coll = database["consts"]
+    marketers_relations_coll = database["mrelations"]
 
-    filter = {"MarketerID": args.MarketerID}
+
     update = {"$set": {}}
+    update["$set"]["LeaderMarketerID"] = args.LeaderMarketerID
+    update["$set"]["FollowerMarketerID"] = args.FollowerMarketerID
+    if args.LeaderMarketerID == args.FollowerMarketerID:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="مارکترها نباید یکسان باشند.",
+        )
+    # if marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID}):
 
-    if args.FixIncome is not None:
-        update["$set"]["FixIncome"] = args.FixIncome
+    update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
+    update["$set"]["UpdateDate"] = str(jd.now())
+    update["$set"]["StartDate"] = str(jd.today().date())
 
-    if args.Insurance is not None:
-        update["$set"]["Insurance"] = args.Insurance
+    if args.StartDate is not None:
+        update["$set"]["StartDate"] = args.StartDate
 
-    if args.Collateral is not None:
-        update["$set"]["Collateral"] = args.Collateral
+    if args.EndDate is not None:
+        update["$set"]["EndDate"] = args.EndDate
+        update["$set"]["GEndDate"] = to_gregorian_(args.EndDate)
+    update["$set"]["GStartDate"] = to_gregorian_(args.StartDate)
+    update["$set"]["GUpdateDate"] = to_gregorian_(update["$set"]["UpdateDate"])
 
-    if args.Tax is not None:
-        update["$set"]["Tax"] = args.Tax
-
-    consts_coll.update_one(filter, update)
-    query_result = consts_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
-    # marketer_dict = peek(query_result)
+    query = {
+        "$and": [
+            {"LeaderMarketerID": args.LeaderMarketerID},
+            {"FollowerMarketerID": args.FollowerMarketerID}
+        ]
+    }
+    marketers_relations_coll.update_one(query, update)
     return ResponseListOut(
-        result=query_result,  # marketer_entity(marketer_dict),
+        result=marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID},{"_id":False}),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
 
 
-@marketer.put("/modify-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
-async def modify_factor(
-    request: Request, args: ModifyFactorIn = Depends(ModifyFactorIn)
+@marketer.get(
+    "/search-marketers-relations",
+    dependencies=[Depends(JWTBearer())],
+    tags=["Marketer"],  response_model=None
+)
+async def search_marketers_relations(
+        request: Request, args: SearchMarketerRelations = Depends(SearchMarketerRelations)
 ):
     user_id = get_sub(request)
 
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
-
-    factor_coll = database["factors"]
-
-    filter = {"IdpID": args.MarketerID}
-    update = {"$set": {}}
-    per = args.Period
-
-    if args.TotalPureVolume is not None:
-        update["$set"][per + "TPV"] = args.TotalPureVolume
-
-    if args.TotalFee is not None:
-        update["$set"][per + "TF"] = args.TotalFee
-
-    if args.PureFee is not None:
-        update["$set"][per + "PureFee"] = args.PureFee
-
-    if args.MarketerFee is not None:
-        update["$set"][per + "MarFee"] = args.MarketerFee
-
-    if args.Plan is not None:
-        update["$set"][per + "Plan"] = args.Plan
-
-    if args.Tax is not None:
-        update["$set"][per + "Tax"] = args.Tax
-
-    if args.Collateral is not None:
-        update["$set"][per + "Collateral"] = args.Collateral
-
-    if args.FinalFee is not None:
-        update["$set"][per + "FinalFee"] = args.FinalFee
-
-    if args.Payment is not None:
-        update["$set"][per + "Payment"] = args.Payment
-
-    if args.FactorStatus is not None:
-        update["$set"][per + "FactStatus"] = args.FactorStatus
-
-    factor_coll.update_one(filter, update)
-    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
-    # marketer_dict = peek(query_result)
-    return ResponseListOut(
-        result=query_result,  # marketer_entity(marketer_dict),
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
+    from_gregorian_date = to_gregorian_(args.StartDate)
+    gregorian_create_date = to_gregorian_(args.CreateDate)
+    to_gregorian_date = to_gregorian_(args.EndDate)
+    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+        days=1
     )
+    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    marketers_relations_coll = database["mrelations"]
+    marketers_coll = database["marketers"]
+
+    if args.FollowerMarketerName:
+        name_query = {"$or": [
+            {"FirstName": {"$regex": args.FollowerMarketerName}},
+            {"LastName": {"$regex": args.FollowerMarketerName}}
+        ]
+        }
+        fields = {"IdpId": 1}
+        idps = marketers_coll.find(name_query, fields)
+        codes = [c.get('IdpId') for c in idps]
+        query = {
+                "$and": [
+                    {"TradeCode": {"$in": codes}},
+                    {"StartDate": {"$gte": from_gregorian_date}},
+                    {"EndDate": {"$lte": to_gregorian_date}},
+                ]
+            }
+    elif args.LeaderMarketerName:
+        name_query = {"$or": [
+            {"FirstName": {"$regex": args.LeaderMarketerName}},
+            {"LastName": {"$regex": args.LeaderMarketerName}}
+        ]
+        }
+        fields = {"IdpId": 1}
+        idps = marketers_coll.find(name_query, fields)
+        codes = [c.get('IdpId') for c in idps]
+        query = {
+                "$and": [
+                    {"TradeCode": {"$in": codes}},
+                    {"StartDate": {"$gte": from_gregorian_date}},
+                    {"EndDate": {"$lte": to_gregorian_date}},
+                ]
+            }
+
+
+
+    LeaderMarketerName: str = Query("")
+    FollowerMarketerName: str = Query("")
+    StartDate: str = Query(default=current_date)
+    EndDate: str = Query(default=current_date)
+    CreateDate: str = Query(default=current_date)
+
+    {
+                "$and": [
+                    {"TradeCode": {"$in": trade_codes}},
+                    {"TradeDate": {"$gte": from_gregorian_date}},
+                    {"TradeDate": {"$lte": to_gregorian_date}},
+                ]
+            }
+
+
+
+
 
 
 add_pagination(marketer)
