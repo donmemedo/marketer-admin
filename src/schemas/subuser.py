@@ -21,6 +21,7 @@ class UserTotalOut:
     TotalPureVolume: float
     TotalFee: float
 
+
 @dataclass
 class MarketerIn:
     """_summary_"""
@@ -304,6 +305,7 @@ class UserTypeEnum(str, Enum):
     active = "active"
     inactive = "inactive"
 
+
 class SortField(str, Enum):
     REGISTRATION_DATE = "RegisterDate"
     TotalPureVolume = "TotalPureVolume"
@@ -314,11 +316,11 @@ class SortOrder(IntEnum):
     DESCENDING = -1
 
 
-
 @dataclass
 class UsersListIn(Pages):
     from_date: str = Query(default=current_date, alias="StartDate")
     to_date: str = Query(default=current_date, alias="EndDate")
+
 
 @dataclass
 class TotalUsersListIn(Pages):
@@ -327,6 +329,7 @@ class TotalUsersListIn(Pages):
     asc_desc_TPV: Optional[bool] = False
     asc_desc_TF: Optional[bool] = False
     sorted: bool = False
+
 
 @dataclass
 class UsersTotalPureIn:
@@ -343,11 +346,13 @@ class UsersTotalPureIn:
     asc_desc_UC: Optional[bool] = False
     sorted: bool = False
 
+
 @dataclass
 class ResponseOut:
     timeGenerated: JalaliDatetime
     result: List[UserTotalOut] = List[Any]
     error: str = Query("nothing")
+
 
 @dataclass
 class ResponseListOut:

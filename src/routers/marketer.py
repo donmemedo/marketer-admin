@@ -18,7 +18,9 @@ from src.schemas.marketer import (
     MarketerIn,
     ConstOut,
     ModifyConstIn,
-    ResponseOut, ResponseListOut, ModifyFactorIn
+    ResponseOut,
+    ResponseListOut,
+    ModifyFactorIn,
 )
 from src.tools.utils import peek, to_gregorian_, marketer_entity
 
@@ -30,7 +32,7 @@ marketer = APIRouter(prefix="/marketer")
     "/get-marketer",
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
-    response_model=None
+    response_model=None,
 )
 async def get_marketer_profile(
     request: Request, args: MarketerIn = Depends(MarketerIn)
@@ -47,21 +49,21 @@ async def get_marketer_profile(
     marketers_coll = brokerage["marketers"]
     results = []
     query_result = marketers_coll.find({"IdpId": args.IdpID})
-    marketers=dict(enumerate(query_result))
+    marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
         results.append(marketer_entity(marketers[i]))
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
-        )
+        error="",
+    )
 
 
 @marketer.get(
     "/marketers",
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
-    response_model=None
+    response_model=None,
 )
 async def get_marketer(request: Request):
     user_id = get_sub(request)
@@ -79,12 +81,14 @@ async def get_marketer(request: Request):
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
-        )
+        error="",
+    )
 
 
 @marketer.put(
-    "/modify-marketer", dependencies=[Depends(JWTBearer())], tags=["Marketer"]#, response_model=None
+    "/modify-marketer",
+    dependencies=[Depends(JWTBearer())],
+    tags=["Marketer"],  # , response_model=None
 )
 async def modify_marketer(
     request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)
@@ -129,7 +133,7 @@ async def modify_marketer(
 
     if args.NewIdpId is not None:
         update["$set"]["IdpId"] = args.NewIdpId
-        idpid=args.NewIdpId
+        idpid = args.NewIdpId
 
     if args.NationalID is not None:
         update["$set"]["Id"] = args.NationalID
@@ -138,13 +142,16 @@ async def modify_marketer(
     query_result = marketer_coll.find({"IdpId": idpid})
     marketer_dict = peek(query_result)
     return ResponseListOut(
-        result= marketer_entity(marketer_dict),
+        result=marketer_entity(marketer_dict),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
-        )
+        error="",
+    )
+
 
 @marketer.put(
-    "/add-marketer", dependencies=[Depends(JWTBearer())], tags=["Marketer"]#, response_model=None
+    "/add-marketer",
+    dependencies=[Depends(JWTBearer())],
+    tags=["Marketer"],  # , response_model=None
 )
 async def add_marketer(
     request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)
@@ -196,19 +203,24 @@ async def add_marketer(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="مارکتر در دیتابیس وجود دارد."
+            error="مارکتر در دیتابیس وجود دارد.",
         )
 
     query_result = marketer_coll.find(filter)
     marketer_dict = peek(query_result)
     return ResponseListOut(
-        result= marketer_entity(marketer_dict),
+        result=marketer_entity(marketer_dict),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
-        )
+        error="",
+    )
 
 
-@marketer.get("/marketer-total", dependencies=[Depends(JWTBearer())], tags=["Marketer"], response_model=None)
+@marketer.get(
+    "/marketer-total",
+    dependencies=[Depends(JWTBearer())],
+    tags=["Marketer"],
+    response_model=None,
+)
 def get_marketer_total_trades(
     request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
 ):
@@ -392,15 +404,12 @@ def get_marketer_total_trades(
         results.sort(key=lambda x: x["LastName"], reverse=args.asc_desc_LN)
         results.sort(key=lambda x: x["UsersCount"], reverse=args.asc_desc_UC)
 
-
-
     # return results
     return ResponseOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
-        )
-
+        error="",
+    )
 
 
 @marketer.get(
@@ -484,13 +493,12 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     marketer_id = args.IdpID
     brokerage = get_database()
     consts_coll = brokerage["consts"]
-    query_result = consts_coll.find_one({"MarketerID": marketer_id}, {'_id': False})
+    query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
-        )
-
+        error="",
+    )
 
 
 @marketer.get(
@@ -507,9 +515,9 @@ async def get_all_factors_consts(request: Request):
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
-    results=[]
+    results = []
     consts_coll = database["consts"]
-    query_result = consts_coll.find({}, {'_id': False})
+    query_result = consts_coll.find({}, {"_id": False})
     consts = dict(enumerate(query_result))
     for i in range(len(consts)):
         results.append((consts[i]))
@@ -517,9 +525,8 @@ async def get_all_factors_consts(request: Request):
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
-        )
-
+        error="",
+    )
 
 
 @marketer.put(
@@ -553,18 +560,16 @@ async def modify_factor_consts(
         update["$set"]["Tax"] = args.Tax
 
     consts_coll.update_one(filter, update)
-    query_result = consts_coll.find_one({"MarketerID": args.MarketerID}, {'_id': False})
+    query_result = consts_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     # marketer_dict = peek(query_result)
     return ResponseListOut(
-        result= query_result,#marketer_entity(marketer_dict),
+        result=query_result,  # marketer_entity(marketer_dict),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
-        )
+        error="",
+    )
 
 
-@marketer.put(
-    "/modify-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"]
-)
+@marketer.put("/modify-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
 async def modify_factor(
     request: Request, args: ModifyFactorIn = Depends(ModifyFactorIn)
 ):
@@ -582,46 +587,47 @@ async def modify_factor(
     per = args.Period
 
     if args.TotalPureVolume is not None:
-        update["$set"][per+"TPV"] = args.TotalPureVolume
+        update["$set"][per + "TPV"] = args.TotalPureVolume
 
     if args.TotalFee is not None:
-        update["$set"][per+"TF"] = args.TotalFee
+        update["$set"][per + "TF"] = args.TotalFee
 
     if args.PureFee is not None:
-        update["$set"][per+"PureFee"] = args.PureFee
+        update["$set"][per + "PureFee"] = args.PureFee
 
     if args.MarketerFee is not None:
-        update["$set"][per+"MarFee"] = args.MarketerFee
+        update["$set"][per + "MarFee"] = args.MarketerFee
 
     if args.Plan is not None:
-        update["$set"][per+"Plan"] = args.Plan
+        update["$set"][per + "Plan"] = args.Plan
 
     if args.Tax is not None:
-        update["$set"][per+"Tax"] = args.Tax
+        update["$set"][per + "Tax"] = args.Tax
 
     if args.Collateral is not None:
-        update["$set"][per+"Collateral"] = args.Collateral
+        update["$set"][per + "Collateral"] = args.Collateral
 
     if args.FinalFee is not None:
-        update["$set"][per+"FinalFee"] = args.FinalFee
+        update["$set"][per + "FinalFee"] = args.FinalFee
 
     if args.Payment is not None:
-        update["$set"][per+"Payment"] = args.Payment
+        update["$set"][per + "Payment"] = args.Payment
 
     if args.FactorStatus is not None:
-        update["$set"][per+"FactStatus"] = args.FactorStatus
+        update["$set"][per + "FactStatus"] = args.FactorStatus
 
     factor_coll.update_one(filter, update)
-    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {'_id': False})
+    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
     # marketer_dict = peek(query_result)
     return ResponseListOut(
-        result= query_result,#marketer_entity(marketer_dict),
+        result=query_result,  # marketer_entity(marketer_dict),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
-        )
+        error="",
+    )
 
 
 add_pagination(marketer)
+
 
 def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     db = get_database()
@@ -639,7 +645,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
                 "$and": [
                     {"TradeCode": {"$in": trade_codes}},
                     {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}}
+                    {"TradeDate": {"$lte": to_gregorian_date}},
                 ]
             }
         },
@@ -657,26 +663,24 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
                         "then": {
                             "$add": [
                                 "$TotalCommission",
-                                {"$multiply": ["$Price", "$Volume"]}
+                                {"$multiply": ["$Price", "$Volume"]},
                             ]
                         },
                         "else": {
                             "$subtract": [
                                 {"$multiply": ["$Price", "$Volume"]},
-                                "$TotalCommission"
+                                "$TotalCommission",
                             ]
-                        }
+                        },
                     }
-                }
+                },
             }
         },
         {
             "$group": {
                 "_id": "$TradeCode",
-                "TotalFee": {
-                    "$sum": "$TradeItemBroker"
-                },
-                "TotalPureVolume": {"$sum": "$Commission"}
+                "TotalFee": {"$sum": "$TradeItemBroker"},
+                "TotalPureVolume": {"$sum": "$Commission"},
             }
         },
         {
@@ -684,7 +688,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
                 "_id": 0,
                 "TradeCode": "$_id",
                 "TotalPureVolume": 1,
-                "TotalFee": 1
+                "TotalFee": 1,
             }
         },
         {
@@ -692,29 +696,19 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
                 "from": "firms",
                 "localField": "TradeCode",
                 "foreignField": "PAMCode",
-                "as": "FirmProfile"
+                "as": "FirmProfile",
             },
         },
-        {
-            "$unwind": {
-                "path": "$FirmProfile",
-                "preserveNullAndEmptyArrays": True
-            }
-        },
+        {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
         {
             "$lookup": {
                 "from": "customers",
                 "localField": "TradeCode",
                 "foreignField": "PAMCode",
-                "as": "UserProfile"
+                "as": "UserProfile",
             }
         },
-        {
-            "$unwind": {
-                "path": "$UserProfile",
-                "preserveNullAndEmptyArrays": True
-            }
-        },
+        {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
         {
             "$project": {
                 "TradeCode": 1,
@@ -731,36 +725,22 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
                 "Mobile": "$UserProfile.Mobile",
                 "RegisterDate": "$UserProfile.RegisterDate",
                 "BankAccountNumber": "$UserProfile.BankAccountNumber",
-
-            }
-
-        },
-
-        {
-            "$sort": {
-                "TotalPureVolume": 1,
-                "RegisterDate": 1,
-                "TradeCode": 1
             }
         },
+        {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
         {
             "$facet": {
                 "metadata": [{"$count": "totalCount"}],
-                "items": [
-                    {"$skip": (page - 1) * size},
-                    {"$limit": size}
-                ]
+                "items": [{"$skip": (page - 1) * size}, {"$limit": size}],
             }
         },
-        {
-            "$unwind": "$metadata"
-        },
+        {"$unwind": "$metadata"},
         {
             "$project": {
                 "totalCount": "$metadata.totalCount",
                 "items": 1,
             }
-        }
+        },
     ]
 
     aggr_result = trades_coll.aggregate(pipeline=pipeline)
@@ -893,6 +873,5 @@ def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
     return ResponseOut(
         result=response_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
-        )
-
+        error="",
+    )

@@ -11,11 +11,11 @@ current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 
 
-
 @dataclass
 class UserTotalOut:
     TotalPureVolume: float
     TotalFee: float
+
 
 class MarketerOut(BaseModel):
     FirstName: str
@@ -51,7 +51,6 @@ class ModifyMarketerIn:
     ModifiedBy: Optional[str] = None
     NewIdpId: Optional[str] = None
     NationalID: Optional[int] = None
-
 
 
 @dataclass
@@ -90,6 +89,7 @@ class Pages:
 class UserTypeEnum(str, Enum):
     active = "active"
     inactive = "inactive"
+
 
 class SortField(str, Enum):
     REGISTRATION_DATE = "RegisterDate"
@@ -161,8 +161,7 @@ class ModifyFactorIn:
     FinalFee: int = None
     Payment: int = None
     FactorStatus: int = None
-    Period: Optional[str] = str(current_year)+f"{current_month:02}"
-
+    Period: Optional[str] = str(current_year) + f"{current_month:02}"
 
 
 @dataclass
@@ -171,9 +170,9 @@ class ResponseOut:
     result: List[UserTotalOut] = List[Any]
     error: str = Query("nothing")
 
+
 @dataclass
 class ResponseListOut:
     result: Dict
     timeGenerated: JalaliDatetime
     error: str = Query("nothing")
-
