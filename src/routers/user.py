@@ -348,7 +348,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         ###########END of Refactor############
         {
             "$facet": {
-                "metadata": [{"$count": "total"}],
+                "metadata": [{"$count": "totalCount"}],
                 "items": [
                     {"$skip": (args.page - 1) * args.size},
                     {"$limit": args.size}
@@ -360,7 +360,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         },
         {
             "$project": {
-                "total": "$metadata.total",
+                "totalCount": "$metadata.totalCount",
                 "items": 1,
             }
         }
@@ -375,7 +375,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
 
     aggre_dict["page"] = args.page
     aggre_dict["size"] = args.size
-    aggre_dict["pages"] = -(aggre_dict.get("total") // -args.size)
+    aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
 
     # return aggre_dict
     return ResponseOut(
@@ -503,7 +503,7 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
         {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
         {
             "$facet": {
-                "metadata": [{"$count": "total"}],
+                "metadata": [{"$count": "totalCount"}],
                 "items": [
                     {"$skip": (args.page - 1) * args.size},
                     {"$limit": args.size},
@@ -513,7 +513,7 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
         {"$unwind": "$metadata"},
         {
             "$project": {
-                "total": "$metadata.total",
+                "totalCount": "$metadata.totalCount",
                 "items": 1,
             }
         },
@@ -528,7 +528,7 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
 
     aggre_dict["page"] = args.page
     aggre_dict["size"] = args.size
-    aggre_dict["pages"] = -(aggre_dict.get("total") // -args.size)
+    aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
 
     return aggre_dict
 
@@ -657,7 +657,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
         },
         {
             "$facet": {
-                "metadata": [{"$count": "total"}],
+                "metadata": [{"$count": "totalCount"}],
                 "items": [
                     {"$skip": (page - 1) * size},
                     {"$limit": size}
@@ -669,7 +669,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
         },
         {
             "$project": {
-                "total": "$metadata.total",
+                "totalCount": "$metadata.totalCount",
                 "items": 1,
             }
         }
@@ -684,7 +684,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
 
     aggre_dict["page"] = page
     aggre_dict["size"] = size
-    aggre_dict["pages"] = -(aggre_dict.get("total") // -size)
+    aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
     return aggre_dict
 
     # return ResponseOut(

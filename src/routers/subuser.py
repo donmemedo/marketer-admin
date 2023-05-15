@@ -847,7 +847,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
             ###########END of Refactor############
             {
                 "$facet": {
-                    "metadata": [{"$count": "total"}],
+                    "metadata": [{"$count": "totalCount"}],
                     "items": [
                         {"$skip": (args.page - 1) * args.size},
                         {"$limit": args.size}
@@ -859,7 +859,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
             },
             {
                 "$project": {
-                    "total": "$metadata.total",
+                    "totalCount": "$metadata.totalCount",
                     "items": 1,
                 }
             }
@@ -1128,7 +1128,7 @@ def total_users_cost(request: Request, args: TotalUsersListIn = Depends(TotalUse
             ###########END of Refactor############
             {
                 "$facet": {
-                    "metadata": [{"$count": "total"}],
+                    "metadata": [{"$count": "totalCount"}],
                     "items": [
                         {"$skip": (args.page - 1) * args.size},
                         {"$limit": args.size}
@@ -1140,7 +1140,7 @@ def total_users_cost(request: Request, args: TotalUsersListIn = Depends(TotalUse
             },
             {
                 "$project": {
-                    # "total": "$metadata.total",
+                    # "totalCount": "$metadata.totalCount",
                     "items": 1,
                 }
             }
@@ -1312,7 +1312,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
         },
         {
             "$facet": {
-                "metadata": [{"$count": "total"}],
+                "metadata": [{"$count": "totalCount"}],
                 "items": [
                     {"$skip": (page - 1) * size},
                     {"$limit": size}
@@ -1324,7 +1324,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
         },
         {
             "$project": {
-                "total": "$metadata.total",
+                "totalCount": "$metadata.totalCount",
                 "items": 1,
             }
         }
@@ -1339,7 +1339,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
 
     aggre_dict["page"] = page
     aggre_dict["size"] = size
-    aggre_dict["pages"] = -(aggre_dict.get("total") // -size)
+    aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
     return aggre_dict
 
     # return ResponseOut(

@@ -18,7 +18,7 @@ from src.schemas.marketer import (
     MarketerIn,
     ConstOut,
     ModifyConstIn,
-    ResponseOut, ResponseListOut
+    ResponseOut, ResponseListOut, ModifyFactorIn
 )
 from src.tools.utils import peek, to_gregorian_, marketer_entity
 
@@ -136,6 +136,70 @@ async def modify_marketer(
 
     marketer_coll.update_one(filter, update)
     query_result = marketer_coll.find({"IdpId": idpid})
+    marketer_dict = peek(query_result)
+    return ResponseListOut(
+        result= marketer_entity(marketer_dict),
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
+
+@marketer.put(
+    "/add-marketer", dependencies=[Depends(JWTBearer())], tags=["Marketer"]#, response_model=None
+)
+async def add_marketer(
+    request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)
+):
+
+    user_id = get_sub(request)
+
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
+
+    database = get_database()
+
+    marketer_coll = database["marketers"]
+
+    filter = {"IdpId": args.CurrentIdpId}
+    update = {"$set": {}}
+
+    if args.FirstName is not None:
+        update["$set"]["FirstName"] = args.FirstName
+
+    if args.LastName is not None:
+        update["$set"]["LastName"] = args.LastName
+
+    if args.InvitationLink is not None:
+        update["$set"]["InvitationLink"] = args.InvitationLink
+
+    if args.RefererType is not None:
+        update["$set"]["RefererType"] = args.RefererType
+
+    if args.CreateDate is not None:
+        update["$set"]["CreateDate"] = args.CreateDate
+
+    if args.ModifiedBy is not None:
+        update["$set"]["ModifiedBy"] = args.ModifiedBy
+
+    if args.CreatedBy is not None:
+        update["$set"]["CreatedBy"] = args.CreatedBy
+
+    if args.ModifiedDate is not None:
+        update["$set"]["ModifiedDate"] = args.ModifiedDate
+
+    if args.NationalID is not None:
+        update["$set"]["Id"] = args.NationalID
+
+    update["$set"]["IdpId"] = args.CurrentIdpId
+    try:
+        marketer_coll.insert_one(update)
+    except:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="مارکتر در دیتابیس وجود دارد."
+        )
+
+    query_result = marketer_coll.find(filter)
     marketer_dict = peek(query_result)
     return ResponseListOut(
         result= marketer_entity(marketer_dict),
@@ -498,6 +562,64 @@ async def modify_factor_consts(
         )
 
 
+@marketer.put(
+    "/modify-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"]
+)
+async def modify_factor(
+    request: Request, args: ModifyFactorIn = Depends(ModifyFactorIn)
+):
+    user_id = get_sub(request)
+
+    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
+    database = get_database()
+
+    factor_coll = database["factors"]
+
+    filter = {"IdpID": args.MarketerID}
+    update = {"$set": {}}
+    per = args.Period
+
+    if args.TotalPureVolume is not None:
+        update["$set"][per+"TPV"] = args.TotalPureVolume
+
+    if args.TotalFee is not None:
+        update["$set"][per+"TF"] = args.TotalFee
+
+    if args.PureFee is not None:
+        update["$set"][per+"PureFee"] = args.PureFee
+
+    if args.MarketerFee is not None:
+        update["$set"][per+"MarFee"] = args.MarketerFee
+
+    if args.Plan is not None:
+        update["$set"][per+"Plan"] = args.Plan
+
+    if args.Tax is not None:
+        update["$set"][per+"Tax"] = args.Tax
+
+    if args.Collateral is not None:
+        update["$set"][per+"Collateral"] = args.Collateral
+
+    if args.FinalFee is not None:
+        update["$set"][per+"FinalFee"] = args.FinalFee
+
+    if args.Payment is not None:
+        update["$set"][per+"Payment"] = args.Payment
+
+    if args.FactorStatus is not None:
+        update["$set"][per+"FactStatus"] = args.FactorStatus
+
+    factor_coll.update_one(filter, update)
+    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {'_id': False})
+    # marketer_dict = peek(query_result)
+    return ResponseListOut(
+        result= query_result,#marketer_entity(marketer_dict),
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
+        )
+
 
 add_pagination(marketer)
 
@@ -623,7 +745,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
         },
         {
             "$facet": {
-                "metadata": [{"$count": "total"}],
+                "metadata": [{"$count": "totalCount"}],
                 "items": [
                     {"$skip": (page - 1) * size},
                     {"$limit": size}
@@ -635,7 +757,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
         },
         {
             "$project": {
-                "total": "$metadata.total",
+                "totalCount": "$metadata.totalCount",
                 "items": 1,
             }
         }
@@ -650,7 +772,7 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
 
     aggre_dict["page"] = page
     aggre_dict["size"] = size
-    aggre_dict["pages"] = -(aggre_dict.get("total") // -size)
+    aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
     return aggre_dict
 
     # return ResponseOut(

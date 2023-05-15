@@ -148,6 +148,24 @@ class ModifyConstIn:
 
 
 @dataclass
+class ModifyFactorIn:
+
+    MarketerID: str
+    TotalPureVolume: int = None
+    TotalFee: int = None
+    PureFee: int = None
+    MarketerFee: int = None
+    Plan: str = None
+    Tax: int = None
+    Collateral: int = None
+    FinalFee: int = None
+    Payment: int = None
+    FactorStatus: int = None
+    Period: Optional[str] = str(current_year)+f"{current_month:02}"
+
+
+
+@dataclass
 class ResponseOut:
     timeGenerated: JalaliDatetime
     result: List[UserTotalOut] = List[Any]
