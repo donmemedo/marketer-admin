@@ -15,6 +15,7 @@ class UserTotalOut:
     TotalPureVolume: float
     TotalFee: float
 
+
 class MarketerOut(BaseModel):
     FirstName: str
     LastName: str
@@ -59,8 +60,6 @@ class UserTradesIn:
     to_date: str = Query(default=current_date, alias="EndDate")
 
 
-
-
 class UserTradesOut(BaseModel):
     AddedValueTax: str
     TotalCommission: str
@@ -88,9 +87,11 @@ class Pages:
     size: int = Query(10, alias="PageSize")
     page: int = Query(1, alias="PageNumber")
 
+
 class UserTypeEnum(str, Enum):
     active = "active"
     inactive = "inactive"
+
 
 class SortField(str, Enum):
     REGISTRATION_DATE = "RegisterDate"
@@ -100,7 +101,6 @@ class SortField(str, Enum):
 class SortOrder(IntEnum):
     ASCENDING = 1
     DESCENDING = -1
-
 
 
 @dataclass
@@ -155,6 +155,7 @@ class ResponseOut:
     timeGenerated: JalaliDatetime
     result: List[UserTotalOut] = List[Any]
     error: str = Query("nothing")
+
 
 @dataclass
 class ResponseListOut:

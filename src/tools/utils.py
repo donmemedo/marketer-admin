@@ -32,12 +32,15 @@ def peek(iterable):
 
 
 def get_marketer_name(marketer_dict: dict):
+    if marketer_dict is None:
+        return "There is No Marketer with is IdpID."
     if marketer_dict.get("FirstName") == "":
         return marketer_dict.get("LastName")
     elif marketer_dict.get("LastName") == "":
         return marketer_dict.get("FirstName")
     else:
         return marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
+
 
 def marketer_entity(marketer) -> dict:
     """_summary_
@@ -49,19 +52,18 @@ def marketer_entity(marketer) -> dict:
         dict: _description_
     """
     return {
-    "Id": marketer.get("Id"),
-    "FirstName": marketer.get("FirstName"),
-    "LastName": marketer.get("LastName"),
-    "IsOrganization": marketer.get("IsOrganization"),
-    "RefererType": marketer.get("RefererType"),
-    "CreatedBy": marketer.get("CreatedBy"),
-    "CreateDate": marketer.get("CreateDate"),
-    "ModifiedBy": marketer.get("ModifiedBy"),
-    "ModifiedDate": marketer.get("ModifiedDate"),
-    "IsCustomer": marketer.get("IsCustomer"),
-    "IsEmployee": marketer.get("IsEmployee"),
-    "CustomerType": marketer.get("CustomerType"),
-    "IdpId": marketer.get("IdpId"),
-    "InvitationLink": marketer.get("InvitationLink")
+        "Id": marketer.get("Id"),
+        "FirstName": marketer.get("FirstName"),
+        "LastName": marketer.get("LastName"),
+        "IsOrganization": marketer.get("IsOrganization"),
+        "RefererType": marketer.get("RefererType"),
+        "CreatedBy": marketer.get("CreatedBy"),
+        "CreateDate": marketer.get("CreateDate"),
+        "ModifiedBy": marketer.get("ModifiedBy"),
+        "ModifiedDate": marketer.get("ModifiedDate"),
+        "IsCustomer": marketer.get("IsCustomer"),
+        "IsEmployee": marketer.get("IsEmployee"),
+        "CustomerType": marketer.get("CustomerType"),
+        "IdpId": marketer.get("IdpId"),
+        "InvitationLink": marketer.get("InvitationLink"),
     }
-
