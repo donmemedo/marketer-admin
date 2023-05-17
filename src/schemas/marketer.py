@@ -180,9 +180,9 @@ class SearchMarketerRelations:
 
     LeaderMarketerName: str = None
     FollowerMarketerName: str = None
-    StartDate: str = Query(default="1301-01-01",example=current_date)
-    EndDate: str = Query(default="1501-12-29",example=current_date)
-    CreateDate: str = Query(default="1301-01-01")
+    StartDate: str = Query(default="1301-01-01")
+    EndDate: str = Query(default="1501-12-29")
+    CreateDate: str = Query(default=None)
     # UpdateDate: str = Query(default=current_date)
 
 

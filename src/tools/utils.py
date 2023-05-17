@@ -32,6 +32,8 @@ def peek(iterable):
 
 
 def get_marketer_name(marketer_dict: dict):
+    if marketer_dict is None:
+        return "There is No Marketer with is IdpID."
     if marketer_dict.get("FirstName") == "":
         return marketer_dict.get("LastName")
     elif marketer_dict.get("LastName") == "":

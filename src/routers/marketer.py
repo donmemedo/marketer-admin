@@ -24,7 +24,7 @@ from src.schemas.marketer import (
     MarketerRelations,
     SearchMarketerRelations
 )
-from src.tools.utils import peek, to_gregorian_, marketer_entity
+from src.tools.utils import peek, to_gregorian_, marketer_entity, get_marketer_name
 
 
 marketer = APIRouter(prefix="/marketer")
@@ -487,6 +487,7 @@ async def add_marketers_relations(
     database = get_database()
 
     marketers_relations_coll = database["mrelations"]
+    marketers_coll = database["marketers"]
 
     update = {"$set": {}}
 
@@ -505,17 +506,22 @@ async def add_marketers_relations(
             error="این مارکتر زیرمجموعه نفر دیگری است.",
         )
     update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
-    update["$set"]["UpdateDate"] = str(jd.now())
-    update["$set"]["StartDate"] = str(jd.today().date())
     update["$set"]["CreateDate"] = str(jd.now())
+    update["$set"]["UpdateDate"] = update["$set"]["CreateDate"]
+    update["$set"]["StartDate"] = str(jd.today().date())
 
     if args.StartDate is not None:
         update["$set"]["StartDate"] = args.StartDate
     if args.EndDate is not None:
         update["$set"]["EndDate"] = args.EndDate
-        update["$set"]["GEndDate"] = to_gregorian_(args.EndDate)
-    update["$set"]["GStartDate"] = to_gregorian_(args.StartDate)
-    update["$set"]["GCreateDate"] = to_gregorian_(jd.strptime(update["$set"]["CreateDate"],"%Y-%m-%d %H:%M:%S.%f"))
+        update["$set"]["GEndDate"] = jd.strptime(update["$set"]["EndDate"],"%Y-%m-%d").todatetime()
+    else:
+        update["$set"]["GEndDate"] = jd.strptime("1500-12-29","%Y-%m-%d").todatetime()
+    update["$set"]["GStartDate"] = jd.strptime(update["$set"]["StartDate"],"%Y-%m-%d").todatetime()
+    update["$set"]["GCreateDate"] = jd.strptime(update["$set"]["CreateDate"],"%Y-%m-%d %H:%M:%S.%f").todatetime()
+    update["$set"]["GUpdateDate"] = jd.strptime(update["$set"]["UpdateDate"],"%Y-%m-%d %H:%M:%S.%f").todatetime()
+    update["$set"]["FollowerMarketerName"] = get_marketer_name(marketers_coll.find_one({"IdpId":args.FollowerMarketerID}))
+    update["$set"]["LeaderMarketerName"] = get_marketer_name(marketers_coll.find_one({"IdpId":args.LeaderMarketerID}))
 
     marketers_relations_coll.insert_one(update["$set"])
 
@@ -564,9 +570,9 @@ async def modify_marketers_relations(
 
     if args.EndDate is not None:
         update["$set"]["EndDate"] = args.EndDate
-        update["$set"]["GEndDate"] = to_gregorian_(args.EndDate)
-    update["$set"]["GStartDate"] = to_gregorian_(args.StartDate)
-    update["$set"]["GUpdateDate"] = to_gregorian_(update["$set"]["UpdateDate"])
+        update["$set"]["GEndDate"] = jd.strptime(update["$set"]["EndDate"], "%Y-%m-%d").todatetime()
+    update["$set"]["GStartDate"] = jd.strptime(update["$set"]["StartDate"], "%Y-%m-%d").todatetime()
+    update["$set"]["GUpdateDate"] = jd.strptime(update["$set"]["UpdateDate"], "%Y-%m-%d %H:%M:%S.%f").todatetime()
 
     query = {
         "$and": [
@@ -596,13 +602,8 @@ async def search_marketers_relations(
     #     raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
-    from_gregorian_date = to_gregorian_(args.StartDate)
-    gregorian_create_date = to_gregorian_(args.CreateDate)
-    to_gregorian_date = to_gregorian_(args.EndDate)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
+    to_gregorian_date = jd.strptime(args.EndDate, "%Y-%m-%d").todatetime() + timedelta(days=1)
 
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
@@ -618,9 +619,10 @@ async def search_marketers_relations(
         codes = [c.get('IdpId') for c in idps]
         query = {
                 "$and": [
-                    {"TradeCode": {"$in": codes}},
-                    {"StartDate": {"$gte": from_gregorian_date}},
-                    {"EndDate": {"$lte": to_gregorian_date}},
+                    # {"FollowerMarketerID": {"$in": codes}},
+                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+                    {"GStartDate": {"$gte": from_gregorian_date}},
+                    {"GEndDate": {"$lte": to_gregorian_date}},
                 ]
             }
     elif args.LeaderMarketerName:
@@ -634,27 +636,58 @@ async def search_marketers_relations(
         codes = [c.get('IdpId') for c in idps]
         query = {
                 "$and": [
-                    {"TradeCode": {"$in": codes}},
-                    {"StartDate": {"$gte": from_gregorian_date}},
-                    {"EndDate": {"$lte": to_gregorian_date}},
+                    # {"LeaderMarketerID": {"$in": codes}},
+                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+                    {"GStartDate": {"$gte": from_gregorian_date}},
+                    {"GEndDate": {"$lte": to_gregorian_date}},
                 ]
             }
-
-
-
-    LeaderMarketerName: str = Query("")
-    FollowerMarketerName: str = Query("")
-    StartDate: str = Query(default=current_date)
-    EndDate: str = Query(default=current_date)
-    CreateDate: str = Query(default=current_date)
-
-    {
+    if args.CreateDate:
+        if args.FollowerMarketerName is None:
+            args.FollowerMarketerName = ""
+        if args.LeaderMarketerName is None:
+            args.LeaderMarketerName = ""
+        gregorian_create_date = jd.strptime(args.CreateDate, "%Y-%m-%d").todatetime()
+        le_name_query = {"$or": [
+            {"FirstName": {"$regex": args.LeaderMarketerName}},
+            {"LastName": {"$regex": args.LeaderMarketerName}}
+        ]
+        }
+        fields = {"IdpId": 1}
+        le_idps = marketers_coll.find(le_name_query, fields)
+        le_codes = [c.get('IdpId') for c in le_idps]
+        fo_name_query = {"$or": [
+            {"FirstName": {"$regex": args.FollowerMarketerName}},
+            {"LastName": {"$regex": args.FollowerMarketerName}}
+        ]
+        }
+        fo_idps = marketers_coll.find(fo_name_query, fields)
+        fo_codes = [c.get('IdpId') for c in fo_idps]
+        query = {
                 "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
+                    # {"LeaderMarketerID": {"$in": le_codes}},
+                    # {"FollowerMarketerID": {"$in": fo_codes}},
+                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+                    {"GCreateDate": {"$gte": gregorian_create_date}},
+                    {"GStartDate": {"$gte": from_gregorian_date}},
+                    {"GEndDate": {"$lte": to_gregorian_date}}
                 ]
             }
+
+
+
+
+    results = []
+    query_result = marketers_relations_coll.find(query,{"_id":False})
+    marketers = dict(enumerate(query_result))
+    for i in range(len(marketers)):
+        results.append(marketers[i])
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 
