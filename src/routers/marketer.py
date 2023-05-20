@@ -608,10 +608,14 @@ async def search_marketers_relations(
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
     query={}
-    if args.FollowerMarketerName:
+    if args.FollowerMarketerName or args.FollowerMarketerID:
+        if args.FollowerMarketerName is None:
+            args.FollowerMarketerName = ''
+
         name_query = {"$or": [
             {"FirstName": {"$regex": args.FollowerMarketerName}},
-            {"LastName": {"$regex": args.FollowerMarketerName}}
+            {"LastName": {"$regex": args.FollowerMarketerName}},
+            {"FollowerMarketerID": args.FollowerMarketerID}
         ]
         }
         fields = {"IdpId": 1}
@@ -625,10 +629,23 @@ async def search_marketers_relations(
                     {"GEndDate": {"$lte": to_gregorian_date}},
                 ]
             }
-    elif args.LeaderMarketerName:
+        if args.FollowerMarketerID:
+            query = {
+                "$and": [
+                    {"FollowerMarketerID": args.FollowerMarketerID},
+                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+                    {"GStartDate": {"$gte": from_gregorian_date}},
+                    {"GEndDate": {"$lte": to_gregorian_date}},
+                ]
+            }
+    elif args.LeaderMarketerName or args.LeaderMarketerID:
+        if args.LeaderMarketerName is None:
+            args.LeaderMarketerName = ''
+
         name_query = {"$or": [
             {"FirstName": {"$regex": args.LeaderMarketerName}},
-            {"LastName": {"$regex": args.LeaderMarketerName}}
+            {"LastName": {"$regex": args.LeaderMarketerName}},
+            {"LeaderMarketerID": args.LeaderMarketerID}
         ]
         }
         fields = {"IdpId": 1}
@@ -642,6 +659,17 @@ async def search_marketers_relations(
                     {"GEndDate": {"$lte": to_gregorian_date}},
                 ]
             }
+        if args.LeaderMarketerID:
+            query = {
+                "$and": [
+                    # {"LeaderMarketerID": {"$in": codes}},
+                    {"LeaderMarketerID": args.LeaderMarketerID},
+                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+                    {"GStartDate": {"$gte": from_gregorian_date}},
+                    {"GEndDate": {"$lte": to_gregorian_date}},
+                ]
+            }
+
     if args.CreateDate:
         if args.FollowerMarketerName is None:
             args.FollowerMarketerName = ""
@@ -650,7 +678,8 @@ async def search_marketers_relations(
         gregorian_create_date = jd.strptime(args.CreateDate, "%Y-%m-%d").todatetime()
         le_name_query = {"$or": [
             {"FirstName": {"$regex": args.LeaderMarketerName}},
-            {"LastName": {"$regex": args.LeaderMarketerName}}
+            {"LastName": {"$regex": args.LeaderMarketerName}},
+            {"LeaderMarketerID": args.LeaderMarketerID}
         ]
         }
         fields = {"IdpId": 1}
@@ -674,9 +703,30 @@ async def search_marketers_relations(
                     {"GEndDate": {"$lte": to_gregorian_date}}
                 ]
             }
-
-
-
+        if args.FollowerMarketerID:
+            query = {
+                "$and": [
+                    # {"LeaderMarketerID": {"$in": le_codes}},
+                    {"FollowerMarketerID": args.FollowerMarketerID},
+                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+                    {"GCreateDate": {"$gte": gregorian_create_date}},
+                    {"GStartDate": {"$gte": from_gregorian_date}},
+                    {"GEndDate": {"$lte": to_gregorian_date}}
+                ]
+            }
+        elif args.LeaderMarketerID:
+            query = {
+                "$and": [
+                    # {"LeaderMarketerID": {"$in": le_codes}},
+                    {"LeaderMarketerID": args.LeaderMarketerID},
+                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+                    {"GCreateDate": {"$gte": gregorian_create_date}},
+                    {"GStartDate": {"$gte": from_gregorian_date}},
+                    {"GEndDate": {"$lte": to_gregorian_date}}
+                ]
+            }
 
     results = []
     query_result = marketers_relations_coll.find(query,{"_id":False})
