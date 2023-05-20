@@ -607,7 +607,7 @@ async def search_marketers_relations(
 
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
-
+    query={}
     if args.FollowerMarketerName:
         name_query = {"$or": [
             {"FirstName": {"$regex": args.FollowerMarketerName}},
