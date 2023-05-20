@@ -179,7 +179,9 @@ class MarketerRelations:
 class SearchMarketerRelations:
 
     LeaderMarketerName: str = None
+    LeaderMarketerID: str = None
     FollowerMarketerName: str = None
+    FollowerMarketerID: str = None
     StartDate: str = Query(default="1301-01-01")
     EndDate: str = Query(default="1501-12-29")
     CreateDate: str = Query(default=None)
