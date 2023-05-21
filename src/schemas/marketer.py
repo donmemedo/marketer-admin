@@ -187,6 +187,12 @@ class SearchMarketerRelations:
     CreateDate: str = Query(default=None)
     # UpdateDate: str = Query(default=current_date)
 
+@dataclass
+class DiffTradesIn:
+    IdpID: str = Query(alias="IdpID")
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
+
 
 @dataclass
 class ResponseOut:
