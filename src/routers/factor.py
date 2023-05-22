@@ -54,11 +54,21 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     brokerage = get_database()
     consts_coll = brokerage["consts"]
     query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
-    return ResponseListOut(
-        result=query_result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    if not query_result:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage":"موردی یافت نشد.",
+                "errorCode":"30001"
+            },
+        )
+    else:
+        return ResponseListOut(
+            result=query_result,
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="",
+        )
 
 
 @factor.get(
@@ -81,12 +91,21 @@ async def get_all_factors_consts(request: Request):
     consts = dict(enumerate(query_result))
     for i in range(len(consts)):
         results.append((consts[i]))
-
-    return ResponseListOut(
-        result=results,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    if not results:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage":"موردی برای ثابتهای فاکتورها یافت نشد.",
+                "errorCode":"30002"
+            },
+        )
+    else:
+        return ResponseListOut(
+            result=results,
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="",
+        )
 
 
 @factor.put(
@@ -107,7 +126,10 @@ async def modify_factor_consts(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="IDP مارکتر را وارد کنید.",
+            error={
+                "errorMessage":"IDP مارکتر را وارد کنید.",
+                "errorCode":"30003"
+            },
         )
 
     filter = {"MarketerID": args.MarketerID}
@@ -151,7 +173,10 @@ async def modify_factor(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="IDP مارکتر را وارد کنید.",
+            error={
+                "errorMessage": "IDP مارکتر را وارد کنید.",
+                "errorCode": "30003"
+            },
         )
 
     filter = {"IdpID": args.MarketerID}
