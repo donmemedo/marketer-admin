@@ -4,6 +4,8 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, timedelta
+
+import pymongo.errors
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi_pagination import Page, add_pagination
 from fastapi_pagination.ext.pymongo import paginate
@@ -60,7 +62,7 @@ async def get_marketer_profile(
                 "errorCode": "30003"
             },
         )
-    query_result = marketers_coll.find_one({"IdpId": args.IdpID})
+    query_result = marketers_coll.find_one({"IdpId": args.IdpID},{"_id":False})
     # marketers = dict(enumerate(query_result))
     # for i in range(len(marketers)):
     #     results.append(marketer_entity(marketers[i]))
@@ -178,13 +180,24 @@ async def modify_marketer(
         update["$set"]["Id"] = args.NationalID
 
     marketer_coll.update_one(filter, update)
-    query_result = marketer_coll.find({"IdpId": idpid})
-    marketer_dict = peek(query_result)
-    return ResponseListOut(
-        result=marketer_entity(marketer_dict),
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    query_result = marketer_coll.find_one({"IdpId": idpid},{"_id":False})
+    # marketer_dict = peek(query_result)
+    if not query_result:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage":"موردی در دیتابیس یافت نشد.",
+                "errorCode":"30001"
+            },
+        )
+    else:
+        return ResponseListOut(
+            result=query_result,
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="",
+        )
+
 
 
 @marketer.put(
@@ -257,13 +270,23 @@ async def add_marketer(
             },
         )
 
-    query_result = marketer_coll.find_one(filter)
+    query_result = marketer_coll.find_one(filter,{"_id":False})
     # marketer_dict = peek(query_result)
-    return ResponseListOut(
-        result=query_result,#marketer_entity(marketer_dict),
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    if not query_result:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage":"ورودی ها را دوباره چک کنید.",
+                "errorCode":"30051"
+            },
+        )
+    else:
+        return ResponseListOut(
+            result=query_result,
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="",
+        )
 
 
 @marketer.get(
@@ -518,7 +541,22 @@ async def search_user_profile(
     # print(filter)
     # return paginate(marketer_coll, {})
     results = []
-    query_result = marketer_coll.find({"IdpId": args.IdpID},{"_id":False})
+    # query_result = marketer_coll.find({"IdpId": args.IdpID},{"_id":False})
+    try:
+        query_result = marketer_coll.find_one(query, {"_id": False})
+    # except pymongo.errors.OperationFailure as err:
+    except:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                # "errorMessage":err.details['errmsg'],
+                "errorMessage":"ورودی نام غیرقابل قبول است.",
+                "errorCode":"30050"
+            },
+        )
+
+    query_result = marketer_coll.find(query,{"_id":False})
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
         results.append(marketer_entity(marketers[i]))
@@ -805,7 +843,7 @@ async def search_marketers_relations(
         }
         fields = {"IdpId": 1}
         idps = marketers_coll.find(name_query, fields)
-        codes = [c.get("IdpId") for c in idps]
+        # codes = [c.get("IdpId") for c in idps]
         query = {
             "$and": [
                 # {"LeaderMarketerID": {"$in": codes}},
@@ -886,6 +924,20 @@ async def search_marketers_relations(
             }
 
     results = []
+    try:
+        query_result = marketers_relations_coll.find_one(query, {"_id": False})
+    # except pymongo.errors.OperationFailure as err:
+    except:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                # "errorMessage":err.details['errmsg'],
+                "errorMessage":"ورودی نام غیرقابل قبول است.",
+                "errorCode":"30050"
+            },
+        )
+
     query_result = marketers_relations_coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):

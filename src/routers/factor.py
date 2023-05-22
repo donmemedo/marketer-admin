@@ -150,11 +150,21 @@ async def modify_factor_consts(
     consts_coll.update_one(filter, update)
     query_result = consts_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     # marketer_dict = peek(query_result)
-    return ResponseListOut(
-        result=query_result,  # marketer_entity(marketer_dict),
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    if not query_result:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage":"موردی با IDP داده شده یافت نشد.",
+                "errorCode":"30004"
+            },
+        )
+    else:
+        return ResponseListOut(
+            result=query_result,
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="",
+        )
 
 
 @factor.put("/modify-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
@@ -214,13 +224,24 @@ async def modify_factor(
         update["$set"][per + "FactStatus"] = args.FactorStatus
 
     factor_coll.update_one(filter, update)
-    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
+    query_result = factor_coll.find_one({"IdpID": args.MarketerID},{"_id":False})
     # marketer_dict = peek(query_result)
-    return ResponseListOut(
-        result=query_result,  # marketer_entity(marketer_dict),
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    if not query_result:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage":"موردی در دیتابیس یافت نشد.",
+                "errorCode":"30001"
+            },
+        )
+    else:
+        return ResponseListOut(
+            result=query_result,
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="",
+        )
+
 
 
 @factor.put("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
