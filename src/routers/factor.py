@@ -223,6 +223,139 @@ async def modify_factor(
     )
 
 
+@factor.put("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+async def add_factor(
+    request: Request, args: ModifyFactorIn = Depends(ModifyFactorIn)
+):
+    user_id = get_sub(request)
+
+    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
+    database = get_database()
+
+    factor_coll = database["factorsFIN"]
+    if args.MarketerID is None:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "IDP مارکتر را وارد کنید.",
+                "errorCode": "30003"
+            },
+        )
+
+    filter = {"IdpID": args.MarketerID}
+    update = {"$set": {}}
+    per = args.Period
+
+    if args.TotalPureVolume is not None:
+        update["$set"][per + "TPV"] = args.TotalPureVolume
+
+    if args.TotalFee is not None:
+        update["$set"][per + "TF"] = args.TotalFee
+
+    if args.PureFee is not None:
+        update["$set"][per + "PureFee"] = args.PureFee
+
+    if args.MarketerFee is not None:
+        update["$set"][per + "MarFee"] = args.MarketerFee
+
+    if args.Plan is not None:
+        update["$set"][per + "Plan"] = args.Plan
+
+    if args.Tax is not None:
+        update["$set"][per + "Tax"] = args.Tax
+
+    if args.Collateral is not None:
+        update["$set"][per + "Collateral"] = args.Collateral
+
+    if args.FinalFee is not None:
+        update["$set"][per + "FinalFee"] = args.FinalFee
+
+    if args.Payment is not None:
+        update["$set"][per + "Payment"] = args.Payment
+
+    if args.FactorStatus is not None:
+        update["$set"][per + "FactStatus"] = args.FactorStatus
+
+    factor_coll.insert_one(filter, update)
+    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
+    # marketer_dict = peek(query_result)
+    return ResponseListOut(
+        result=query_result,  # marketer_entity(marketer_dict),
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
+
+# @factor.delete("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+# async def delete_factor(
+#     request: Request, args: ModifyFactorIn = Depends(ModifyFactorIn)
+# ):
+#     user_id = get_sub(request)
+#
+#     if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+#         raise HTTPException(status_code=403, detail="Not authorized.")
+#
+#     database = get_database()
+#
+#     factor_coll = database["factorsFIN"]
+#     if args.MarketerID and args.Period:
+#         pass
+#     else:
+#         return ResponseListOut(
+#             result=[],
+#             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+#             error={
+#                 "errorMessage": "IDP مارکتر و دوره را وارد کنید.",
+#                 "errorCode": "30030"
+#             },
+#         )
+#
+#     filter = {"IdpID": args.MarketerID}
+#     update = {"$set": {}}
+#     per = args.Period
+#
+#     if args.TotalPureVolume is not None:
+#         update["$set"][per + "TPV"] = args.TotalPureVolume
+#
+#     if args.TotalFee is not None:
+#         update["$set"][per + "TF"] = args.TotalFee
+#
+#     if args.PureFee is not None:
+#         update["$set"][per + "PureFee"] = args.PureFee
+#
+#     if args.MarketerFee is not None:
+#         update["$set"][per + "MarFee"] = args.MarketerFee
+#
+#     if args.Plan is not None:
+#         update["$set"][per + "Plan"] = args.Plan
+#
+#     if args.Tax is not None:
+#         update["$set"][per + "Tax"] = args.Tax
+#
+#     if args.Collateral is not None:
+#         update["$set"][per + "Collateral"] = args.Collateral
+#
+#     if args.FinalFee is not None:
+#         update["$set"][per + "FinalFee"] = args.FinalFee
+#
+#     if args.Payment is not None:
+#         update["$set"][per + "Payment"] = args.Payment
+#
+#     if args.FactorStatus is not None:
+#         update["$set"][per + "FactStatus"] = args.FactorStatus
+#
+#     factor_coll.insert_one(filter, update)
+#     query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
+#     # marketer_dict = peek(query_result)
+#     return ResponseListOut(
+#         result=query_result,  # marketer_entity(marketer_dict),
+#         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+#         error="",
+#     )
+
+
 @factor.get(
     "/total-factors",
     dependencies=[Depends(JWTBearer())],
@@ -239,6 +372,7 @@ def total_factors(request: Request, args: FactorsListIn = Depends(FactorsListIn)
     firms_coll = db["firms"]
     marketers_coll = db["marketers"]
     factors_coll = db["factors"]
+    factors_coll = db["factorsFIN"]
 
     # check if marketer exists and return his name
     # query_result = marketers_coll.find({"IdpId": marketer_id})
