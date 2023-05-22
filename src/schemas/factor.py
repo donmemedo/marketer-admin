@@ -164,7 +164,6 @@ class ModifyFactorIn:
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
 
 
-
 @dataclass
 class FactorsListIn(Pages):
     from_date: str = Query(default=current_date, alias="StartDate")

@@ -23,4 +23,3 @@ app.include_router(marketer, prefix="")
 app.include_router(factor, prefix="")
 app.include_router(user, prefix="")
 app.include_router(subuser, prefix="")
-
