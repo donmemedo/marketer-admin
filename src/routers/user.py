@@ -39,10 +39,11 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="PAMCode  را وارد کنید.",
+            error={
+                "errorMessage": "PAMCode  را وارد کنید.",
+                "errorCode": "30015"
+            },
         )
-
-
     database = get_database()
     results = []
     from_gregorian_date = to_gregorian_(args.from_date)
@@ -64,11 +65,21 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     for i in range(len(trades)):
         results.append(trades[i])
 
-    return ResponseListOut(
-        result=results,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    if not results:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
+                "errorCode": "30017"
+            },
+        )
+    else:
+        return ResponseListOut(
+            result=results,
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="",
+        )
 
 
 @user.get(
@@ -372,13 +383,24 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     aggre_dict["page"] = args.page
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
+    if not aggre_dict:
 
-    # return aggre_dict
-    return ResponseOut(
-        result=aggre_dict,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+        # return aggre_dict
+        return ResponseOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "خروجی برای متغیرهای داده شده نداریم.",
+                "errorCode": "30020"
+            },
+        )
+    else:
+        return ResponseOut(
+            result=aggre_dict,
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="",
+        )
+
 
 
 @user.get(
@@ -529,8 +551,25 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     aggre_dict["page"] = args.page
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
+    if not aggre_dict:
 
-    return aggre_dict
+        # return aggre_dict
+        return ResponseOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "خروجی برای متغیرهای داده شده نداریم.",
+                "errorCode": "30020"
+            },
+        )
+    else:
+        return ResponseOut(
+            result=aggre_dict,
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="",
+        )
+
+    # return aggre_dict
 
 
 @user.get(
@@ -551,9 +590,11 @@ async def users_diff_with_tbs(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="PAMCode را وارد کنید.",
+            error={
+                "errorMessage": "PAMCode  را وارد کنید.",
+                "errorCode": "30015"
+            },
         )
-
 
     delta = timedelta(days=1)
     dates = []
@@ -573,11 +614,21 @@ async def users_diff_with_tbs(
             pass
         else:
             result.append(q)
-    return ResponseListOut(
-        result=result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    if not result:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
+                "errorCode": "30013"
+            },
+        )
+    else:
+        return ResponseListOut(
+            result=result,
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="",
+        )
 
 
 add_pagination(user)
