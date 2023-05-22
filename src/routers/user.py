@@ -35,6 +35,13 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
 
     if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
         raise HTTPException(status_code=403, detail="Not authorized.")
+    if args.TradeCode is None:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="PAMCode  را وارد کنید.",
+        )
+
 
     database = get_database()
     results = []
@@ -525,19 +532,28 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
 
     return aggre_dict
 
+
 @user.get(
     "/users-diff",
     dependencies=[Depends(JWTBearer())],
-    tags=["Marketer"], response_model=None
+    tags=["User"],
+    response_model=None,
 )
 async def users_diff_with_tbs(
-        request: Request, args: UserTradesIn = Depends(UserTradesIn)
+    request: Request, args: UserTradesIn = Depends(UserTradesIn)
 ):
 
     # get user id
     # marketer_id = get_sub(request)
     start_date = jd.strptime(args.from_date, "%Y-%m-%d")
     end_date = jd.strptime(args.to_date, "%Y-%m-%d")
+    if args.TradeCode is None:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="PAMCode را وارد کنید.",
+        )
+
 
     delta = timedelta(days=1)
     dates = []
@@ -553,7 +569,7 @@ async def users_diff_with_tbs(
         print(date)
 
         q = bs_calculator(args.TradeCode, date)
-        if q['BuyDiff'] == 0 and q['SellDiff'] == 0:
+        if q["BuyDiff"] == 0 and q["SellDiff"] == 0:
             pass
         else:
             result.append(q)
@@ -734,10 +750,8 @@ def bs_calculator(trade_code, date, page=1, size=10):
                 "Volume": 1,
                 "Total": {"$multiply": ["$Price", "$Volume"]},
                 "TotalCommission": 1,
-
                 "Buy": 1,
                 "Sell": 1,
-
                 "TradeItemBroker": 1,
                 "TradeCode": 1,
                 "Buy": {
@@ -745,19 +759,15 @@ def bs_calculator(trade_code, date, page=1, size=10):
                         "if": {"$eq": ["$TradeType", 1]},
                         "then": "$TradeItemBroker",
                         "else": 0,
-
                     }
                 },
-
                 "Sell": {
                     "$cond": {
                         "if": {"$ne": ["$TradeType", 1]},
                         "then": "$TradeItemBroker",
                         "else": 0,
-
                     }
                 },
-
                 "Commission": {
                     "$cond": {
                         "if": {"$eq": ["$TradeType", 1]},
@@ -793,7 +803,7 @@ def bs_calculator(trade_code, date, page=1, size=10):
                 "TotalPureVolume": 1,
                 "TotalFee": 1,
                 "TotalBuy": 1,
-                "TotalSell": 1
+                "TotalSell": 1,
             }
         },
         {
@@ -821,7 +831,6 @@ def bs_calculator(trade_code, date, page=1, size=10):
                 "TotalPureVolume": 1,
                 "TotalBuy": 1,
                 "TotalSell": 1,
-
                 "Refferer": "$FirmProfile.Referer",
                 "Referer": "$UserProfile.Referer",
                 "FirmTitle": "$FirmProfile.FirmTitle",
@@ -866,8 +875,8 @@ def bs_calculator(trade_code, date, page=1, size=10):
 
     # for i in range(len(trade_codes)):
 
-        # customer[i]=(cus_dict)
-        # trade_code = trade_codes[i]
+    # customer[i]=(cus_dict)
+    # trade_code = trade_codes[i]
     bb = customers_coll.find_one({"PAMCode": trade_code}, {"_id": False})
     if bb:
         cus_dict["TradeCode"] = trade_code
@@ -879,20 +888,29 @@ def bs_calculator(trade_code, date, page=1, size=10):
         cus_dict["LedgerCode"] = bb.get("DetailLedgerCode")
         cus_dict["Name"] = bb.get("FirmTitle")
 
-
     dd = commisions_coll.find_one(
-        {"$and": [{"AccountCode": {"$regex": cus_dict["LedgerCode"]}}, {"Date": {"$regex": gdate}}]},
-        {"_id": False})
+        {
+            "$and": [
+                {"AccountCode": {"$regex": cus_dict["LedgerCode"]}},
+                {"Date": {"$regex": gdate}},
+            ]
+        },
+        {"_id": False},
+    )
     if dd:
-        cus_dict["TBSBuyCo"] = dd.get("NonOnlineBuyCommission") + dd.get("OnlineBuyCommission")
-        cus_dict["TBSSellCo"] = dd.get("NonOnlineSellCommission") + dd.get("OnlineSellCommission")
+        cus_dict["TBSBuyCo"] = dd.get("NonOnlineBuyCommission") + dd.get(
+            "OnlineBuyCommission"
+        )
+        cus_dict["TBSSellCo"] = dd.get("NonOnlineSellCommission") + dd.get(
+            "OnlineSellCommission"
+        )
     else:
         cus_dict["TBSBuyCo"] = 0
         cus_dict["TBSSellCo"] = 0
 
     if aggre_dict:
-        cus_dict["OurBuyCom"] = aggre_dict['items'][0]["TotalBuy"]
-        cus_dict["OurSellCom"] = aggre_dict['items'][0]["TotalSell"]
+        cus_dict["OurBuyCom"] = aggre_dict["items"][0]["TotalBuy"]
+        cus_dict["OurSellCom"] = aggre_dict["items"][0]["TotalSell"]
     else:
         cus_dict["OurBuyCom"] = 0
         cus_dict["OurSellCom"] = 0
@@ -902,11 +920,8 @@ def bs_calculator(trade_code, date, page=1, size=10):
     cus_dict["Date"] = date
 
     # Comm = bs_calculator([trade_code], dato, dato)
-        # print(Comm)
-        # print(f"{BuyCo}\t{SellCo}\t{BuyCom}\t{SellCom}\t")
-        # customer.append(cus_dict)
+    # print(Comm)
+    # print(f"{BuyCo}\t{SellCo}\t{BuyCom}\t{SellCom}\t")
+    # customer.append(cus_dict)
 
-
-    return cus_dict#aggre_dict
-
-
+    return cus_dict  # aggre_dict

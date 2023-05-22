@@ -23,7 +23,7 @@ from src.schemas.marketer import (
     ResponseListOut,
     ModifyFactorIn,
     MarketerRelations,
-    SearchMarketerRelations
+    SearchMarketerRelations,
 )
 from src.tools.utils import peek, to_gregorian_, marketer_entity, get_marketer_name
 
@@ -105,6 +105,12 @@ async def modify_marketer(
     database = get_database()
 
     marketer_coll = database["marketers"]
+    if args.CurrentIdpId is None:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="IDP مارکتر را وارد کنید",
+        )
 
     filter = {"IdpId": args.CurrentIdpId}
     idpid = args.CurrentIdpId
@@ -168,6 +174,13 @@ async def add_marketer(
     database = get_database()
 
     marketer_coll = database["marketers"]
+    if args.CurrentIdpId is None:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="IDP مارکتر را وارد کنید",
+        )
+
 
     filter = {"IdpId": args.CurrentIdpId}
     update = {"$set": {}}
@@ -475,10 +488,11 @@ async def search_user_profile(
 @marketer.put(
     "/add-marketers-relations",
     dependencies=[Depends(JWTBearer())],
-    tags=["Marketer"],   response_model=None
+    tags=["Marketer"],
+    response_model=None,
 )
 async def add_marketers_relations(
-        request: Request, args: MarketerRelations = Depends(MarketerRelations)
+    request: Request, args: MarketerRelations = Depends(MarketerRelations)
 ):
     user_id = get_sub(request)
 
@@ -489,6 +503,22 @@ async def add_marketers_relations(
 
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
+    if args.LeaderMarketerID and args.FollowerMarketerID:
+        pass
+    else:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="IDP مارکترها را وارد کنید",
+        )
+    if args.CommissionCoefficient is None:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="کمیسیون را وارد کنید.",
+        )
+
+
 
     update = {"$set": {}}
 
@@ -500,7 +530,9 @@ async def add_marketers_relations(
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error="مارکترها نباید یکسان باشند.",
         )
-    if marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID}):
+    if marketers_relations_coll.find_one(
+        {"FollowerMarketerID": args.FollowerMarketerID}
+    ):
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -515,19 +547,33 @@ async def add_marketers_relations(
         update["$set"]["StartDate"] = args.StartDate
     if args.EndDate is not None:
         update["$set"]["EndDate"] = args.EndDate
-        update["$set"]["GEndDate"] = jd.strptime(update["$set"]["EndDate"],"%Y-%m-%d").todatetime()
+        update["$set"]["GEndDate"] = jd.strptime(
+            update["$set"]["EndDate"], "%Y-%m-%d"
+        ).todatetime()
     else:
-        update["$set"]["GEndDate"] = jd.strptime("1500-12-29","%Y-%m-%d").todatetime()
-    update["$set"]["GStartDate"] = jd.strptime(update["$set"]["StartDate"],"%Y-%m-%d").todatetime()
-    update["$set"]["GCreateDate"] = jd.strptime(update["$set"]["CreateDate"],"%Y-%m-%d %H:%M:%S.%f").todatetime()
-    update["$set"]["GUpdateDate"] = jd.strptime(update["$set"]["UpdateDate"],"%Y-%m-%d %H:%M:%S.%f").todatetime()
-    update["$set"]["FollowerMarketerName"] = get_marketer_name(marketers_coll.find_one({"IdpId":args.FollowerMarketerID}))
-    update["$set"]["LeaderMarketerName"] = get_marketer_name(marketers_coll.find_one({"IdpId":args.LeaderMarketerID}))
+        update["$set"]["GEndDate"] = jd.strptime("1500-12-29", "%Y-%m-%d").todatetime()
+    update["$set"]["GStartDate"] = jd.strptime(
+        update["$set"]["StartDate"], "%Y-%m-%d"
+    ).todatetime()
+    update["$set"]["GCreateDate"] = jd.strptime(
+        update["$set"]["CreateDate"], "%Y-%m-%d %H:%M:%S.%f"
+    ).todatetime()
+    update["$set"]["GUpdateDate"] = jd.strptime(
+        update["$set"]["UpdateDate"], "%Y-%m-%d %H:%M:%S.%f"
+    ).todatetime()
+    update["$set"]["FollowerMarketerName"] = get_marketer_name(
+        marketers_coll.find_one({"IdpId": args.FollowerMarketerID})
+    )
+    update["$set"]["LeaderMarketerName"] = get_marketer_name(
+        marketers_coll.find_one({"IdpId": args.LeaderMarketerID})
+    )
 
     marketers_relations_coll.insert_one(update["$set"])
 
     return ResponseListOut(
-        result=marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID},{"_id":False}),
+        result=marketers_relations_coll.find_one(
+            {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
+        ),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
@@ -536,10 +582,11 @@ async def add_marketers_relations(
 @marketer.put(
     "/modify-marketers-relations",
     dependencies=[Depends(JWTBearer())],
-    tags=["Marketer"],  response_model=None
+    tags=["Marketer"],
+    response_model=None,
 )
 async def modify_marketers_relations(
-        request: Request, args: MarketerRelations = Depends(MarketerRelations)
+    request: Request, args: MarketerRelations = Depends(MarketerRelations)
 ):
     user_id = get_sub(request)
 
@@ -549,7 +596,20 @@ async def modify_marketers_relations(
     database = get_database()
 
     marketers_relations_coll = database["mrelations"]
-
+    if args.LeaderMarketerID and args.FollowerMarketerID:
+        pass
+    else:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="IDP مارکترها را وارد کنید",
+        )
+    if args.CommissionCoefficient is None:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="کمیسیون را وارد کنید.",
+        )
 
     update = {"$set": {}}
     update["$set"]["LeaderMarketerID"] = args.LeaderMarketerID
@@ -571,19 +631,27 @@ async def modify_marketers_relations(
 
     if args.EndDate is not None:
         update["$set"]["EndDate"] = args.EndDate
-        update["$set"]["GEndDate"] = jd.strptime(update["$set"]["EndDate"], "%Y-%m-%d").todatetime()
-    update["$set"]["GStartDate"] = jd.strptime(update["$set"]["StartDate"], "%Y-%m-%d").todatetime()
-    update["$set"]["GUpdateDate"] = jd.strptime(update["$set"]["UpdateDate"], "%Y-%m-%d %H:%M:%S.%f").todatetime()
+        update["$set"]["GEndDate"] = jd.strptime(
+            update["$set"]["EndDate"], "%Y-%m-%d"
+        ).todatetime()
+    update["$set"]["GStartDate"] = jd.strptime(
+        update["$set"]["StartDate"], "%Y-%m-%d"
+    ).todatetime()
+    update["$set"]["GUpdateDate"] = jd.strptime(
+        update["$set"]["UpdateDate"], "%Y-%m-%d %H:%M:%S.%f"
+    ).todatetime()
 
     query = {
         "$and": [
             {"LeaderMarketerID": args.LeaderMarketerID},
-            {"FollowerMarketerID": args.FollowerMarketerID}
+            {"FollowerMarketerID": args.FollowerMarketerID},
         ]
     }
     marketers_relations_coll.update_one(query, update)
     return ResponseListOut(
-        result=marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID},{"_id":False}),
+        result=marketers_relations_coll.find_one(
+            {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
+        ),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
@@ -592,10 +660,11 @@ async def modify_marketers_relations(
 @marketer.get(
     "/search-marketers-relations",
     dependencies=[Depends(JWTBearer())],
-    tags=["Marketer"],  response_model=None
+    tags=["Marketer"],
+    response_model=None,
 )
 async def search_marketers_relations(
-        request: Request, args: SearchMarketerRelations = Depends(SearchMarketerRelations)
+    request: Request, args: SearchMarketerRelations = Depends(SearchMarketerRelations)
 ):
     user_id = get_sub(request)
 
@@ -604,32 +673,35 @@ async def search_marketers_relations(
 
     database = get_database()
     from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
-    to_gregorian_date = jd.strptime(args.EndDate, "%Y-%m-%d").todatetime() + timedelta(days=1)
+    to_gregorian_date = jd.strptime(args.EndDate, "%Y-%m-%d").todatetime() + timedelta(
+        days=1
+    )
 
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
-    query={}
+    query = {}
     if args.FollowerMarketerName or args.FollowerMarketerID:
         if args.FollowerMarketerName is None:
-            args.FollowerMarketerName = ''
+            args.FollowerMarketerName = ""
 
-        name_query = {"$or": [
-            {"FirstName": {"$regex": args.FollowerMarketerName}},
-            {"LastName": {"$regex": args.FollowerMarketerName}},
-            {"FollowerMarketerID": args.FollowerMarketerID}
-        ]
+        name_query = {
+            "$or": [
+                {"FirstName": {"$regex": args.FollowerMarketerName}},
+                {"LastName": {"$regex": args.FollowerMarketerName}},
+                {"FollowerMarketerID": args.FollowerMarketerID},
+            ]
         }
         fields = {"IdpId": 1}
         idps = marketers_coll.find(name_query, fields)
-        codes = [c.get('IdpId') for c in idps]
+        codes = [c.get("IdpId") for c in idps]
         query = {
-                "$and": [
-                    # {"FollowerMarketerID": {"$in": codes}},
-                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                    {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}},
-                ]
-            }
+            "$and": [
+                # {"FollowerMarketerID": {"$in": codes}},
+                {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+                {"GStartDate": {"$gte": from_gregorian_date}},
+                {"GEndDate": {"$lte": to_gregorian_date}},
+            ]
+        }
         if args.FollowerMarketerID:
             query = {
                 "$and": [
@@ -641,25 +713,26 @@ async def search_marketers_relations(
             }
     elif args.LeaderMarketerName or args.LeaderMarketerID:
         if args.LeaderMarketerName is None:
-            args.LeaderMarketerName = ''
+            args.LeaderMarketerName = ""
 
-        name_query = {"$or": [
-            {"FirstName": {"$regex": args.LeaderMarketerName}},
-            {"LastName": {"$regex": args.LeaderMarketerName}},
-            {"LeaderMarketerID": args.LeaderMarketerID}
-        ]
+        name_query = {
+            "$or": [
+                {"FirstName": {"$regex": args.LeaderMarketerName}},
+                {"LastName": {"$regex": args.LeaderMarketerName}},
+                {"LeaderMarketerID": args.LeaderMarketerID},
+            ]
         }
         fields = {"IdpId": 1}
         idps = marketers_coll.find(name_query, fields)
-        codes = [c.get('IdpId') for c in idps]
+        codes = [c.get("IdpId") for c in idps]
         query = {
-                "$and": [
-                    # {"LeaderMarketerID": {"$in": codes}},
-                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                    {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}},
-                ]
-            }
+            "$and": [
+                # {"LeaderMarketerID": {"$in": codes}},
+                {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+                {"GStartDate": {"$gte": from_gregorian_date}},
+                {"GEndDate": {"$lte": to_gregorian_date}},
+            ]
+        }
         if args.LeaderMarketerID:
             query = {
                 "$and": [
@@ -677,33 +750,35 @@ async def search_marketers_relations(
         if args.LeaderMarketerName is None:
             args.LeaderMarketerName = ""
         gregorian_create_date = jd.strptime(args.CreateDate, "%Y-%m-%d").todatetime()
-        le_name_query = {"$or": [
-            {"FirstName": {"$regex": args.LeaderMarketerName}},
-            {"LastName": {"$regex": args.LeaderMarketerName}},
-            {"LeaderMarketerID": args.LeaderMarketerID}
-        ]
+        le_name_query = {
+            "$or": [
+                {"FirstName": {"$regex": args.LeaderMarketerName}},
+                {"LastName": {"$regex": args.LeaderMarketerName}},
+                {"LeaderMarketerID": args.LeaderMarketerID},
+            ]
         }
         fields = {"IdpId": 1}
         le_idps = marketers_coll.find(le_name_query, fields)
-        le_codes = [c.get('IdpId') for c in le_idps]
-        fo_name_query = {"$or": [
-            {"FirstName": {"$regex": args.FollowerMarketerName}},
-            {"LastName": {"$regex": args.FollowerMarketerName}}
-        ]
+        le_codes = [c.get("IdpId") for c in le_idps]
+        fo_name_query = {
+            "$or": [
+                {"FirstName": {"$regex": args.FollowerMarketerName}},
+                {"LastName": {"$regex": args.FollowerMarketerName}},
+            ]
         }
         fo_idps = marketers_coll.find(fo_name_query, fields)
-        fo_codes = [c.get('IdpId') for c in fo_idps]
+        fo_codes = [c.get("IdpId") for c in fo_idps]
         query = {
-                "$and": [
-                    # {"LeaderMarketerID": {"$in": le_codes}},
-                    # {"FollowerMarketerID": {"$in": fo_codes}},
-                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                    {"GCreateDate": {"$gte": gregorian_create_date}},
-                    {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}}
-                ]
-            }
+            "$and": [
+                # {"LeaderMarketerID": {"$in": le_codes}},
+                # {"FollowerMarketerID": {"$in": fo_codes}},
+                {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+                {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+                {"GCreateDate": {"$gte": gregorian_create_date}},
+                {"GStartDate": {"$gte": from_gregorian_date}},
+                {"GEndDate": {"$lte": to_gregorian_date}},
+            ]
+        }
         if args.FollowerMarketerID:
             query = {
                 "$and": [
@@ -713,7 +788,7 @@ async def search_marketers_relations(
                     {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
                     {"GCreateDate": {"$gte": gregorian_create_date}},
                     {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}}
+                    {"GEndDate": {"$lte": to_gregorian_date}},
                 ]
             }
         elif args.LeaderMarketerID:
@@ -725,12 +800,12 @@ async def search_marketers_relations(
                     {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
                     {"GCreateDate": {"$gte": gregorian_create_date}},
                     {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}}
+                    {"GEndDate": {"$lte": to_gregorian_date}},
                 ]
             }
 
     results = []
-    query_result = marketers_relations_coll.find(query,{"_id":False})
+    query_result = marketers_relations_coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
         results.append(marketers[i])
@@ -740,13 +815,15 @@ async def search_marketers_relations(
         error="",
     )
 
+
 @marketer.get(
     "/users-diff-marketer",
     dependencies=[Depends(JWTBearer())],
-    tags=["Marketer"], response_model=None
+    tags=["Marketer"],
+    response_model=None,
 )
 async def users_diff_with_tbs(
-        request: Request, args: DiffTradesIn = Depends(DiffTradesIn)
+    request: Request, args: DiffTradesIn = Depends(DiffTradesIn)
 ):
 
     # get user id
@@ -757,6 +834,12 @@ async def users_diff_with_tbs(
     firms_coll = db["firms"]
     trades_coll = db["trades"]
     marketers_coll = db["marketers"]
+    if args.IdpID is None:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error="IDP مارکتر را وارد کنید.",
+        )
 
     # check if marketer exists and return his name
     query_result = marketers_coll.find({"IdpId": args.IdpID})
@@ -766,15 +849,15 @@ async def users_diff_with_tbs(
     marketer_fullname = get_marketer_name(marketer_dict)
     # Check if customer exist
 
-    customers_records = customers_coll.find({"Referer": marketer_fullname},
-                                    {"PAMCode": 1}
-                                    )
+    customers_records = customers_coll.find(
+        {"Referer": marketer_fullname}, {"PAMCode": 1}
+    )
 
-    firms_records = firms_coll.find({"Referer":  marketer_fullname},
-                                            {"PAMCode": 1}
-                                            )
+    firms_records = firms_coll.find({"Referer": marketer_fullname}, {"PAMCode": 1})
 
-    trade_codes = [c.get('PAMCode') for c in customers_records] + [c.get('PAMCode') for c in firms_records]
+    trade_codes = [c.get("PAMCode") for c in customers_records] + [
+        c.get("PAMCode") for c in firms_records
+    ]
     ###############
     start_date = jd.strptime(args.from_date, "%Y-%m-%d")
     end_date = jd.strptime(args.to_date, "%Y-%m-%d")
@@ -790,17 +873,20 @@ async def users_diff_with_tbs(
     ###############
     result = []
     for date in dates:
-        print(date)
+        # print(date)
         for trade_code in trade_codes:
-            q=bs_calculator(trade_code, date)#, page=1, size=10)
-            if q['BuyDiff'] ==0 and q['SellDiff']==0:
+            q = bs_calculator(trade_code, date)  # , page=1, size=10)
+            if q["BuyDiff"] == 0 and q["SellDiff"] == 0:
                 pass
             else:
                 result.append(q)
+    err = ""
+    if result == []:
+        err = "مغایرتی در تاریخ های داده شده مشاهده نشد."
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
+        error=err,
     )
 
 
@@ -1087,10 +1173,8 @@ def bs_calculator(trade_code, date, page=1, size=10):
                 "Volume": 1,
                 "Total": {"$multiply": ["$Price", "$Volume"]},
                 "TotalCommission": 1,
-
                 "Buy": 1,
                 "Sell": 1,
-
                 "TradeItemBroker": 1,
                 "TradeCode": 1,
                 "Buy": {
@@ -1098,19 +1182,15 @@ def bs_calculator(trade_code, date, page=1, size=10):
                         "if": {"$eq": ["$TradeType", 1]},
                         "then": "$TradeItemBroker",
                         "else": 0,
-
                     }
                 },
-
                 "Sell": {
                     "$cond": {
                         "if": {"$ne": ["$TradeType", 1]},
                         "then": "$TradeItemBroker",
                         "else": 0,
-
                     }
                 },
-
                 "Commission": {
                     "$cond": {
                         "if": {"$eq": ["$TradeType", 1]},
@@ -1146,7 +1226,7 @@ def bs_calculator(trade_code, date, page=1, size=10):
                 "TotalPureVolume": 1,
                 "TotalFee": 1,
                 "TotalBuy": 1,
-                "TotalSell": 1
+                "TotalSell": 1,
             }
         },
         {
@@ -1174,7 +1254,6 @@ def bs_calculator(trade_code, date, page=1, size=10):
                 "TotalPureVolume": 1,
                 "TotalBuy": 1,
                 "TotalSell": 1,
-
                 "Refferer": "$FirmProfile.Referer",
                 "Referer": "$UserProfile.Referer",
                 "FirmTitle": "$FirmProfile.FirmTitle",
@@ -1219,8 +1298,8 @@ def bs_calculator(trade_code, date, page=1, size=10):
 
     # for i in range(len(trade_codes)):
 
-        # customer[i]=(cus_dict)
-        # trade_code = trade_codes[i]
+    # customer[i]=(cus_dict)
+    # trade_code = trade_codes[i]
     bb = customers_coll.find_one({"PAMCode": trade_code}, {"_id": False})
     if bb:
         cus_dict["TradeCode"] = trade_code
@@ -1232,20 +1311,29 @@ def bs_calculator(trade_code, date, page=1, size=10):
         cus_dict["LedgerCode"] = bb.get("DetailLedgerCode")
         cus_dict["Name"] = bb.get("FirmTitle")
 
-
     dd = commisions_coll.find_one(
-        {"$and": [{"AccountCode": {"$regex": cus_dict["LedgerCode"]}}, {"Date": {"$regex": gdate}}]},
-        {"_id": False})
+        {
+            "$and": [
+                {"AccountCode": {"$regex": cus_dict["LedgerCode"]}},
+                {"Date": {"$regex": gdate}},
+            ]
+        },
+        {"_id": False},
+    )
     if dd:
-        cus_dict["TBSBuyCo"] = dd.get("NonOnlineBuyCommission") + dd.get("OnlineBuyCommission")
-        cus_dict["TBSSellCo"] = dd.get("NonOnlineSellCommission") + dd.get("OnlineSellCommission")
+        cus_dict["TBSBuyCo"] = dd.get("NonOnlineBuyCommission") + dd.get(
+            "OnlineBuyCommission"
+        )
+        cus_dict["TBSSellCo"] = dd.get("NonOnlineSellCommission") + dd.get(
+            "OnlineSellCommission"
+        )
     else:
         cus_dict["TBSBuyCo"] = 0
         cus_dict["TBSSellCo"] = 0
 
     if aggre_dict:
-        cus_dict["OurBuyCom"] = aggre_dict['items'][0]["TotalBuy"]
-        cus_dict["OurSellCom"] = aggre_dict['items'][0]["TotalSell"]
+        cus_dict["OurBuyCom"] = aggre_dict["items"][0]["TotalBuy"]
+        cus_dict["OurSellCom"] = aggre_dict["items"][0]["TotalSell"]
     else:
         cus_dict["OurBuyCom"] = 0
         cus_dict["OurSellCom"] = 0
@@ -1255,14 +1343,11 @@ def bs_calculator(trade_code, date, page=1, size=10):
     cus_dict["Date"] = date
 
     # Comm = bs_calculator([trade_code], dato, dato)
-        # print(Comm)
-        # print(f"{BuyCo}\t{SellCo}\t{BuyCom}\t{SellCom}\t")
-        # customer.append(cus_dict)
+    # print(Comm)
+    # print(f"{BuyCo}\t{SellCo}\t{BuyCom}\t{SellCom}\t")
+    # customer.append(cus_dict)
 
-
-    return cus_dict#aggre_dict
-
-
+    return cus_dict  # aggre_dict
 
 
 # bb= bs_calculator('18690927134934', '1402-02-17', page=1, size=10)

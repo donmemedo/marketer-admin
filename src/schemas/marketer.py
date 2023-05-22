@@ -175,6 +175,7 @@ class MarketerRelations:
     # CreateDate: str = Query(default=current_date)
     # UpdateDate: str = Query(default=current_date)
 
+
 @dataclass
 class SearchMarketerRelations:
 
@@ -186,6 +187,7 @@ class SearchMarketerRelations:
     EndDate: str = Query(default="1501-12-29")
     CreateDate: str = Query(default=None)
     # UpdateDate: str = Query(default=current_date)
+
 
 @dataclass
 class DiffTradesIn:
