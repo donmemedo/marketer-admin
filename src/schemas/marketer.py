@@ -174,6 +174,11 @@ class MarketerRelations:
     EndDate: str = Query(default=None)
     # CreateDate: str = Query(default=current_date)
     # UpdateDate: str = Query(default=current_date)
+@dataclass
+class DelMarketerRelations:
+
+    LeaderMarketerID: str
+    FollowerMarketerID: str
 
 
 @dataclass
