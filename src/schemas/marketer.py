@@ -54,6 +54,18 @@ class ModifyMarketerIn:
 
 
 @dataclass
+class AddMarketerIn:
+    CurrentIdpId: str
+    InvitationLink: Optional[str] = None
+    FirstName: Optional[str] = None
+    LastName: Optional[str] = None
+    RefererType: Optional[str] = None
+    CreatedBy: Optional[str] = None
+    CreateDate: Optional[str] = None
+    NationalID: Optional[str] = None
+
+
+@dataclass
 class UserTradesIn:
     TradeCode: str = Query(alias="TradeCode")
 

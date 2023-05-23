@@ -301,7 +301,7 @@ async def add_factor(
     if args.FactorStatus is not None:
         update["$set"][per + "FactStatus"] = args.FactorStatus
 
-    factor_coll.insert_one(filter, update)
+    factor_coll.update_one(filter, update)
     query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
     # marketer_dict = peek(query_result)
     return ResponseListOut(
@@ -369,6 +369,7 @@ async def search_factor(
         result["FinalFee"]=query_result.get(per + "FinalFee")
         result["Payment"]=query_result.get(per + "Payment")
         result["FactStatus"]=query_result.get(per + "FactStatus")
+        query_result.values()
     except:
         return ResponseListOut(
             result=[],
@@ -385,72 +386,81 @@ async def search_factor(
     )
 
 
-# @factor.delete("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
-# async def delete_factor(
-#     request: Request, args: ModifyFactorIn = Depends(ModifyFactorIn)
-# ):
-#     user_id = get_sub(request)
-#
-#     if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-#         raise HTTPException(status_code=403, detail="Not authorized.")
-#
-#     database = get_database()
-#
-#     factor_coll = database["factorsFIN"]
-#     if args.MarketerID and args.Period:
-#         pass
-#     else:
-#         return ResponseListOut(
-#             result=[],
-#             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-#             error={
-#                 "errorMessage": "IDP مارکتر و دوره را وارد کنید.",
-#                 "errorCode": "30030"
-#             },
-#         )
-#
-#     filter = {"IdpID": args.MarketerID}
-#     update = {"$set": {}}
-#     per = args.Period
-#
-#     if args.TotalPureVolume is not None:
-#         update["$set"][per + "TPV"] = args.TotalPureVolume
-#
-#     if args.TotalFee is not None:
-#         update["$set"][per + "TF"] = args.TotalFee
-#
-#     if args.PureFee is not None:
-#         update["$set"][per + "PureFee"] = args.PureFee
-#
-#     if args.MarketerFee is not None:
-#         update["$set"][per + "MarFee"] = args.MarketerFee
-#
-#     if args.Plan is not None:
-#         update["$set"][per + "Plan"] = args.Plan
-#
-#     if args.Tax is not None:
-#         update["$set"][per + "Tax"] = args.Tax
-#
-#     if args.Collateral is not None:
-#         update["$set"][per + "Collateral"] = args.Collateral
-#
-#     if args.FinalFee is not None:
-#         update["$set"][per + "FinalFee"] = args.FinalFee
-#
-#     if args.Payment is not None:
-#         update["$set"][per + "Payment"] = args.Payment
-#
-#     if args.FactorStatus is not None:
-#         update["$set"][per + "FactStatus"] = args.FactorStatus
-#
-#     factor_coll.insert_one(filter, update)
-#     query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
-#     # marketer_dict = peek(query_result)
-#     return ResponseListOut(
-#         result=query_result,  # marketer_entity(marketer_dict),
-#         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-#         error="",
-#     )
+@factor.delete("/delete-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+async def delete_factor(
+    request: Request, args: SearchFactorIn = Depends(SearchFactorIn)
+):
+    user_id = get_sub(request)
+
+    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
+    database = get_database()
+
+    factor_coll = database["factorsFIN"]
+    if args.MarketerID and args.Period:
+        pass
+    else:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "IDP مارکتر و دوره را وارد کنید.",
+                "errorCode": "30030"
+            },
+        )
+
+    filter = {"IdpID": args.MarketerID}
+    update = {"$set": {}}
+    per = args.Period
+    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
+    if not query_result:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage":"موردی در دیتابیس یافت نشد.",
+                "errorCode":"30001"
+            },
+        )
+    result =[f"از ماکتر {query_result.get('FullName')}فاکتور مربوط به دوره {args.Period} پاک شد."]
+    delete = []
+    update = {"$unset": {}}
+    update["$unset"][per + "PureFee"]=1
+    update["$unset"][per + "MarFee"]=1
+
+    delete.append(per + "TPV")
+    delete.append(per + "TF")
+    delete.append(per + "PureFee")
+    delete.append(per + "MarFee")
+    delete.append(per + "Plan")
+    delete.append(per + "Tax")
+    delete.append(per + "Collateral")
+    delete.append(per + "FinalFee")
+    delete.append(per + "Payment")
+    delete.append(per + "FactStatus")
+    try:
+        # factor_coll.update_one({"IdpID": args.MarketerID}, {"$unset": delete})
+        # factor_coll.update_one({"IdpID": args.MarketerID}, {'$unset': {'140202Tax':1}})
+        factor_coll.update_one({"IdpID": args.MarketerID}, update)
+
+    except:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage":"موردی در دیتابیس یافت نشد.",
+                "errorCode":"30001"
+            },
+        )
+    # result.append(dict(delete))
+    result.append(factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False}))
+    # marketer_dict = peek(query_result)
+    return ResponseListOut(
+        result=result,#factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False}),  # marketer_entity(marketer_dict),
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @factor.get(
