@@ -202,7 +202,7 @@ class SearchMarketerRelations:
     FollowerMarketerID: str = None
     StartDate: str = Query(default="1301-01-01")
     EndDate: str = Query(default="1501-12-29")
-    CreateDate: str = Query(default=None)
+    # CreateDate: str = Query(default=None)
     # UpdateDate: str = Query(default=current_date)
 
 

@@ -876,65 +876,65 @@ async def search_marketers_relations(
                 ]
             }
 
-    if args.CreateDate:
-        if args.FollowerMarketerName is None:
-            args.FollowerMarketerName = ""
-        if args.LeaderMarketerName is None:
-            args.LeaderMarketerName = ""
-        gregorian_create_date = jd.strptime(args.CreateDate, "%Y-%m-%d").todatetime()
-        le_name_query = {
-            "$or": [
-                {"FirstName": {"$regex": args.LeaderMarketerName}},
-                {"LastName": {"$regex": args.LeaderMarketerName}},
-                {"LeaderMarketerID": args.LeaderMarketerID},
-            ]
-        }
-        fields = {"IdpId": 1}
-        le_idps = marketers_coll.find(le_name_query, fields)
-        le_codes = [c.get("IdpId") for c in le_idps]
-        fo_name_query = {
-            "$or": [
-                {"FirstName": {"$regex": args.FollowerMarketerName}},
-                {"LastName": {"$regex": args.FollowerMarketerName}},
-            ]
-        }
-        fo_idps = marketers_coll.find(fo_name_query, fields)
-        fo_codes = [c.get("IdpId") for c in fo_idps]
-        query = {
-            "$and": [
-                # {"LeaderMarketerID": {"$in": le_codes}},
-                # {"FollowerMarketerID": {"$in": fo_codes}},
-                {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                {"GCreateDate": {"$gte": gregorian_create_date}},
-                {"GStartDate": {"$gte": from_gregorian_date}},
-                {"GEndDate": {"$lte": to_gregorian_date}},
-            ]
-        }
-        if args.FollowerMarketerID:
-            query = {
-                "$and": [
-                    # {"LeaderMarketerID": {"$in": le_codes}},
-                    {"FollowerMarketerID": args.FollowerMarketerID},
-                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                    {"GCreateDate": {"$gte": gregorian_create_date}},
-                    {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}},
-                ]
-            }
-        elif args.LeaderMarketerID:
-            query = {
-                "$and": [
-                    # {"LeaderMarketerID": {"$in": le_codes}},
-                    {"LeaderMarketerID": args.LeaderMarketerID},
-                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                    {"GCreateDate": {"$gte": gregorian_create_date}},
-                    {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}},
-                ]
-            }
+    # if args.CreateDate:
+    #     if args.FollowerMarketerName is None:
+    #         args.FollowerMarketerName = ""
+    #     if args.LeaderMarketerName is None:
+    #         args.LeaderMarketerName = ""
+    #     gregorian_create_date = jd.strptime(args.CreateDate, "%Y-%m-%d").todatetime()
+    #     le_name_query = {
+    #         "$or": [
+    #             {"FirstName": {"$regex": args.LeaderMarketerName}},
+    #             {"LastName": {"$regex": args.LeaderMarketerName}},
+    #             {"LeaderMarketerID": args.LeaderMarketerID},
+    #         ]
+    #     }
+    #     fields = {"IdpId": 1}
+    #     le_idps = marketers_coll.find(le_name_query, fields)
+    #     le_codes = [c.get("IdpId") for c in le_idps]
+    #     fo_name_query = {
+    #         "$or": [
+    #             {"FirstName": {"$regex": args.FollowerMarketerName}},
+    #             {"LastName": {"$regex": args.FollowerMarketerName}},
+    #         ]
+    #     }
+    #     fo_idps = marketers_coll.find(fo_name_query, fields)
+    #     fo_codes = [c.get("IdpId") for c in fo_idps]
+    #     query = {
+    #         "$and": [
+    #             # {"LeaderMarketerID": {"$in": le_codes}},
+    #             # {"FollowerMarketerID": {"$in": fo_codes}},
+    #             {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+    #             {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+    #             {"GCreateDate": {"$gte": gregorian_create_date}},
+    #             {"GStartDate": {"$gte": from_gregorian_date}},
+    #             {"GEndDate": {"$lte": to_gregorian_date}},
+    #         ]
+    #     }
+    #     if args.FollowerMarketerID:
+    #         query = {
+    #             "$and": [
+    #                 # {"LeaderMarketerID": {"$in": le_codes}},
+    #                 {"FollowerMarketerID": args.FollowerMarketerID},
+    #                 {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+    #                 {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+    #                 {"GCreateDate": {"$gte": gregorian_create_date}},
+    #                 {"GStartDate": {"$gte": from_gregorian_date}},
+    #                 {"GEndDate": {"$lte": to_gregorian_date}},
+    #             ]
+    #         }
+    #     elif args.LeaderMarketerID:
+    #         query = {
+    #             "$and": [
+    #                 # {"LeaderMarketerID": {"$in": le_codes}},
+    #                 {"LeaderMarketerID": args.LeaderMarketerID},
+    #                 {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+    #                 {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+    #                 {"GCreateDate": {"$gte": gregorian_create_date}},
+    #                 {"GStartDate": {"$gte": from_gregorian_date}},
+    #                 {"GEndDate": {"$lte": to_gregorian_date}},
+    #             ]
+    #         }
 
     results = []
     try:
