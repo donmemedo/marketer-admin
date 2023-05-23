@@ -15,6 +15,7 @@ from src.tools.database import get_database
 from src.schemas.marketer import (
     MarketerOut,
     ModifyMarketerIn,
+    AddMarketerIn,
     UsersTotalPureIn,
     MarketersProfileIn,
     MarketerIn,
@@ -207,7 +208,7 @@ async def modify_marketer(
     tags=["Marketer"],  # , response_model=None
 )
 async def add_marketer(
-    request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)
+    request: Request, args: AddMarketerIn = Depends(AddMarketerIn)
 ):
 
     user_id = get_sub(request)
@@ -246,21 +247,32 @@ async def add_marketer(
     if args.CreateDate is not None:
         update["$set"]["CreateDate"] = args.CreateDate
 
-    if args.ModifiedBy is not None:
-        update["$set"]["ModifiedBy"] = args.ModifiedBy
+    # if args.ModifiedBy is not None:
+    #     update["$set"]["ModifiedBy"] = args.ModifiedBy
 
     if args.CreatedBy is not None:
         update["$set"]["CreatedBy"] = args.CreatedBy
 
-    if args.ModifiedDate is not None:
-        update["$set"]["ModifiedDate"] = args.ModifiedDate
+    # if args.ModifiedDate is not None:
+    #     update["$set"]["ModifiedDate"] = args.ModifiedDate
 
     if args.NationalID is not None:
-        update["$set"]["Id"] = args.NationalID
+        try:
+            dd = int(args.NationalID)
+            update["$set"]["Id"] = args.NationalID
+        except:
+            return ResponseListOut(
+                result=[],
+                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                error={
+                    "errorMessage": "کد ملی را درست وارد کنید.",
+                    "errorCode": "30066"
+                },
+            )
 
     update["$set"]["IdpId"] = args.CurrentIdpId
     try:
-        marketer_coll.insert_one(update)
+        marketer_coll.insert_one(update["$set"])
     except:
         return ResponseListOut(
             result=[],
@@ -813,7 +825,7 @@ async def search_marketers_relations(
         }
         fields = {"IdpId": 1}
         idps = marketers_coll.find(name_query, fields)
-        codes = [c.get("IdpId") for c in idps]
+        # codes = [c.get("IdpId") for c in idps]
         query = {
             "$and": [
                 # {"FollowerMarketerID": {"$in": codes}},
