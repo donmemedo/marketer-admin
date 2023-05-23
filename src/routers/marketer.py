@@ -25,6 +25,7 @@ from src.schemas.marketer import (
     ResponseListOut,
     ModifyFactorIn,
     MarketerRelations,
+    DelMarketerRelations,
     SearchMarketerRelations,
 )
 from src.tools.utils import peek, to_gregorian_, marketer_entity, get_marketer_name
@@ -957,6 +958,84 @@ async def search_marketers_relations(
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error="",
         )
+
+@marketer.delete(
+    "/delete-marketers-relations",
+    dependencies=[Depends(JWTBearer())],
+    tags=["Marketer"],
+    response_model=None,
+)
+async def delete_marketers_relations(
+    request: Request, args: DelMarketerRelations = Depends(DelMarketerRelations)
+):
+    user_id = get_sub(request)
+
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
+
+    database = get_database()
+
+    marketers_relations_coll = database["mrelations"]
+    marketers_coll = database["marketers"]
+    if args.LeaderMarketerID and args.FollowerMarketerID:
+        pass
+    else:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "IDP مارکترها را وارد کنید.",
+                "errorCode": "30009"
+            },
+        )
+    if args.LeaderMarketerID == args.FollowerMarketerID:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "مارکترها نباید یکسان باشند.",
+                "errorCode": "30011"
+            },
+        )
+    q = marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID},{"_id":False})
+
+    if not q:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "این مارکتر زیرمجموعه کسی نیست.",
+                "errorCode": "30052"
+            }
+        )
+    elif not q.get("LeaderMarketerID")==args.LeaderMarketerID:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "این مارکتر زیرمجموعه نفر دیگری است.",
+                "errorCode": "30012"
+            },
+        )
+
+    results=[]
+    FollowerMarketerName = get_marketer_name(
+        marketers_coll.find_one({"IdpId": args.FollowerMarketerID})
+    )
+    LeaderMarketerName = get_marketer_name(
+        marketers_coll.find_one({"IdpId": args.LeaderMarketerID})
+    )
+
+    qq = marketers_relations_coll.find_one(
+        {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False})
+    results.append(qq)
+    results.append({"MSG":f"ارتباط بین {LeaderMarketerName} و{FollowerMarketerName} برداشته شد."})
+
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @marketer.get(

@@ -163,6 +163,12 @@ class ModifyFactorIn:
     FactorStatus: int = None
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
 
+@dataclass
+class SearchFactorIn:
+
+    MarketerID: str
+    Period: Optional[str] = str(current_year) + f"{current_month:02}"
+
 
 @dataclass
 class FactorsListIn(Pages):

@@ -22,6 +22,7 @@ from src.schemas.factor import (
     ResponseListOut,
     ModifyFactorIn,
     FactorsListIn,
+    SearchFactorIn
 )
 from src.tools.utils import peek, to_gregorian_, marketer_entity, get_marketer_name
 
@@ -308,6 +309,81 @@ async def add_factor(
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
+
+@factor.get("/search-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+async def search_factor(
+    request: Request, args: SearchFactorIn = Depends(SearchFactorIn)
+):
+    user_id = get_sub(request)
+
+    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
+    database = get_database()
+
+    factor_coll = database["factors"]
+    if args.MarketerID and args.Period:
+        pass
+    else:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage": "IDP مارکتر و دوره را وارد کنید.",
+                "errorCode": "30030"
+            },
+        )
+
+    filter = {"IdpID": args.MarketerID}
+    per = args.Period
+    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
+    if not query_result:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage":"موردی در دیتابیس یافت نشد.",
+                "errorCode":"30001"
+            },
+        )
+
+    # results =[]
+    result={}
+    tma = per
+    if int(per[4:6])<3:
+        tma = str(int(per[0:4])-1)+ str(int(per[4:6])+10)
+    else:
+        tma[5] = int(per[5]) - 2
+
+    try:
+        result["MarketerName"]= query_result.get("FullName")
+        result["Doreh"]=per
+        result["TotalPureVolume"]=query_result.get(per + "TPV")
+        result["TotalFee"]=query_result.get(per + "TF")
+        result["PureFee"]=query_result.get(per + "PureFee")
+        result["MarketerFee"]=query_result.get(per + "MarFee")
+        result["Plan"]=query_result.get(per + "Plan")
+        result["Tax"]=query_result.get(per + "Tax")
+        result["ThisMonthCollateral"]=query_result.get(per + "Collateral")
+        result["TwoMonthsAgoCollateral"]=query_result.get(tma + "Collateral")
+        result["FinalFee"]=query_result.get(per + "FinalFee")
+        result["Payment"]=query_result.get(per + "Payment")
+        result["FactStatus"]=query_result.get(per + "FactStatus")
+    except:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={
+                "errorMessage":"موردی در دیتابیس یافت نشد.",
+                "errorCode":"30001"
+            },
+        )
+    return ResponseListOut(
+        result=result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
+
 
 # @factor.delete("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
 # async def delete_factor(
