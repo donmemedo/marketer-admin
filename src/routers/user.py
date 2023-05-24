@@ -3,21 +3,19 @@
 Returns:
     _type_: _description_
 """
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi_pagination import add_pagination
+from khayyam import JalaliDatetime as jd
 from src.tools.tokens import JWTBearer, get_sub
 from src.tools.database import get_database
 from src.tools.utils import to_gregorian_, peek
-from datetime import datetime, timedelta
-from khayyam import JalaliDatetime as jd
 from src.schemas.user import (
     UserTradesIn,
-    UserTradesOut,
     UsersListIn,
     ResponseOut,
     ResponseListOut,
 )
-from fastapi_pagination import Page, add_pagination
-from fastapi_pagination.ext.pymongo import paginate
 
 
 user = APIRouter(prefix="/user")
@@ -27,10 +25,21 @@ user = APIRouter(prefix="/user")
     "/user-trades",
     dependencies=[Depends(JWTBearer())],
     tags=["User"],
-    # response_model=Page[UserTradesOut],
     response_model=None,
 )
 async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTradesIn)):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (UserTradesIn, optional): _description_. Defaults to Depends(UserTradesIn).
+
+    Raises:
+        HTTPException: _description_
+
+    Returns:
+        _type_: _description_
+    """
     user_id = get_sub(request)
 
     if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
@@ -39,10 +48,7 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "PAMCode  را وارد کنید.",
-                "errorCode": "30015"
-            },
+            error={"errorMessage": "PAMCode  را وارد کنید.", "errorCode": "30015"},
         )
     database = get_database()
     results = []
@@ -71,15 +77,14 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
                 "errorMessage": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
-                "errorCode": "30017"
+                "errorCode": "30017",
             },
         )
-    else:
-        return ResponseListOut(
-            result=results,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @user.get(
@@ -89,16 +94,25 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     response_model=None,
 )
 def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersListIn)):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (UsersListIn, optional): _description_. Defaults to Depends(UsersListIn).
+
+    Returns:
+        _type_: _description_
+    """
     # get user id
     marketer_id = get_sub(request)
 
-    db = get_database()
+    database = get_database()
 
-    customers_coll = db["customers"]
-    firms_coll = db["firms"]
+    customers_coll = database["customers"]
+    firms_coll = database["firms"]
 
-    trades_coll = db["trades"]
-    marketers_coll = db["marketers"]
+    trades_coll = database["trades"]
+    marketers_coll = database["marketers"]
 
     # check if marketer exists and return his name
     query_result = marketers_coll.find({"IdpId": marketer_id})
@@ -123,115 +137,15 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     query = {"$and": [{"Referer": marketer_fullname}]}
     if args.marketername:
         query = {"Referer": {"$regex": args.marketername}}
-
-    # get all customers' TradeCodes
-    # query = {"$and": [{"Referer": marketer_fullname}]}
-
     fields = {"PAMCode": 1}
-
     customers_records = customers_coll.find(query, fields)
     firms_records = firms_coll.find(query, fields)
     trade_codes = [c.get("PAMCode") for c in customers_records] + [
         c.get("PAMCode") for c in firms_records
     ]
-    #
-    # pipeline = [
-    #     {
-    #         "$match": {
-    #             "$and": [
-    #                 {"TradeCode": {"$in": trade_codes}},
-    #                 {"TradeDate": {"$gte": from_gregorian_date}},
-    #                 {"TradeDate": {"$lte": to_gregorian_date}},
-    #             ]
-    #         }
-    #     },
-    #     {
-    #         "$project": {
-    #             "Price": 1,
-    #             "Volume": 1,
-    #             "Total": {"$multiply": ["$Price", "$Volume"]},
-    #             "TotalCommission": 1,
-    #             "TradeItemBroker": 1,
-    #             "TradeCode": 1,
-    #             "Commission": {
-    #                 "$cond": {
-    #                     "if": {"$eq": ["$TradeType", 1]},
-    #                     "then": {
-    #                         "$add": [
-    #                             "$TotalCommission",
-    #                             {"$multiply": ["$Price", "$Volume"]},
-    #                         ]
-    #                     },
-    #                     "else": {
-    #                         "$subtract": [
-    #                             {"$multiply": ["$Price", "$Volume"]},
-    #                             "$TotalCommission",
-    #                         ]
-    #                     },
-    #                 }
-    #             },
-    #         }
-    #     },
-    #     {
-    #         "$group": {
-    #             "_id": "$TradeCode",
-    #             "TotalFee": {"$sum": "$TradeItemBroker"},
-    #             "TotalPureVolume": {"$sum": "$Commission"},
-    #         }
-    #     },
-    #     {
-    #         "$project": {
-    #             "_id": 0,
-    #             "TradeCode": "$_id",
-    #             "TotalPureVolume": 1,
-    #             "TotalFee": 1,
-    #         }
-    #     },
-    #     {
-    #         "$lookup": {
-    #             "from": "customers",
-    #             "localField": "TradeCode",
-    #             "foreignField": "PAMCode",
-    #             "as": "UserProfile",
-    #         }
-    #     },
-    #     {"$unwind": "$UserProfile"},
-    #     {
-    #         "$project": {
-    #             "TradeCode": 1,
-    #             "TotalFee": 1,
-    #             "TotalPureVolume": 1,
-    #             "FirstName": "$UserProfile.FirstName",
-    #             "LastName": "$UserProfile.LastName",
-    #             "Username": "$UserProfile.Username",
-    #             "Mobile": "$UserProfile.Mobile",
-    #             "RegisterDate": "$UserProfile.RegisterDate",
-    #             "BankAccountNumber": "$UserProfile.BankAccountNumber",
-    #         }
-    #     },
-    #     {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
-    #     {
-    #         "$facet": {
-    #             "metadata": [{"$count": "total"}],
-    #             "items": [
-    #                 {"$skip": (args.page - 1) * args.size},
-    #                 {"$limit": args.size},
-    #             ],
-    #         }
-    #     },
-    #     {"$unwind": "$metadata"},
-    #     {
-    #         "$project": {
-    #             "total": "$metadata.total",
-    #             "items": 1,
-    #         }
-    #     },
-    # ]
-
     pipeline = [
         {
             "$match": {
-                # "TradeCode": {"$in": trade_codes}
                 "$and": [
                     {"TradeCode": {"$in": trade_codes}},
                     {"TradeDate": {"$gte": from_gregorian_date}},
@@ -281,40 +195,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
                 "TotalFee": 1,
             }
         },
-        #########Danial's Code########
-        # {
-        #     "$lookup": {
-        #         "from": "customers",
-        #         "localField": "TradeCode",
-        #         "foreignField": "PAMCode",
-        #         "as": "UserProfile"
-        #     }
-        # },
-        # {
-        #     "$unwind": "$UserProfile"
-        # },
-        # {
-        #     "$project": {
-        #         "TradeCode": 1,
-        #         "TotalFee": 1,
-        #         "TotalPureVolume": 1,
-        #         "FirstName": "$UserProfile.FirstName",
-        #         "LastName": "$UserProfile.LastName",
-        #         "Username": "$UserProfile.Username",
-        #         "Mobile": "$UserProfile.Mobile",
-        #         "RegisterDate": "$UserProfile.RegisterDate",
-        #         "BankAccountNumber": "$UserProfile.BankAccountNumber",
-        #     }
-        # },
-        # {
-        #     "$sort": {
-        #         "TotalPureVolume": 1,
-        #         "RegisterDate": 1,
-        #         "TradeCode": 1
-        #     }
-        # },
-        ##############END of Danial's Code#########
-        ##############Refactored Code#########
         {
             "$lookup": {
                 "from": "firms",
@@ -341,8 +221,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
                 "Refferer": "$FirmProfile.Referer",
                 "Referer": "$UserProfile.Referer",
                 "FirmTitle": "$FirmProfile.FirmTitle",
-                # "FirmRegisterDate": "$FirmTitle.RegisterDate",
-                # "FirmBankAccountNumber": "$FirmTitle.BankAccountNumber",
                 "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
                 "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
                 "FirstName": "$UserProfile.FirstName",
@@ -354,7 +232,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
             }
         },
         {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
-        ###########END of Refactor############
         {
             "$facet": {
                 "metadata": [{"$count": "totalCount"}],
@@ -372,35 +249,27 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
             }
         },
     ]
-
     aggr_result = trades_coll.aggregate(pipeline=pipeline)
-
     aggre_dict = next(aggr_result, None)
-
     if aggre_dict is None:
         return {}
-
     aggre_dict["page"] = args.page
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
-
-        # return aggre_dict
         return ResponseOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
                 "errorMessage": "خروجی برای متغیرهای داده شده نداریم.",
-                "errorCode": "30020"
+                "errorCode": "30020",
             },
         )
-    else:
-        return ResponseOut(
-            result=aggre_dict,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
-
+    return ResponseOut(
+        result=aggre_dict,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @user.get(
@@ -410,13 +279,23 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     response_model=None,
 )
 def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (UsersListIn, optional): _description_. Defaults to Depends(UsersListIn).
+
+    Returns:
+        _type_: _description_
+    """
     # get user id
     marketer_id = get_sub(request)
-    db = get_database()
+    database = get_database()
 
-    customers_coll = db["customers"]
-    trades_coll = db["trades"]
-    marketers_coll = db["marketers"]
+    customers_coll = database["customers"]
+    firms_coll = database["firms"]
+    trades_coll = database["trades"]
+    marketers_coll = database["marketers"]
 
     # check if marketer exists and return his name
     query_result = marketers_coll.find({"IdpId": marketer_id})
@@ -445,12 +324,14 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     fields = {"PAMCode": 1}
 
     customers_records = customers_coll.find(query, fields)
-    trade_codes = [c.get("PAMCode") for c in customers_records]
+    firms_records = firms_coll.find(query, fields)
+    trade_codes = [c.get("PAMCode") for c in customers_records] + [
+        c.get("PAMCode") for c in firms_records
+    ]
 
     pipeline = [
         {
             "$match": {
-                # "TradeCode": {"$in": trade_codes}
                 "$and": [
                     {"TradeCode": {"$in": trade_codes}},
                     {"TradeDate": {"$gte": from_gregorian_date}},
@@ -502,18 +383,30 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
         },
         {
             "$lookup": {
+                "from": "firms",
+                "localField": "TradeCode",
+                "foreignField": "PAMCode",
+                "as": "FirmProfile",
+            },
+        },
+        {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
+        {
+            "$lookup": {
                 "from": "customers",
                 "localField": "TradeCode",
                 "foreignField": "PAMCode",
                 "as": "UserProfile",
             }
         },
-        {"$unwind": "$UserProfile"},
+        {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
         {
             "$project": {
                 "TradeCode": 1,
                 "TotalFee": 1,
                 "TotalPureVolume": 1,
+                "Refferer": "$FirmProfile.Referer",
+                "Referer": "$UserProfile.Referer",
+                "FirmTitle": "$FirmProfile.FirmTitle",
                 "FirstName": "$UserProfile.FirstName",
                 "LastName": "$UserProfile.LastName",
                 "Username": "$UserProfile.Username",
@@ -522,6 +415,19 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
                 "BankAccountNumber": "$UserProfile.BankAccountNumber",
             }
         },
+        # {
+        #     "$project": {
+        #         "TradeCode": 1,
+        #         "TotalFee": 1,
+        #         "TotalPureVolume": 1,
+        #         "FirstName": "$UserProfile.FirstName",
+        #         "LastName": "$UserProfile.LastName",
+        #         "Username": "$UserProfile.Username",
+        #         "Mobile": "$UserProfile.Mobile",
+        #         "RegisterDate": "$UserProfile.RegisterDate",
+        #         "BankAccountNumber": "$UserProfile.BankAccountNumber",
+        #     }
+        # },
         {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
         {
             "$facet": {
@@ -552,24 +458,19 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
-
-        # return aggre_dict
         return ResponseOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
                 "errorMessage": "خروجی برای متغیرهای داده شده نداریم.",
-                "errorCode": "30020"
+                "errorCode": "30020",
             },
         )
-    else:
-        return ResponseOut(
-            result=aggre_dict,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
-
-    # return aggre_dict
+    return ResponseOut(
+        result=aggre_dict,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @user.get(
@@ -581,7 +482,15 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
 async def users_diff_with_tbs(
     request: Request, args: UserTradesIn = Depends(UserTradesIn)
 ):
+    """_summary_
 
+    Args:
+        request (Request): _description_
+        args (UserTradesIn, optional): _description_. Defaults to Depends(UserTradesIn).
+
+    Returns:
+        _type_: _description_
+    """
     # get user id
     # marketer_id = get_sub(request)
     start_date = jd.strptime(args.from_date, "%Y-%m-%d")
@@ -590,10 +499,7 @@ async def users_diff_with_tbs(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "PAMCode  را وارد کنید.",
-                "errorCode": "30015"
-            },
+            error={"errorMessage": "PAMCode  را وارد کنید.", "errorCode": "30015"},
         )
 
     delta = timedelta(days=1)
@@ -620,23 +526,34 @@ async def users_diff_with_tbs(
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
                 "errorMessage": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-                "errorCode": "30013"
+                "errorCode": "30013",
             },
         )
-    else:
-        return ResponseListOut(
-            result=result,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
+    return ResponseListOut(
+        result=result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 add_pagination(user)
 
 
 def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
-    db = get_database()
-    trades_coll = db["trades"]
+    """_summary_
+
+    Args:
+        trade_codes (_type_): _description_
+        from_date (_type_): _description_
+        to_date (_type_): _description_
+        page (int, optional): _description_. Defaults to 1.
+        size (int, optional): _description_. Defaults to 10.
+
+    Returns:
+        _type_: _description_
+    """
+    database = get_database()
+    trades_coll = database["trades"]
     from_gregorian_date = to_gregorian_(from_date)
     to_gregorian_date = to_gregorian_(to_date)
     to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
@@ -760,22 +677,25 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
     return aggre_dict
 
-    # return ResponseOut(
-    #     result=aggre_dict,
-    #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-    #     error=""
-    #     )
 
-
-# b=cost_calculator(['18691270430742','1866253420','1866257261','1866259792','1866246063','1866246295'],'1400-02-01','1402-02-21')
-# print(b)
 def bs_calculator(trade_code, date, page=1, size=10):
-    db = get_database()
-    trades_coll = db["trades"]
-    customers_coll = db["customers"]
-    firms_coll = db["firms"]
+    """_summary_
 
-    commisions_coll = db["commisions"]
+    Args:
+        trade_code (_type_): _description_
+        date (_type_): _description_
+        page (int, optional): _description_. Defaults to 1.
+        size (int, optional): _description_. Defaults to 10.
+
+    Returns:
+        _type_: _description_
+    """
+    database = get_database()
+    trades_coll = database["trades"]
+    customers_coll = database["customers"]
+    firms_coll = database["firms"]
+
+    commisions_coll = database["commisions"]
     gdate = to_gregorian_(date)
 
     from_gregorian_date = to_gregorian_(date)
@@ -914,32 +834,19 @@ def bs_calculator(trade_code, date, page=1, size=10):
     aggr_result = trades_coll.aggregate(pipeline=pipeline)
 
     aggre_dict = next(aggr_result, None)
-
-    # if aggre_dict is None:
-    #     return {}
-
-    # aggre_dict["page"] = page
-    # aggre_dict["size"] = size
-    # aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
-    customer = {}
     cus_dict = {}
-
-    # for i in range(len(trade_codes)):
-
-    # customer[i]=(cus_dict)
-    # trade_code = trade_codes[i]
-    bb = customers_coll.find_one({"PAMCode": trade_code}, {"_id": False})
-    if bb:
+    bbb = customers_coll.find_one({"PAMCode": trade_code}, {"_id": False})
+    if bbb:
         cus_dict["TradeCode"] = trade_code
-        cus_dict["LedgerCode"] = bb.get("DetailLedgerCode")
-        cus_dict["Name"] = f'{bb.get("FirstName")} {bb.get("LastName")}'
+        cus_dict["LedgerCode"] = bbb.get("DetailLedgerCode")
+        cus_dict["Name"] = f'{bbb.get("FirstName")} {bbb.get("LastName")}'
     else:
-        bb = firms_coll.find_one({"PAMCode": trade_code}, {"_id": False})
+        bbb = firms_coll.find_one({"PAMCode": trade_code}, {"_id": False})
         cus_dict["TradeCode"] = trade_code
-        cus_dict["LedgerCode"] = bb.get("DetailLedgerCode")
-        cus_dict["Name"] = bb.get("FirmTitle")
+        cus_dict["LedgerCode"] = bbb.get("DetailLedgerCode")
+        cus_dict["Name"] = bbb.get("FirmTitle")
 
-    dd = commisions_coll.find_one(
+    ddd = commisions_coll.find_one(
         {
             "$and": [
                 {"AccountCode": {"$regex": cus_dict["LedgerCode"]}},
@@ -948,11 +855,11 @@ def bs_calculator(trade_code, date, page=1, size=10):
         },
         {"_id": False},
     )
-    if dd:
-        cus_dict["TBSBuyCo"] = dd.get("NonOnlineBuyCommission") + dd.get(
+    if ddd:
+        cus_dict["TBSBuyCo"] = ddd.get("NonOnlineBuyCommission") + ddd.get(
             "OnlineBuyCommission"
         )
-        cus_dict["TBSSellCo"] = dd.get("NonOnlineSellCommission") + dd.get(
+        cus_dict["TBSSellCo"] = ddd.get("NonOnlineSellCommission") + ddd.get(
             "OnlineSellCommission"
         )
     else:
@@ -970,9 +877,4 @@ def bs_calculator(trade_code, date, page=1, size=10):
     cus_dict["SellDiff"] = cus_dict["TBSSellCo"] - cus_dict["OurSellCom"]
     cus_dict["Date"] = date
 
-    # Comm = bs_calculator([trade_code], dato, dato)
-    # print(Comm)
-    # print(f"{BuyCo}\t{SellCo}\t{BuyCom}\t{SellCom}\t")
-    # customer.append(cus_dict)
-
-    return cus_dict  # aggre_dict
+    return cus_dict

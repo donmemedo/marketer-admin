@@ -38,11 +38,33 @@ issuer = "https://cluster.tech1a.co"  # iss
 
 
 class InvalidAuthorizationToken(Exception):
+    """_summary_
+
+    Args:
+        Exception (_type_): _description_
+    """    
     def __init__(self, details):
+        """_summary_
+
+        Args:
+            details (_type_): _description_
+        """        
         super().__init__("Invalid authorization token: " + details)
 
 
 def get_kid(token):
+    """_summary_
+
+    Args:
+        token (_type_): _description_
+
+    Raises:
+        InvalidAuthorizationToken: _description_
+        InvalidAuthorizationToken: _description_
+
+    Returns:
+        _type_: _description_
+    """    
     headers = jwt.get_unverified_header(token)
     if not headers:
         raise InvalidAuthorizationToken("missing headers")
@@ -53,6 +75,17 @@ def get_kid(token):
 
 
 def get_jwk(kid):
+    """_summary_
+
+    Args:
+        kid (_type_): _description_
+
+    Raises:
+        InvalidAuthorizationToken: _description_
+
+    Returns:
+        _type_: _description_
+    """    
     for jwk in jwks.get("keys"):
         if jwk.get("kid") == kid:
             return jwk
@@ -60,10 +93,26 @@ def get_jwk(kid):
 
 
 def get_public_key(token):
+    """_summary_
+
+    Args:
+        token (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """    
     return rsa_pem_from_jwk(get_jwk(get_kid(token)))
 
 
 def validate_jwt(jwt_to_validate):
+    """_summary_
+
+    Args:
+        jwt_to_validate (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """    
     public_key = get_public_key(jwt_to_validate)
 
     try:
@@ -85,10 +134,33 @@ def validate_jwt(jwt_to_validate):
 
 
 class JWTBearer(HTTPBearer):
+    """_summary_
+
+    Args:
+        HTTPBearer (_type_): _description_
+    """    
     def __init__(self, auto_error: bool = True):
+        """_summary_
+
+        Args:
+            auto_error (bool, optional): _description_. Defaults to True.
+        """        
         super(JWTBearer, self).__init__(auto_error=auto_error)
 
     async def __call__(self, request: Request):
+        """_summary_
+
+        Args:
+            request (Request): _description_
+
+        Raises:
+            HTTPException: _description_
+            HTTPException: _description_
+            HTTPException: _description_
+
+        Returns:
+            _type_: _description_
+        """        
         credentials: HTTPAuthorizationCredentials = await super(
             JWTBearer, self
         ).__call__(request)
@@ -106,6 +178,14 @@ class JWTBearer(HTTPBearer):
             raise HTTPException(status_code=403, detail="Invalid authorization code.")
 
     def verify_jwt(self, jwtoken: str) -> bool:
+        """_summary_
+
+        Args:
+            jwtoken (str): _description_
+
+        Returns:
+            bool: _description_
+        """        
         isTokenValid: bool = False
 
         try:
@@ -118,6 +198,14 @@ class JWTBearer(HTTPBearer):
 
 
 def get_sub(req: Request):
+    """_summary_
+
+    Args:
+        req (Request): _description_
+
+    Returns:
+        _type_: _description_
+    """    
     token = req.headers.get("authorization").split()[1]
     public_key = get_public_key(token)
 

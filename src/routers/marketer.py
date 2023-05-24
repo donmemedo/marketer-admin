@@ -5,26 +5,21 @@ Returns:
 """
 from datetime import datetime, timedelta
 
-import pymongo.errors
+# import pymongo.errors
 from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi_pagination import Page, add_pagination
-from fastapi_pagination.ext.pymongo import paginate
+from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
 from src.tools.tokens import JWTBearer, get_sub
 from src.tools.database import get_database
 from src.schemas.marketer import (
-    MarketerOut,
     ModifyMarketerIn,
     AddMarketerIn,
     UsersTotalPureIn,
     MarketersProfileIn,
     MarketerIn,
-    ConstOut,
-    ModifyConstIn,
     DiffTradesIn,
     ResponseOut,
     ResponseListOut,
-    ModifyFactorIn,
     MarketerRelations,
     DelMarketerRelations,
     SearchMarketerRelations,
@@ -54,17 +49,14 @@ async def get_marketer_profile(
     """
     brokerage = get_database()
     marketers_coll = brokerage["marketers"]
-    results = []
+    # results = []
     if args.IdpID is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "IDP مارکتر را وارد کنید.",
-                "errorCode": "30003"
-            },
+            error={"errorMessage": "IDP مارکتر را وارد کنید.", "errorCode": "30003"},
         )
-    query_result = marketers_coll.find_one({"IdpId": args.IdpID},{"_id":False})
+    query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
     # marketers = dict(enumerate(query_result))
     # for i in range(len(marketers)):
     #     results.append(marketer_entity(marketers[i]))
@@ -73,16 +65,15 @@ async def get_marketer_profile(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage":"موردی با IDP داده شده یافت نشد.",
-                "errorCode":"30004"
+                "errorMessage": "موردی با IDP داده شده یافت نشد.",
+                "errorCode": "30004",
             },
         )
-    else:
-        return ResponseListOut(
-            result=query_result,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
+    return ResponseListOut(
+        result=query_result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @marketer.get(
@@ -92,6 +83,17 @@ async def get_marketer_profile(
     response_model=None,
 )
 async def get_marketer(request: Request):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+
+    Raises:
+        HTTPException: _description_
+
+    Returns:
+        _type_: _description_
+    """
     user_id = get_sub(request)
 
     if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
@@ -108,17 +110,13 @@ async def get_marketer(request: Request):
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage":"موردی در دیتابیس یافت نشد.",
-                "errorCode":"30001"
-            },
+            error={"errorMessage": "موردی در دیتابیس یافت نشد.", "errorCode": "30001"},
         )
-    else:
-        return ResponseListOut(
-            result=results,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @marketer.put(
@@ -129,6 +127,15 @@ async def get_marketer(request: Request):
 async def modify_marketer(
     request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)
 ):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (ModifyMarketerIn, optional): _description_. Defaults to Depends(ModifyMarketerIn).
+
+    Returns:
+        _type_: _description_
+    """
 
     user_id = get_sub(request)
 
@@ -137,14 +144,12 @@ async def modify_marketer(
 
     database = get_database()
     marketer_coll = database["marketers"]
+    admins_coll = database["factors"]
     if args.CurrentIdpId is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage":"IDP مارکتر را وارد کنید.",
-                "errorCode":"30003"
-            },
+            error={"errorMessage": "IDP مارکتر را وارد کنید.", "errorCode": "30003"},
         )
     filter = {"IdpId": args.CurrentIdpId}
     idpid = args.CurrentIdpId
@@ -162,20 +167,19 @@ async def modify_marketer(
     if args.RefererType is not None:
         update["$set"]["RefererType"] = args.RefererType
 
-# ToDo: Let Super Admin can change CreatedDate
-#     if args.CreateDate is not None and user_id == 'Super Admin IDPID':
-#         update["$set"]["CreateDate"] = args.CreateDate
+    # ToDo: Let Super Admin can change CreatedDate
+    #     if args.CreateDate is not None and user_id == 'Super Admin IDPID':
+    #         update["$set"]["CreateDate"] = args.CreateDate
 
     if args.ModifiedBy is not None:
-        update["$set"]["ModifiedBy"] = args.ModifiedBy
-        #Todo: Will change to this:
-        # update["$set"]["ModifiedBy"] = admins_coll.find_one({"IdpId": user_id},{"_id":False}).get("FullName")
+        update["$set"]["ModifiedBy"] = admins_coll.find_one(
+            {"IdpId": user_id}, {"_id": False}
+        ).get("FullName")
 
-# ToDo: Let Super Admin can change CreatedBy
-#     if args.CreatedBy is not None and user_id == 'Super Admin IDPID':
-#         update["$set"]["CreatedBy"] = args.CreatedBy
+    # ToDo: Let Super Admin can change CreatedBy
+    #     if args.CreatedBy is not None and user_id == 'Super Admin IDPID':
+    #         update["$set"]["CreatedBy"] = args.CreatedBy
 
-    # if args.ModifiedDate is not None:
     update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
     if args.NewIdpId is not None:
@@ -184,7 +188,7 @@ async def modify_marketer(
 
     if args.NationalID is not None:
         try:
-            dd = int(args.NationalID)
+            ddd = int(args.NationalID)
             update["$set"]["Id"] = args.NationalID
         except:
             return ResponseListOut(
@@ -192,29 +196,23 @@ async def modify_marketer(
                 timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
                 error={
                     "errorMessage": "کد ملی را درست وارد کنید.",
-                    "errorCode": "30066"
+                    "errorCode": "30066",
                 },
             )
 
     marketer_coll.update_one(filter, update)
-    query_result = marketer_coll.find_one({"IdpId": idpid},{"_id":False})
-    # marketer_dict = peek(query_result)
+    query_result = marketer_coll.find_one({"IdpId": idpid}, {"_id": False})
     if not query_result:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage":"موردی در دیتابیس یافت نشد.",
-                "errorCode":"30001"
-            },
+            error={"errorMessage": "موردی در دیتابیس یافت نشد.", "errorCode": "30001"},
         )
-    else:
-        return ResponseListOut(
-            result=query_result,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
-
+    return ResponseListOut(
+        result=query_result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @marketer.put(
@@ -222,9 +220,16 @@ async def modify_marketer(
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],  # , response_model=None
 )
-async def add_marketer(
-    request: Request, args: AddMarketerIn = Depends(AddMarketerIn)
-):
+async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarketerIn)):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (AddMarketerIn, optional): _description_. Defaults to Depends(AddMarketerIn).
+
+    Returns:
+        _type_: _description_
+    """
 
     user_id = get_sub(request)
 
@@ -232,16 +237,13 @@ async def add_marketer(
     #     raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
-
+    admins_coll = database["factors"]
     marketer_coll = database["marketers"]
     if args.CurrentIdpId is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage":"IDP مارکتر را وارد کنید.",
-                "errorCode":"30003"
-            },
+            error={"errorMessage": "IDP مارکتر را وارد کنید.", "errorCode": "30003"},
         )
 
     filter = {"IdpId": args.CurrentIdpId}
@@ -259,23 +261,18 @@ async def add_marketer(
     if args.RefererType is not None:
         update["$set"]["RefererType"] = args.RefererType
 
-    # if args.CreateDate is not None:
     update["$set"]["CreateDate"] = jd.today().strftime("%Y-%m-%d")
-
-    # if args.ModifiedBy is not None:
-    #     update["$set"]["ModifiedBy"] = args.ModifiedBy
-
-    if args.CreatedBy is not None:
-        update["$set"]["CreatedBy"] = args.CreatedBy
-        #Todo: Will change to this:
-        # update["$set"]["CreatedBy"] = admins_coll.find_one({"IdpId": user_id},{"_id":False}).get("FullName")
-
-    # if args.ModifiedDate is not None:
-    #     update["$set"]["ModifiedDate"] = args.ModifiedDate
+    update["$set"]["ModifiedBy"] = admins_coll.find_one(
+        {"IdpId": user_id}, {"_id": False}
+    ).get("FullName")
+    update["$set"]["CreatedBy"] = admins_coll.find_one(
+        {"IdpId": user_id}, {"_id": False}
+    ).get("FullName")
+    update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
     if args.NationalID is not None:
         try:
-            dd = int(args.NationalID)
+            ddd = int(args.NationalID)
             update["$set"]["Id"] = args.NationalID
         except:
             return ResponseListOut(
@@ -283,7 +280,7 @@ async def add_marketer(
                 timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
                 error={
                     "errorMessage": "کد ملی را درست وارد کنید.",
-                    "errorCode": "30066"
+                    "errorCode": "30066",
                 },
             )
 
@@ -296,27 +293,22 @@ async def add_marketer(
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
                 "errorMessage": "مارکتر در دیتابیس وجود دارد.",
-                "errorCode": "30006"
+                "errorCode": "30006",
             },
         )
 
-    query_result = marketer_coll.find_one(filter,{"_id":False})
-    # marketer_dict = peek(query_result)
+    query_result = marketer_coll.find_one(filter, {"_id": False})
     if not query_result:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage":"ورودی ها را دوباره چک کنید.",
-                "errorCode":"30051"
-            },
+            error={"errorMessage": "ورودی ها را دوباره چک کنید.", "errorCode": "30051"},
         )
-    else:
-        return ResponseListOut(
-            result=query_result,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
+    return ResponseListOut(
+        result=query_result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @marketer.get(
@@ -328,6 +320,15 @@ async def add_marketer(
 def get_marketer_total_trades(
     request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
 ):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (UsersTotalPureIn, optional): _description_. Defaults to Depends(UsersTotalPureIn).
+
+    Returns:
+        _type_: _description_
+    """
     # get all current marketers
     database = get_database()
 
@@ -508,7 +509,6 @@ def get_marketer_total_trades(
         results.sort(key=lambda x: x["LastName"], reverse=args.asc_desc_LN)
         results.sort(key=lambda x: x["UsersCount"], reverse=args.asc_desc_UC)
 
-    # return results
     return ResponseOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -535,58 +535,33 @@ async def search_user_profile(
     Returns:
         _type_: _description_
     """
-    # get user id
-    # marketer_id = get_sub(request)
     brokerage = get_database()
-
-    # customer_coll = brokerage["customers"]
     marketer_coll = brokerage["marketers"]
-
-    # check if marketer exists and return his name
-    # query_result = marketers_coll.find({"IdpId": marketer_id})
-
-    # marketer_dict = peek(query_result)
-
-    # marketer_fullname = marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
-
     query = {
         "$and": [
-            # {"Referer": marketer_fullname},
             {"FirstName": {"$regex": args.first_name}},
             {"LastName": {"$regex": args.last_name}},
-            {"CreateDate": {"$regex": args.register_date}}
-            # {'Mobile': {'$regex': args.mobile}}
+            {"CreateDate": {"$regex": args.register_date}},
         ]
     }
 
     filter = {
         "FirstName": {"$regex": args.first_name},
         "LastName": {"$regex": args.last_name},
-        "RegisterDate": {"$regex": args.register_date}
-        # },
-        # 'Mobile': {
-        #     '$regex': args.mobile
-        # }
+        "RegisterDate": {"$regex": args.register_date},
     }
-    # print(filter)
-    # return paginate(marketer_coll, {})
     results = []
     # query_result = marketer_coll.find({"IdpId": args.IdpID},{"_id":False})
     try:
         query_result = marketer_coll.find_one(query, {"_id": False})
-    # except pymongo.errors.OperationFailure as err:
     except:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                # "errorMessage":err.details['errmsg'],
-                "errorMessage":"ورودی نام غیرقابل قبول است.",
-                "errorCode":"30050"
-            },
+            error={"errorMessage": "ورودی نام غیرقابل قبول است.", "errorCode": "30050"},
         )
 
-    query_result = marketer_coll.find(query,{"_id":False})
+    query_result = marketer_coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
         results.append(marketer_entity(marketers[i]))
@@ -595,19 +570,15 @@ async def search_user_profile(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage":"موردی با متغیرهای داده شده یافت نشد.",
-                "errorCode":"30008"
+                "errorMessage": "موردی با متغیرهای داده شده یافت نشد.",
+                "errorCode": "30008",
             },
         )
-    else:
-        return ResponseListOut(
-            result=results,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
-
-
-    # return paginate(marketer_coll, query, sort=[("RegisterDate", -1)])
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @marketer.put(
@@ -619,6 +590,15 @@ async def search_user_profile(
 async def add_marketers_relations(
     request: Request, args: MarketerRelations = Depends(MarketerRelations)
 ):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (MarketerRelations, optional): _description_. Defaults to Depends(MarketerRelations).
+
+    Returns:
+        _type_: _description_
+    """
     user_id = get_sub(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
@@ -634,20 +614,14 @@ async def add_marketers_relations(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "IDP مارکترها را وارد کنید.",
-                "errorCode": "30009"
-            },
+            error={"errorMessage": "IDP مارکترها را وارد کنید.", "errorCode": "30009"},
         )
 
     if args.CommissionCoefficient is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "کمیسیون را وارد کنید.",
-                "errorCode": "30010"
-            },
+            error={"errorMessage": "کمیسیون را وارد کنید.", "errorCode": "30010"},
         )
     update = {"$set": {}}
 
@@ -657,11 +631,7 @@ async def add_marketers_relations(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "مارکترها نباید یکسان باشند.",
-                "errorCode": "30011"
-            },
-
+            error={"errorMessage": "مارکترها نباید یکسان باشند.", "errorCode": "30011"},
         )
     if marketers_relations_coll.find_one(
         {"FollowerMarketerID": args.FollowerMarketerID}
@@ -671,10 +641,8 @@ async def add_marketers_relations(
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
                 "errorMessage": "این مارکتر زیرمجموعه نفر دیگری است.",
-                "errorCode": "30012"
+                "errorCode": "30012",
             },
-
-
         )
     update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
     update["$set"]["CreateDate"] = str(jd.now())
@@ -726,6 +694,15 @@ async def add_marketers_relations(
 async def modify_marketers_relations(
     request: Request, args: MarketerRelations = Depends(MarketerRelations)
 ):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (MarketerRelations, optional): _description_. Defaults to Depends(MarketerRelations).
+
+    Returns:
+        _type_: _description_
+    """
     user_id = get_sub(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
@@ -740,20 +717,14 @@ async def modify_marketers_relations(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "IDP مارکترها را وارد کنید.",
-                "errorCode": "30009"
-            },
+            error={"errorMessage": "IDP مارکترها را وارد کنید.", "errorCode": "30009"},
         )
 
     if args.CommissionCoefficient is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "کمیسیون را وارد کنید.",
-                "errorCode": "30010"
-            },
+            error={"errorMessage": "کمیسیون را وارد کنید.", "errorCode": "30010"},
         )
 
     update = {"$set": {}}
@@ -763,14 +734,9 @@ async def modify_marketers_relations(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "مارکترها نباید یکسان باشند.",
-                "errorCode": "30011"
-            },
-
+            error={"errorMessage": "مارکترها نباید یکسان باشند.", "errorCode": "30011"},
         )
     # if marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID}):
-
     update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
     update["$set"]["UpdateDate"] = str(jd.now())
     update["$set"]["StartDate"] = str(jd.today().date())
@@ -815,6 +781,16 @@ async def modify_marketers_relations(
 async def search_marketers_relations(
     request: Request, args: SearchMarketerRelations = Depends(SearchMarketerRelations)
 ):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (SearchMarketerRelations, optional): _description_.
+        Defaults to Depends(SearchMarketerRelations).
+
+    Returns:
+        _type_: _description_
+    """
     user_id = get_sub(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
@@ -827,21 +803,21 @@ async def search_marketers_relations(
     )
 
     marketers_relations_coll = database["mrelations"]
-    marketers_coll = database["marketers"]
+    # marketers_coll = database["marketers"]
     query = {}
     if args.FollowerMarketerName or args.FollowerMarketerID:
         if args.FollowerMarketerName is None:
             args.FollowerMarketerName = ""
 
-        name_query = {
-            "$or": [
-                {"FirstName": {"$regex": args.FollowerMarketerName}},
-                {"LastName": {"$regex": args.FollowerMarketerName}},
-                {"FollowerMarketerID": args.FollowerMarketerID},
-            ]
-        }
-        fields = {"IdpId": 1}
-        idps = marketers_coll.find(name_query, fields)
+        # name_query = {
+        #     "$or": [
+        #         {"FirstName": {"$regex": args.FollowerMarketerName}},
+        #         {"LastName": {"$regex": args.FollowerMarketerName}},
+        #         {"FollowerMarketerID": args.FollowerMarketerID},
+        #     ]
+        # }
+        # fields = {"IdpId": 1}
+        # idps = marketers_coll.find(name_query, fields)
         # codes = [c.get("IdpId") for c in idps]
         query = {
             "$and": [
@@ -864,15 +840,15 @@ async def search_marketers_relations(
         if args.LeaderMarketerName is None:
             args.LeaderMarketerName = ""
 
-        name_query = {
-            "$or": [
-                {"FirstName": {"$regex": args.LeaderMarketerName}},
-                {"LastName": {"$regex": args.LeaderMarketerName}},
-                {"LeaderMarketerID": args.LeaderMarketerID},
-            ]
-        }
-        fields = {"IdpId": 1}
-        idps = marketers_coll.find(name_query, fields)
+        # name_query = {
+        #     "$or": [
+        #         {"FirstName": {"$regex": args.LeaderMarketerName}},
+        #         {"LastName": {"$regex": args.LeaderMarketerName}},
+        #         {"LeaderMarketerID": args.LeaderMarketerID},
+        #     ]
+        # }
+        # fields = {"IdpId": 1}
+        # idps = marketers_coll.find(name_query, fields)
         # codes = [c.get("IdpId") for c in idps]
         query = {
             "$and": [
@@ -956,16 +932,11 @@ async def search_marketers_relations(
     results = []
     try:
         query_result = marketers_relations_coll.find_one(query, {"_id": False})
-    # except pymongo.errors.OperationFailure as err:
     except:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                # "errorMessage":err.details['errmsg'],
-                "errorMessage":"ورودی نام غیرقابل قبول است.",
-                "errorCode":"30050"
-            },
+            error={"errorMessage": "ورودی نام غیرقابل قبول است.", "errorCode": "30050"},
         )
 
     query_result = marketers_relations_coll.find(query, {"_id": False})
@@ -977,16 +948,16 @@ async def search_marketers_relations(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage":"موردی برای متغیرهای داده شده یافت نشد.",
-                "errorCode":"30003"
+                "errorMessage": "موردی برای متغیرهای داده شده یافت نشد.",
+                "errorCode": "30003",
             },
         )
-    else:
-        return ResponseListOut(
-            result=results,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
+    return ResponseListOut(
+        result=results,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
+
 
 @marketer.delete(
     "/delete-marketers-relations",
@@ -997,6 +968,16 @@ async def search_marketers_relations(
 async def delete_marketers_relations(
     request: Request, args: DelMarketerRelations = Depends(DelMarketerRelations)
 ):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (DelMarketerRelations, optional): _description_.
+            Defaults to Depends(DelMarketerRelations).
+
+    Returns:
+        _type_: _description_
+    """
     user_id = get_sub(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
@@ -1012,21 +993,17 @@ async def delete_marketers_relations(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "IDP مارکترها را وارد کنید.",
-                "errorCode": "30009"
-            },
+            error={"errorMessage": "IDP مارکترها را وارد کنید.", "errorCode": "30009"},
         )
     if args.LeaderMarketerID == args.FollowerMarketerID:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage": "مارکترها نباید یکسان باشند.",
-                "errorCode": "30011"
-            },
+            error={"errorMessage": "مارکترها نباید یکسان باشند.", "errorCode": "30011"},
         )
-    q = marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID},{"_id":False})
+    q = marketers_relations_coll.find_one(
+        {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
+    )
 
     if not q:
         return ResponseListOut(
@@ -1034,20 +1011,20 @@ async def delete_marketers_relations(
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
                 "errorMessage": "این مارکتر زیرمجموعه کسی نیست.",
-                "errorCode": "30052"
-            }
+                "errorCode": "30052",
+            },
         )
-    elif not q.get("LeaderMarketerID")==args.LeaderMarketerID:
+    if not q.get("LeaderMarketerID") == args.LeaderMarketerID:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
                 "errorMessage": "این مارکتر زیرمجموعه نفر دیگری است.",
-                "errorCode": "30012"
+                "errorCode": "30012",
             },
         )
 
-    results=[]
+    results = []
     FollowerMarketerName = get_marketer_name(
         marketers_coll.find_one({"IdpId": args.FollowerMarketerID})
     )
@@ -1055,10 +1032,13 @@ async def delete_marketers_relations(
         marketers_coll.find_one({"IdpId": args.LeaderMarketerID})
     )
 
-    qq = marketers_relations_coll.find_one(
-        {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False})
-    results.append(qq)
-    results.append({"MSG":f"ارتباط بین {LeaderMarketerName} و{FollowerMarketerName} برداشته شد."})
+    qqq = marketers_relations_coll.find_one(
+        {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
+    )
+    results.append(qqq)
+    results.append(
+        {"MSG": f"ارتباط بین {LeaderMarketerName} و{FollowerMarketerName} برداشته شد."}
+    )
 
     return ResponseListOut(
         result=results,
@@ -1076,24 +1056,29 @@ async def delete_marketers_relations(
 async def users_diff_with_tbs(
     request: Request, args: DiffTradesIn = Depends(DiffTradesIn)
 ):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (DiffTradesIn, optional): _description_. Defaults to Depends(DiffTradesIn).
+
+    Returns:
+        _type_: _description_
+    """
 
     # get user id
     # marketer_id = get_sub(request)
-    db = get_database()
+    database = get_database()
 
-    customers_coll = db["customers"]
-    firms_coll = db["firms"]
-    trades_coll = db["trades"]
-    marketers_coll = db["marketers"]
+    customers_coll = database["customers"]
+    firms_coll = database["firms"]
+    # trades_coll = database["trades"]
+    marketers_coll = database["marketers"]
     if args.IdpID is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errorMessage":"IDP مارکتر را وارد کنید.",
-                "errorCode":"30003"
-            },
-
+            error={"errorMessage": "IDP مارکتر را وارد کنید.", "errorCode": "30003"},
         )
 
     # check if marketer exists and return his name
@@ -1128,9 +1113,8 @@ async def users_diff_with_tbs(
     ###############
     result = []
     for date in dates:
-        # print(date)
         for trade_code in trade_codes:
-            q = bs_calculator(trade_code, date)  # , page=1, size=10)
+            q = bs_calculator(trade_code, date)
             if q["BuyDiff"] == 0 and q["SellDiff"] == 0:
                 pass
             else:
@@ -1141,23 +1125,34 @@ async def users_diff_with_tbs(
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
                 "errorMessage": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-                "errorCode": "30013"
+                "errorCode": "30013",
             },
         )
-    else:
-        return ResponseListOut(
-            result=result,
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
+    return ResponseListOut(
+        result=result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 add_pagination(marketer)
 
 
 def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
-    db = get_database()
-    trades_coll = db["trades"]
+    """_summary_
+
+    Args:
+        trade_codes (_type_): _description_
+        from_date (_type_): _description_
+        to_date (_type_): _description_
+        page (int, optional): _description_. Defaults to 1.
+        size (int, optional): _description_. Defaults to 10.
+
+    Returns:
+        _type_: _description_
+    """
+    database = get_database()
+    trades_coll = database["trades"]
     from_gregorian_date = to_gregorian_(from_date)
     to_gregorian_date = to_gregorian_(to_date)
     to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
@@ -1281,14 +1276,18 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
     return aggre_dict
 
-    # return ResponseOut(
-    #     result=aggre_dict,
-    #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-    #     error=""
-    #     )
-
 
 def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
+    """_summary_
+
+    Args:
+        marketer_fullname (_type_): _description_
+        from_gregorian_date (_type_): _description_
+        to_gregorian_date (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     database = get_database()
 
     customers_coll = database["customers"]
@@ -1390,26 +1389,27 @@ def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
     response_dict = {}
     response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
     response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
-    # response_dict["FirstName"] = marketer.get("FirstName")
-    # response_dict["LastName"] = marketer.get("LastName")
-
-    # results.append(response_dict)
-
-    # return response_dict
-    return ResponseOut(
-        result=response_dict,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    return response_dict
 
 
 def bs_calculator(trade_code, date, page=1, size=10):
-    db = get_database()
-    trades_coll = db["trades"]
-    customers_coll = db["customers"]
-    firms_coll = db["firms"]
+    """_summary_
 
-    commisions_coll = db["commisions"]
+    Args:
+        trade_code (_type_): _description_
+        date (_type_): _description_
+        page (int, optional): _description_. Defaults to 1.
+        size (int, optional): _description_. Defaults to 10.
+
+    Returns:
+        _type_: _description_
+    """
+    database = get_database()
+    trades_coll = database["trades"]
+    customers_coll = database["customers"]
+    firms_coll = database["firms"]
+
+    commisions_coll = database["commisions"]
     gdate = to_gregorian_(date)
 
     from_gregorian_date = to_gregorian_(date)
@@ -1546,34 +1546,21 @@ def bs_calculator(trade_code, date, page=1, size=10):
     ]
 
     aggr_result = trades_coll.aggregate(pipeline=pipeline)
-
     aggre_dict = next(aggr_result, None)
-
-    # if aggre_dict is None:
-    #     return {}
-
-    # aggre_dict["page"] = page
-    # aggre_dict["size"] = size
-    # aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
-    customer = {}
+    # customer = {}
     cus_dict = {}
-
-    # for i in range(len(trade_codes)):
-
-    # customer[i]=(cus_dict)
-    # trade_code = trade_codes[i]
-    bb = customers_coll.find_one({"PAMCode": trade_code}, {"_id": False})
-    if bb:
+    bbb = customers_coll.find_one({"PAMCode": trade_code}, {"_id": False})
+    if bbb:
         cus_dict["TradeCode"] = trade_code
-        cus_dict["LedgerCode"] = bb.get("DetailLedgerCode")
-        cus_dict["Name"] = f'{bb.get("FirstName")} {bb.get("LastName")}'
+        cus_dict["LedgerCode"] = bbb.get("DetailLedgerCode")
+        cus_dict["Name"] = f'{bbb.get("FirstName")} {bbb.get("LastName")}'
     else:
-        bb = firms_coll.find_one({"PAMCode": trade_code}, {"_id": False})
+        bbb = firms_coll.find_one({"PAMCode": trade_code}, {"_id": False})
         cus_dict["TradeCode"] = trade_code
-        cus_dict["LedgerCode"] = bb.get("DetailLedgerCode")
-        cus_dict["Name"] = bb.get("FirmTitle")
+        cus_dict["LedgerCode"] = bbb.get("DetailLedgerCode")
+        cus_dict["Name"] = bbb.get("FirmTitle")
 
-    dd = commisions_coll.find_one(
+    ddd = commisions_coll.find_one(
         {
             "$and": [
                 {"AccountCode": {"$regex": cus_dict["LedgerCode"]}},
@@ -1582,11 +1569,11 @@ def bs_calculator(trade_code, date, page=1, size=10):
         },
         {"_id": False},
     )
-    if dd:
-        cus_dict["TBSBuyCo"] = dd.get("NonOnlineBuyCommission") + dd.get(
+    if ddd:
+        cus_dict["TBSBuyCo"] = ddd.get("NonOnlineBuyCommission") + ddd.get(
             "OnlineBuyCommission"
         )
-        cus_dict["TBSSellCo"] = dd.get("NonOnlineSellCommission") + dd.get(
+        cus_dict["TBSSellCo"] = ddd.get("NonOnlineSellCommission") + ddd.get(
             "OnlineSellCommission"
         )
     else:
@@ -1604,13 +1591,4 @@ def bs_calculator(trade_code, date, page=1, size=10):
     cus_dict["SellDiff"] = cus_dict["TBSSellCo"] - cus_dict["OurSellCom"]
     cus_dict["Date"] = date
 
-    # Comm = bs_calculator([trade_code], dato, dato)
-    # print(Comm)
-    # print(f"{BuyCo}\t{SellCo}\t{BuyCom}\t{SellCom}\t")
-    # customer.append(cus_dict)
-
-    return cus_dict  # aggre_dict
-
-
-# bb= bs_calculator('18690927134934', '1402-02-17', page=1, size=10)
-# print(bb)
+    return cus_dict

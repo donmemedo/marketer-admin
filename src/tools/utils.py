@@ -1,8 +1,21 @@
+"""_summary_
+
+Returns:
+    _type_: _description_
+"""
 from datetime import date
 from khayyam import JalaliDatetime
 
 
 def remove_id(items: list):
+    """_summary_
+
+    Args:
+        items (list): _description_
+
+    Returns:
+        _type_: _description_
+    """
     for item in items:
         if "_id" in item:
             del item["_id"]
@@ -11,6 +24,14 @@ def remove_id(items: list):
 
 
 def to_gregorian(date_: date):
+    """_summary_
+
+    Args:
+        date_ (date): _description_
+
+    Returns:
+        _type_: _description_
+    """
     jalali_date = JalaliDatetime(year=date_.year, month=date_.month, day=date_.day)
 
     gregorian_date = jalali_date.todate().strftime("%Y-%m-%d")
@@ -18,12 +39,28 @@ def to_gregorian(date_: date):
 
 
 def to_gregorian_(date_string: str):
+    """_summary_
+
+    Args:
+        date_string (str): _description_
+
+    Returns:
+        _type_: _description_
+    """
     year, month, day = date_string.split("-")
 
     return JalaliDatetime(year, month, day).todate().strftime("%Y-%m-%d")
 
 
 def peek(iterable):
+    """_summary_
+
+    Args:
+        iterable (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     try:
         first = next(iterable)
     except StopIteration:
@@ -32,14 +69,21 @@ def peek(iterable):
 
 
 def get_marketer_name(marketer_dict: dict):
+    """_summary_
+
+    Args:
+        marketer_dict (dict): _description_
+
+    Returns:
+        _type_: _description_
+    """
     if marketer_dict is None:
         return "There is No Marketer with is IdpID."
     if marketer_dict.get("FirstName") == "":
         return marketer_dict.get("LastName")
-    elif marketer_dict.get("LastName") == "":
+    if marketer_dict.get("LastName") == "":
         return marketer_dict.get("FirstName")
-    else:
-        return marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
+    return marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
 
 
 def marketer_entity(marketer) -> dict:
