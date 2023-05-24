@@ -162,24 +162,39 @@ async def modify_marketer(
     if args.RefererType is not None:
         update["$set"]["RefererType"] = args.RefererType
 
-    if args.CreateDate is not None:
-        update["$set"]["CreateDate"] = args.CreateDate
+# ToDo: Let Super Admin can change CreatedDate
+#     if args.CreateDate is not None and user_id == 'Super Admin IDPID':
+#         update["$set"]["CreateDate"] = args.CreateDate
 
     if args.ModifiedBy is not None:
         update["$set"]["ModifiedBy"] = args.ModifiedBy
+        #Todo: Will change to this:
+        # update["$set"]["ModifiedBy"] = admins_coll.find_one({"IdpId": user_id},{"_id":False}).get("FullName")
 
-    if args.CreatedBy is not None:
-        update["$set"]["CreatedBy"] = args.CreatedBy
+# ToDo: Let Super Admin can change CreatedBy
+#     if args.CreatedBy is not None and user_id == 'Super Admin IDPID':
+#         update["$set"]["CreatedBy"] = args.CreatedBy
 
-    if args.ModifiedDate is not None:
-        update["$set"]["ModifiedDate"] = args.ModifiedDate
+    # if args.ModifiedDate is not None:
+    update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
     if args.NewIdpId is not None:
         update["$set"]["IdpId"] = args.NewIdpId
         idpid = args.NewIdpId
 
     if args.NationalID is not None:
-        update["$set"]["Id"] = args.NationalID
+        try:
+            dd = int(args.NationalID)
+            update["$set"]["Id"] = args.NationalID
+        except:
+            return ResponseListOut(
+                result=[],
+                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                error={
+                    "errorMessage": "کد ملی را درست وارد کنید.",
+                    "errorCode": "30066"
+                },
+            )
 
     marketer_coll.update_one(filter, update)
     query_result = marketer_coll.find_one({"IdpId": idpid},{"_id":False})
@@ -244,14 +259,16 @@ async def add_marketer(
     if args.RefererType is not None:
         update["$set"]["RefererType"] = args.RefererType
 
-    if args.CreateDate is not None:
-        update["$set"]["CreateDate"] = args.CreateDate
+    # if args.CreateDate is not None:
+    update["$set"]["CreateDate"] = jd.today().strftime("%Y-%m-%d")
 
     # if args.ModifiedBy is not None:
     #     update["$set"]["ModifiedBy"] = args.ModifiedBy
 
     if args.CreatedBy is not None:
         update["$set"]["CreatedBy"] = args.CreatedBy
+        #Todo: Will change to this:
+        # update["$set"]["CreatedBy"] = admins_coll.find_one({"IdpId": user_id},{"_id":False}).get("FullName")
 
     # if args.ModifiedDate is not None:
     #     update["$set"]["ModifiedDate"] = args.ModifiedDate
