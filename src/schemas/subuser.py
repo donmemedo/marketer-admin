@@ -1,14 +1,11 @@
 """_summary_
 """
 from dataclasses import dataclass
-from datetime import date
 from typing import Optional, Any, List, Dict
-from fastapi import Query
-
-# from khayyam import *
-from khayyam import JalaliDatetime
-from pydantic import BaseModel, Field
 from enum import Enum, IntEnum
+from fastapi import Query
+from khayyam import JalaliDatetime
+from pydantic import BaseModel
 
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 current_month = JalaliDatetime.today().month
@@ -103,13 +100,28 @@ class UserTotalFee:
     to_date: str = Query(default=current_date, alias="EndDate")
 
 
+# @dataclass
+# class UsersTotalPureIn:
+#     """_summary_"""
+#
+#     # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
+#     from_date: str = Query(default=current_date, alias="StartDate")
+#     to_date: str = Query(default=current_date, alias="EndDate")
+
 @dataclass
 class UsersTotalPureIn:
-    """_summary_"""
-
     # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
+    # to_date: str = Query("1401-12-01")
+    to_date: str = Query(default=None, alias="EndDate")
     from_date: str = Query(default=current_date, alias="StartDate")
-    to_date: str = Query(default=current_date, alias="EndDate")
+    asc_desc_TPV: Optional[bool] = False
+    asc_desc_TF: Optional[bool] = False
+    asc_desc_LMTPV: Optional[bool] = False
+    asc_desc_LMTF: Optional[bool] = False
+    asc_desc_FN: Optional[bool] = False
+    asc_desc_LN: Optional[bool] = False
+    asc_desc_UC: Optional[bool] = False
+    sorted: bool = False
 
 
 @dataclass
@@ -331,20 +343,6 @@ class TotalUsersListIn(Pages):
     sorted: bool = False
 
 
-@dataclass
-class UsersTotalPureIn:
-    # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
-    # to_date: str = Query("1401-12-01")
-    to_date: str = Query(default=None, alias="EndDate")
-    from_date: str = Query(default=current_date, alias="StartDate")
-    asc_desc_TPV: Optional[bool] = False
-    asc_desc_TF: Optional[bool] = False
-    asc_desc_LMTPV: Optional[bool] = False
-    asc_desc_LMTF: Optional[bool] = False
-    asc_desc_FN: Optional[bool] = False
-    asc_desc_LN: Optional[bool] = False
-    asc_desc_UC: Optional[bool] = False
-    sorted: bool = False
 
 
 @dataclass
@@ -361,7 +359,3 @@ class ResponseListOut:
     error: str = Query("nothing")
 
 
-@dataclass
-class UserTotalOut:
-    TotalPureVolume: float
-    TotalFee: float

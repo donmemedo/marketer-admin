@@ -5,20 +5,16 @@ Returns:
 """
 from datetime import datetime, timedelta  # , date
 from fastapi import APIRouter, Depends, Request
-from fastapi_pagination import Page, add_pagination
+from fastapi_pagination import add_pagination
 from fastapi_pagination.ext.pymongo import paginate
 from khayyam import JalaliDatetime as jd
 from src.schemas.subuser import (
     SubUserIn,
-    SubUserOut,
-    MarketerOut,
-    # CostIn,
     SubCostIn,
     UsersTotalPureIn,
     UsersListIn,
     TotalUsersListIn,
     MarketerIdpIdIn,
-    ResponseOut,
     ResponseListOut,
 )
 from src.tools.database import get_database
@@ -337,6 +333,15 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
 async def marketer_subuser_lists(
     request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
 ):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (UsersTotalPureIn, optional): _description_. Defaults to Depends(UsersTotalPureIn).
+
+    Returns:
+        _type_: _description_
+    """
     # get all current marketers
     database = get_database()
     marketer_id = get_sub(request)
@@ -416,13 +421,13 @@ async def marketer_subuser_lists(
             last_month = last_month + 12
         if last_month < 10:
             last_month = "0" + str(last_month)
-            last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year) + str(
-                last_month
-            )
-        if last_month == 12:
-            last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year - 1) + str(
-                last_month
-            )
+            # last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year) + str(
+            #     last_month
+            # )
+        # if last_month == 12:
+            # last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year - 1) + str(
+            #     last_month
+            # )
         # print(last_month_str)
         to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
         lmd_to_gregorian_date = lmd_to_gregorian_date.strftime("%Y-%m-%d")
@@ -631,8 +636,6 @@ async def marketer_subuser_lists(
         error="",
     )
 
-    return results
-
 
 @subuser.get(
     "/users-total",
@@ -641,14 +644,23 @@ async def marketer_subuser_lists(
     response_model=None,
 )
 def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersListIn)):
-    # get user id
-    marketer_id = get_sub(request)
-    db = get_database()
+    """_summary_
 
-    customers_coll = db["customers"]
-    trades_coll = db["trades"]
-    firms_coll = db["firms"]
-    marketers_coll = db["marketers"]
+    Args:
+        request (Request): _description_
+        args (UsersListIn, optional): _description_. Defaults to Depends(UsersListIn).
+
+    Returns:
+        _type_: _description_
+    """
+    # get user id
+    # marketer_id = get_sub(request)
+    database = get_database()
+
+    customers_coll = database["customers"]
+    trades_coll = database["trades"]
+    firms_coll = database["firms"]
+    marketers_coll = database["marketers"]
 
     # check if marketer exists and return his name
     # query_result = marketers_coll.find({"IdpId": marketer_id})
@@ -663,7 +675,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
 
     results = []
     for marketer in marketers_list:
-        response_dict = {}
+        # response_dict = {}
         if marketer.get("FirstName") == "":
             marketer_fullname = marketer.get("LastName")
         elif marketer.get("LastName") == "":
@@ -885,8 +897,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         error="",
     )
 
-    return results
-
 
 @subuser.get(
     "/total-users",
@@ -897,14 +907,23 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
 def total_users_cost(
     request: Request, args: TotalUsersListIn = Depends(TotalUsersListIn)
 ):
-    # get user id
-    marketer_id = get_sub(request)
-    db = get_database()
+    """_summary_
 
-    customers_coll = db["customers"]
-    trades_coll = db["trades"]
-    firms_coll = db["firms"]
-    marketers_coll = db["marketers"]
+    Args:
+        request (Request): _description_
+        args (TotalUsersListIn, optional): _description_. Defaults to Depends(TotalUsersListIn).
+
+    Returns:
+        _type_: _description_
+    """
+    # get user id
+    # marketer_id = get_sub(request)
+    database = get_database()
+
+    customers_coll = database["customers"]
+    trades_coll = database["trades"]
+    firms_coll = database["firms"]
+    marketers_coll = database["marketers"]
 
     # check if marketer exists and return his name
     # query_result = marketers_coll.find({"IdpId": marketer_id})
@@ -920,7 +939,7 @@ def total_users_cost(
     results = []
     total_codes = []
     for marketer in marketers_list:
-        response_dict = {}
+        # response_dict = {}
         if marketer.get("FirstName") == "":
             marketer_fullname = marketer.get("LastName")
         elif marketer.get("LastName") == "":
@@ -1157,18 +1176,30 @@ def total_users_cost(
         dicter.sort(key=lambda x: x["TotalPureVolume"], reverse=args.asc_desc_TPV)
 
     return ResponseListOut(
-        result=dicter, timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"), error=""
+        result=dicter,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error=""
     )
-
-    return dicter
 
 
 add_pagination(subuser)
 
 
 def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
-    db = get_database()
-    trades_coll = db["trades"]
+    """_summary_
+
+    Args:
+        trade_codes (_type_): _description_
+        from_date (_type_): _description_
+        to_date (_type_): _description_
+        page (int, optional): _description_. Defaults to 1.
+        size (int, optional): _description_. Defaults to 10.
+
+    Returns:
+        _type_: _description_
+    """
+    database = get_database()
+    trades_coll = database["trades"]
     from_gregorian_date = to_gregorian_(from_date)
     to_gregorian_date = to_gregorian_(to_date)
     to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(

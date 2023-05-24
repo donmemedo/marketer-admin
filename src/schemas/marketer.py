@@ -1,8 +1,10 @@
-from fastapi import Query
+"""_summary_
+"""
 from dataclasses import dataclass
-from pydantic import BaseModel, Field
 from typing import Optional, Any, List, Dict
 from enum import Enum, IntEnum
+from fastapi import Query
+from pydantic import BaseModel
 from khayyam import JalaliDatetime
 
 
@@ -45,10 +47,6 @@ class ModifyMarketerIn:
     FirstName: Optional[str] = None
     LastName: Optional[str] = None
     RefererType: Optional[str] = None
-    # CreatedBy: Optional[str] = None
-    # ModifiedDate: Optional[str] = None
-    # CreateDate: Optional[str] = None
-    # ModifiedBy: Optional[str] = None
     NewIdpId: Optional[str] = None
     NationalID: Optional[int] = None
 
@@ -60,8 +58,6 @@ class AddMarketerIn:
     FirstName: Optional[str] = None
     LastName: Optional[str] = None
     RefererType: Optional[str] = None
-    # CreatedBy: Optional[str] = None
-    # CreateDate: Optional[str] = None
     NationalID: Optional[str] = None
 
 
@@ -121,8 +117,6 @@ class UsersListIn(Pages):
 
 @dataclass
 class UsersTotalPureIn:
-    # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
-    # to_date: str = Query("1401-12-01")
     to_date: str = Query(default=None, alias="EndDate")
     from_date: str = Query(default=current_date, alias="StartDate")
     asc_desc_TPV: Optional[bool] = False
@@ -184,8 +178,8 @@ class MarketerRelations:
     CommissionCoefficient: float
     StartDate: str = Query(default=current_date)
     EndDate: str = Query(default=None)
-    # CreateDate: str = Query(default=current_date)
-    # UpdateDate: str = Query(default=current_date)
+
+
 @dataclass
 class DelMarketerRelations:
 
@@ -202,8 +196,6 @@ class SearchMarketerRelations:
     FollowerMarketerID: str = None
     StartDate: str = Query(default="1301-01-01")
     EndDate: str = Query(default="1501-12-29")
-    # CreateDate: str = Query(default=None)
-    # UpdateDate: str = Query(default=current_date)
 
 
 @dataclass

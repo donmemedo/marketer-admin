@@ -1,9 +1,11 @@
-from fastapi import Query
-from dataclasses import dataclass
-from pydantic import BaseModel, Field
-from typing import Optional, Any, List, Dict
-from khayyam import JalaliDatetime
+"""_summary_
+"""
 from enum import Enum, IntEnum
+from dataclasses import dataclass
+from typing import Optional, Any, List, Dict
+from fastapi import Query
+from pydantic import BaseModel
+from khayyam import JalaliDatetime
 
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 current_month = JalaliDatetime.today().month
@@ -162,9 +164,3 @@ class ResponseListOut:
     result: Dict
     timeGenerated: JalaliDatetime
     error: str = Query("nothing")
-
-
-@dataclass
-class UserTotalOut:
-    TotalPureVolume: float
-    TotalFee: float

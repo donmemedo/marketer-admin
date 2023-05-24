@@ -1,6 +1,8 @@
+"""_summary_
+"""
 from fastapi import FastAPI
-from config import settings
 from fastapi.middleware.cors import CORSMiddleware
+from config import settings
 from routers.marketer import marketer
 from routers.factor import factor
 from routers.user import user

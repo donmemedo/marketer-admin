@@ -1,8 +1,10 @@
-from fastapi import Query
+"""_summary_
+"""
 from dataclasses import dataclass
-from pydantic import BaseModel, Field
 from typing import Optional, Any, List, Dict
 from enum import Enum, IntEnum
+from pydantic import BaseModel#, Field
+from fastapi import Query
 from khayyam import JalaliDatetime
 
 
@@ -162,6 +164,7 @@ class ModifyFactorIn:
     Payment: int = None
     FactorStatus: int = None
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
+
 
 @dataclass
 class SearchFactorIn:
