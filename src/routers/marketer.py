@@ -162,24 +162,39 @@ async def modify_marketer(
     if args.RefererType is not None:
         update["$set"]["RefererType"] = args.RefererType
 
-    if args.CreateDate is not None:
-        update["$set"]["CreateDate"] = args.CreateDate
+# ToDo: Let Super Admin can change CreatedDate
+#     if args.CreateDate is not None and user_id == 'Super Admin IDPID':
+#         update["$set"]["CreateDate"] = args.CreateDate
 
     if args.ModifiedBy is not None:
         update["$set"]["ModifiedBy"] = args.ModifiedBy
+        #Todo: Will change to this:
+        # update["$set"]["ModifiedBy"] = admins_coll.find_one({"IdpId": user_id},{"_id":False}).get("FullName")
 
-    if args.CreatedBy is not None:
-        update["$set"]["CreatedBy"] = args.CreatedBy
+# ToDo: Let Super Admin can change CreatedBy
+#     if args.CreatedBy is not None and user_id == 'Super Admin IDPID':
+#         update["$set"]["CreatedBy"] = args.CreatedBy
 
-    if args.ModifiedDate is not None:
-        update["$set"]["ModifiedDate"] = args.ModifiedDate
+    # if args.ModifiedDate is not None:
+    update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
     if args.NewIdpId is not None:
         update["$set"]["IdpId"] = args.NewIdpId
         idpid = args.NewIdpId
 
     if args.NationalID is not None:
-        update["$set"]["Id"] = args.NationalID
+        try:
+            dd = int(args.NationalID)
+            update["$set"]["Id"] = args.NationalID
+        except:
+            return ResponseListOut(
+                result=[],
+                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                error={
+                    "errorMessage": "کد ملی را درست وارد کنید.",
+                    "errorCode": "30066"
+                },
+            )
 
     marketer_coll.update_one(filter, update)
     query_result = marketer_coll.find_one({"IdpId": idpid},{"_id":False})
@@ -244,14 +259,16 @@ async def add_marketer(
     if args.RefererType is not None:
         update["$set"]["RefererType"] = args.RefererType
 
-    if args.CreateDate is not None:
-        update["$set"]["CreateDate"] = args.CreateDate
+    # if args.CreateDate is not None:
+    update["$set"]["CreateDate"] = jd.today().strftime("%Y-%m-%d")
 
     # if args.ModifiedBy is not None:
     #     update["$set"]["ModifiedBy"] = args.ModifiedBy
 
     if args.CreatedBy is not None:
         update["$set"]["CreatedBy"] = args.CreatedBy
+        #Todo: Will change to this:
+        # update["$set"]["CreatedBy"] = admins_coll.find_one({"IdpId": user_id},{"_id":False}).get("FullName")
 
     # if args.ModifiedDate is not None:
     #     update["$set"]["ModifiedDate"] = args.ModifiedDate
@@ -876,65 +893,65 @@ async def search_marketers_relations(
                 ]
             }
 
-    if args.CreateDate:
-        if args.FollowerMarketerName is None:
-            args.FollowerMarketerName = ""
-        if args.LeaderMarketerName is None:
-            args.LeaderMarketerName = ""
-        gregorian_create_date = jd.strptime(args.CreateDate, "%Y-%m-%d").todatetime()
-        le_name_query = {
-            "$or": [
-                {"FirstName": {"$regex": args.LeaderMarketerName}},
-                {"LastName": {"$regex": args.LeaderMarketerName}},
-                {"LeaderMarketerID": args.LeaderMarketerID},
-            ]
-        }
-        fields = {"IdpId": 1}
-        le_idps = marketers_coll.find(le_name_query, fields)
-        le_codes = [c.get("IdpId") for c in le_idps]
-        fo_name_query = {
-            "$or": [
-                {"FirstName": {"$regex": args.FollowerMarketerName}},
-                {"LastName": {"$regex": args.FollowerMarketerName}},
-            ]
-        }
-        fo_idps = marketers_coll.find(fo_name_query, fields)
-        fo_codes = [c.get("IdpId") for c in fo_idps]
-        query = {
-            "$and": [
-                # {"LeaderMarketerID": {"$in": le_codes}},
-                # {"FollowerMarketerID": {"$in": fo_codes}},
-                {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                {"GCreateDate": {"$gte": gregorian_create_date}},
-                {"GStartDate": {"$gte": from_gregorian_date}},
-                {"GEndDate": {"$lte": to_gregorian_date}},
-            ]
-        }
-        if args.FollowerMarketerID:
-            query = {
-                "$and": [
-                    # {"LeaderMarketerID": {"$in": le_codes}},
-                    {"FollowerMarketerID": args.FollowerMarketerID},
-                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                    {"GCreateDate": {"$gte": gregorian_create_date}},
-                    {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}},
-                ]
-            }
-        elif args.LeaderMarketerID:
-            query = {
-                "$and": [
-                    # {"LeaderMarketerID": {"$in": le_codes}},
-                    {"LeaderMarketerID": args.LeaderMarketerID},
-                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                    {"GCreateDate": {"$gte": gregorian_create_date}},
-                    {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}},
-                ]
-            }
+    # if args.CreateDate:
+    #     if args.FollowerMarketerName is None:
+    #         args.FollowerMarketerName = ""
+    #     if args.LeaderMarketerName is None:
+    #         args.LeaderMarketerName = ""
+    #     gregorian_create_date = jd.strptime(args.CreateDate, "%Y-%m-%d").todatetime()
+    #     le_name_query = {
+    #         "$or": [
+    #             {"FirstName": {"$regex": args.LeaderMarketerName}},
+    #             {"LastName": {"$regex": args.LeaderMarketerName}},
+    #             {"LeaderMarketerID": args.LeaderMarketerID},
+    #         ]
+    #     }
+    #     fields = {"IdpId": 1}
+    #     le_idps = marketers_coll.find(le_name_query, fields)
+    #     le_codes = [c.get("IdpId") for c in le_idps]
+    #     fo_name_query = {
+    #         "$or": [
+    #             {"FirstName": {"$regex": args.FollowerMarketerName}},
+    #             {"LastName": {"$regex": args.FollowerMarketerName}},
+    #         ]
+    #     }
+    #     fo_idps = marketers_coll.find(fo_name_query, fields)
+    #     fo_codes = [c.get("IdpId") for c in fo_idps]
+    #     query = {
+    #         "$and": [
+    #             # {"LeaderMarketerID": {"$in": le_codes}},
+    #             # {"FollowerMarketerID": {"$in": fo_codes}},
+    #             {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+    #             {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+    #             {"GCreateDate": {"$gte": gregorian_create_date}},
+    #             {"GStartDate": {"$gte": from_gregorian_date}},
+    #             {"GEndDate": {"$lte": to_gregorian_date}},
+    #         ]
+    #     }
+    #     if args.FollowerMarketerID:
+    #         query = {
+    #             "$and": [
+    #                 # {"LeaderMarketerID": {"$in": le_codes}},
+    #                 {"FollowerMarketerID": args.FollowerMarketerID},
+    #                 {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+    #                 {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+    #                 {"GCreateDate": {"$gte": gregorian_create_date}},
+    #                 {"GStartDate": {"$gte": from_gregorian_date}},
+    #                 {"GEndDate": {"$lte": to_gregorian_date}},
+    #             ]
+    #         }
+    #     elif args.LeaderMarketerID:
+    #         query = {
+    #             "$and": [
+    #                 # {"LeaderMarketerID": {"$in": le_codes}},
+    #                 {"LeaderMarketerID": args.LeaderMarketerID},
+    #                 {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+    #                 {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
+    #                 {"GCreateDate": {"$gte": gregorian_create_date}},
+    #                 {"GStartDate": {"$gte": from_gregorian_date}},
+    #                 {"GEndDate": {"$lte": to_gregorian_date}},
+    #             ]
+    #         }
 
     results = []
     try:

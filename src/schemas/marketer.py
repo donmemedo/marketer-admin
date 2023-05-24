@@ -45,10 +45,10 @@ class ModifyMarketerIn:
     FirstName: Optional[str] = None
     LastName: Optional[str] = None
     RefererType: Optional[str] = None
-    CreatedBy: Optional[str] = None
-    ModifiedDate: Optional[str] = None
-    CreateDate: Optional[str] = None
-    ModifiedBy: Optional[str] = None
+    # CreatedBy: Optional[str] = None
+    # ModifiedDate: Optional[str] = None
+    # CreateDate: Optional[str] = None
+    # ModifiedBy: Optional[str] = None
     NewIdpId: Optional[str] = None
     NationalID: Optional[int] = None
 
@@ -60,8 +60,8 @@ class AddMarketerIn:
     FirstName: Optional[str] = None
     LastName: Optional[str] = None
     RefererType: Optional[str] = None
-    CreatedBy: Optional[str] = None
-    CreateDate: Optional[str] = None
+    # CreatedBy: Optional[str] = None
+    # CreateDate: Optional[str] = None
     NationalID: Optional[str] = None
 
 
@@ -202,7 +202,7 @@ class SearchMarketerRelations:
     FollowerMarketerID: str = None
     StartDate: str = Query(default="1301-01-01")
     EndDate: str = Query(default="1501-12-29")
-    CreateDate: str = Query(default=None)
+    # CreateDate: str = Query(default=None)
     # UpdateDate: str = Query(default=current_date)
 
 
