@@ -263,10 +263,10 @@ async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarket
 
     update["$set"]["CreateDate"] = jd.today().strftime("%Y-%m-%d")
     update["$set"]["ModifiedBy"] = admins_coll.find_one(
-        {"IdpId": user_id}, {"_id": False}
+        {"IdpID": user_id}, {"_id": False}
     ).get("FullName")
     update["$set"]["CreatedBy"] = admins_coll.find_one(
-        {"IdpId": user_id}, {"_id": False}
+        {"IdpID": user_id}, {"_id": False}
     ).get("FullName")
     update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
