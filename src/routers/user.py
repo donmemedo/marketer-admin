@@ -42,13 +42,13 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     """
     user_id = get_sub(request)
 
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
     if args.TradeCode is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "PAMCode  را وارد کنید.", "errorCode": "30015"},
+            error={"errormessage": "PAMCode  را وارد کنید.", "errorcode": "30015"},
         )
     database = get_database()
     results = []
@@ -76,8 +76,8 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
-                "errorCode": "30017",
+                "errormessage": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
+                "errorcode": "30017",
             },
         )
     return ResponseListOut(
@@ -261,8 +261,8 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage": "خروجی برای متغیرهای داده شده نداریم.",
-                "errorCode": "30020",
+                "errormessage": "خروجی برای متغیرهای داده شده نداریم.",
+                "errorcode": "30020",
             },
         )
     return ResponseOut(
@@ -462,8 +462,8 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage": "خروجی برای متغیرهای داده شده نداریم.",
-                "errorCode": "30020",
+                "errormessage": "خروجی برای متغیرهای داده شده نداریم.",
+                "errorcode": "30020",
             },
         )
     return ResponseOut(
@@ -499,7 +499,7 @@ async def users_diff_with_tbs(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "PAMCode  را وارد کنید.", "errorCode": "30015"},
+            error={"errormessage": "PAMCode  را وارد کنید.", "errorcode": "30015"},
         )
 
     delta = timedelta(days=1)
@@ -525,8 +525,8 @@ async def users_diff_with_tbs(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-                "errorCode": "30013",
+                "errormessage": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
+                "errorcode": "30013",
             },
         )
     return ResponseListOut(

@@ -51,7 +51,7 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "موردی یافت نشد.", "errorCode": "30001"},
+            error={"errormessage": "موردی یافت نشد.", "errorcode": "30001"},
         )
     return ResponseListOut(
         result=query_result,
@@ -95,8 +95,8 @@ async def get_all_factors_consts(request: Request):
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage": "موردی برای ثابتهای فاکتورها یافت نشد.",
-                "errorCode": "30002",
+                "errormessage": "موردی برای ثابتهای فاکتورها یافت نشد.",
+                "errorcode": "30002",
             },
         )
     return ResponseListOut(
@@ -136,7 +136,7 @@ async def modify_factor_consts(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "IDP مارکتر را وارد کنید.", "errorCode": "30003"},
+            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
         )
 
     filter = {"MarketerID": args.MarketerID}
@@ -161,8 +161,8 @@ async def modify_factor_consts(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage": "موردی با IDP داده شده یافت نشد.",
-                "errorCode": "30004",
+                "errormessage": "موردی با IDP داده شده یافت نشد.",
+                "errorcode": "30004",
             },
         )
     return ResponseListOut(
@@ -190,17 +190,17 @@ async def modify_factor(
     """
     user_id = get_sub(request)
 
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
-    factor_coll = database["factors"]
+    factor_coll = database["factorsFIN"]
     if args.MarketerID is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "IDP مارکتر را وارد کنید.", "errorCode": "30003"},
+            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
         )
 
     filter = {"IdpID": args.MarketerID}
@@ -243,7 +243,7 @@ async def modify_factor(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "موردی در دیتابیس یافت نشد.", "errorCode": "30001"},
+            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
         )
     return ResponseListOut(
         result=query_result,
@@ -268,8 +268,8 @@ async def add_factor(request: Request, args: ModifyFactorIn = Depends(ModifyFact
     """
     user_id = get_sub(request)
 
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -278,7 +278,7 @@ async def add_factor(request: Request, args: ModifyFactorIn = Depends(ModifyFact
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "IDP مارکتر را وارد کنید.", "errorCode": "30003"},
+            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
         )
 
     filter = {"IdpID": args.MarketerID}
@@ -347,7 +347,7 @@ async def search_factor(
 
     database = get_database()
 
-    factor_coll = database["factors"]
+    factor_coll = database["factorsFIN"]
     if args.MarketerID and args.Period:
         pass
     else:
@@ -355,8 +355,8 @@ async def search_factor(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage": "IDP مارکتر و دوره را وارد کنید.",
-                "errorCode": "30030",
+                "errormessage": "IDP مارکتر و دوره را وارد کنید.",
+                "errorcode": "30030",
             },
         )
 
@@ -367,7 +367,7 @@ async def search_factor(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "موردی در دیتابیس یافت نشد.", "errorCode": "30001"},
+            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
         )
     result = {}
     tma = per
@@ -395,7 +395,7 @@ async def search_factor(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "موردی در دیتابیس یافت نشد.", "errorCode": "30001"},
+            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
         )
     return ResponseListOut(
         result=result,
@@ -435,8 +435,8 @@ async def delete_factor(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errorMessage": "IDP مارکتر و دوره را وارد کنید.",
-                "errorCode": "30030",
+                "errormessage": "IDP مارکتر و دوره را وارد کنید.",
+                "errorcode": "30030",
             },
         )
 
@@ -448,7 +448,7 @@ async def delete_factor(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "موردی در دیتابیس یافت نشد.", "errorCode": "30001"},
+            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
         )
     result = [
         f"از ماکتر {query_result.get('FullName')}فاکتور مربوط به دوره {args.Period} پاک شد."
@@ -473,7 +473,7 @@ async def delete_factor(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errorMessage": "موردی در دیتابیس یافت نشد.", "errorCode": "30001"},
+            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
         )
     result.append(factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False}))
     return ResponseListOut(
@@ -508,7 +508,7 @@ def total_factors(request: Request):#, args: FactorsListIn = Depends(FactorsList
     # firms_coll = database["firms"]
     marketers_coll = database["marketers"]
     # factors_coll = database["factors"]
-    factors_coll = database["factorsFIN"]
+    factors_coll = database["factors"]
 
     marketers_query = marketers_coll.find(
         {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
