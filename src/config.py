@@ -22,6 +22,20 @@ class Settings(BaseSettings):
     ROOT_PATH = ""
     SWAGGER_TITLE = "Marketer Admin"
     VERSION = "0.1.0"
+    ROOT_PATH = ""
+    #Added from Marketer
+    JWKS_CONFIGURATION_URL = "https://cluster.tech1a.co/.well-known/openid-configuration/jwks"
+    ISSUER = "https://cluster.tech1a.co"
+    APPLICATION_ID = "d7f48c21-2a19-4bdb-ace8-48928bff0eb5"
+    SPLUNK_HOST = "log.tech1a.co"
+    SPLUNK_PORT = 5141
+    SPLUNK_INDEX = "dev"
+
+    # SPLUNK_PORT = 5142
+    # SPLUNK_INDEX = "stg"
+    #
+    # SPLUNK_PORT = 6141
+    # SPLUNK_INDEX = "pro"
 
 
 settings = Settings()
