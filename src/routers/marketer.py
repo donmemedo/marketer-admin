@@ -621,7 +621,7 @@ async def add_marketers_relations(
     except:
     # if args.CommissionCoefficient is None:
     # if d is None:
-            return ResponseListOut(
+        return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "کمیسیون را وارد کنید.", "errorcode": "30010"},
