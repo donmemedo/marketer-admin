@@ -688,14 +688,31 @@ async def add_marketers_relations(
         update["$set"]["StartDate"] = args.StartDate
     if args.EndDate is not None:
         update["$set"]["EndDate"] = args.EndDate
-        update["$set"]["GEndDate"] = jd.strptime(
+        try:
+            update["$set"]["GEndDate"] = jd.strptime(
             update["$set"]["EndDate"], "%Y-%m-%d"
-        ).todatetime()
+            ).todatetime()
+        except:
+            return ResponseListOut(
+                result=[],
+                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                error={"errormessage": "تاریخ انتها را درست وارد کنید.", "errorcode": "30010"},
+            )
+
     else:
         update["$set"]["GEndDate"] = jd.strptime("1500-12-29", "%Y-%m-%d").todatetime()
-    update["$set"]["GStartDate"] = jd.strptime(
+    try:
+        update["$set"]["GStartDate"] = jd.strptime(
         update["$set"]["StartDate"], "%Y-%m-%d"
-    ).todatetime()
+        ).todatetime()
+    except:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={"errormessage": "تاریخ ابتدا را درست وارد کنید.", "errorcode": "30010"},
+        )
+
+
     update["$set"]["GCreateDate"] = jd.strptime(
         update["$set"]["CreateDate"], "%Y-%m-%d %H:%M:%S.%f"
     ).todatetime()
