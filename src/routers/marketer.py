@@ -616,9 +616,12 @@ async def add_marketers_relations(
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "IDP مارکترها را وارد کنید.", "errorcode": "30009"},
         )
-
-    if args.CommissionCoefficient is None:
-        return ResponseListOut(
+    try:
+        d= int(args.CommissionCoefficient)
+    except:
+    # if args.CommissionCoefficient is None:
+    # if d is None:
+            return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "کمیسیون را وارد کنید.", "errorcode": "30010"},
