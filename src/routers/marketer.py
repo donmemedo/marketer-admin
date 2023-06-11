@@ -885,6 +885,10 @@ async def search_marketers_relations(
     if args.FollowerMarketerName or args.FollowerMarketerID:
         if args.FollowerMarketerName is None:
             args.FollowerMarketerName = ""
+        if args.LeaderMarketerName is None:
+            args.LeaderMarketerName = ""
+        if args.LeaderMarketerID is None:
+            args.LeaderMarketerID = ""
 
         # name_query = {
         #     "$or": [
@@ -899,7 +903,9 @@ async def search_marketers_relations(
         query = {
             "$and": [
                 # {"FollowerMarketerID": {"$in": codes}},
+                {"LeaderMarketerID": {"$regex": args.LeaderMarketerID}},
                 {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+                {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
                 {"GStartDate": {"$gte": from_gregorian_date}},
                 {"GEndDate": {"$lte": to_gregorian_date}},
             ]
@@ -908,7 +914,9 @@ async def search_marketers_relations(
             query = {
                 "$and": [
                     {"FollowerMarketerID": args.FollowerMarketerID},
+                    {"LeaderMarketerID": {"$regex": args.LeaderMarketerID}},
                     {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
+                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
                     {"GStartDate": {"$gte": from_gregorian_date}},
                     {"GEndDate": {"$lte": to_gregorian_date}},
                 ]
@@ -916,6 +924,10 @@ async def search_marketers_relations(
     elif args.LeaderMarketerName or args.LeaderMarketerID:
         if args.LeaderMarketerName is None:
             args.LeaderMarketerName = ""
+        if args.FollowerMarketerName is None:
+            args.FollowerMarketerName = ""
+        if args.FollowerMarketerID is None:
+            args.FollowerMarketerID = ""
 
         # name_query = {
         #     "$or": [
@@ -929,7 +941,8 @@ async def search_marketers_relations(
         # codes = [c.get("IdpId") for c in idps]
         query = {
             "$and": [
-                # {"LeaderMarketerID": {"$in": codes}},
+                {"FollowerMarketerID": {"$regex": args.FollowerMarketerID}},
+                {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
                 {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
                 {"GStartDate": {"$gte": from_gregorian_date}},
                 {"GEndDate": {"$lte": to_gregorian_date}},
@@ -938,8 +951,9 @@ async def search_marketers_relations(
         if args.LeaderMarketerID:
             query = {
                 "$and": [
-                    # {"LeaderMarketerID": {"$in": codes}},
+                    {"FollowerMarketerID": {"$regex": args.FollowerMarketerID}},
                     {"LeaderMarketerID": args.LeaderMarketerID},
+                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
                     {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
                     {"GStartDate": {"$gte": from_gregorian_date}},
                     {"GEndDate": {"$lte": to_gregorian_date}},
