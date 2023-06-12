@@ -14,7 +14,7 @@ data:
   OPENAPI_URL: ""
   ROOT_PATH: ""
   SPLUNK_HOST: "172.24.65.206"
-  SPLUNK_PORT: "5141"
+  SPLUNK_PORT: "6141"
 ---
 apiVersion: apps/v1
 kind: Deployment

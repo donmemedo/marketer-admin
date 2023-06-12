@@ -7,14 +7,20 @@ from routers.marketer import marketer
 from routers.factor import factor
 from routers.user import user
 from routers.subuser import subuser
-from src.tools.logger import logger
+from src.tools.logger import logger, log_config
+from logging.config import dictConfig
 from src.tools.database import get_database
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
+import uvicorn
 
 
-app = FastAPI(version=settings.VERSION, title=settings.SWAGGER_TITLE)
+app = FastAPI(version=settings.VERSION,
+              title=settings.SWAGGER_TITLE,
+              docs_url="/docs",
+              redoc_url="/redocs"
+              )
 
 app.add_middleware(
     CORSMiddleware,
@@ -53,3 +59,6 @@ app.include_router(marketer, prefix="")
 app.include_router(factor, prefix="")
 app.include_router(user, prefix="")
 app.include_router(subuser, prefix="")
+
+if __name__ == "__main__":
+    uvicorn.run(app=app, host="0.0.0.0", port=8000, log_config=dictConfig(log_config))
