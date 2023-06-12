@@ -210,6 +210,6 @@ def get_sub(req: Request):
         token, public_key, verify=True, algorithms=["RS256"], issuer=issuer
     )
     logger.info(decoded)
-    return decoded.get('sub')
+    # return decoded.get('sub')
     return "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156"
 

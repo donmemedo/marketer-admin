@@ -19,6 +19,8 @@ from src.schemas.factor import (
 from src.tools.database import get_database
 from src.tools.tokens import JWTBearer, get_sub
 from src.tools.utils import get_marketer_name, peek, to_gregorian_
+from src.tools.logger import logger
+
 
 factor = APIRouter(prefix="/factor")
 
@@ -48,11 +50,13 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     consts_coll = brokerage["consts"]
     query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
     if not query_result:
+        logger.error("No Record- Error 30001")
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "موردی یافت نشد.", "errorcode": "30001"},
         )
+    logger.info("Factor Constants were gotten Successfully.")
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
