@@ -16,7 +16,12 @@ class Settings(BaseSettings):
     API_PREFIX = ""
     DOCS_URL = ""
     MONGO_CONNECTION_STRING = "mongodb://root:root@172.24.65.106:30001/"
+
     MONGO_DATABASE = "brokerage"
+    CUSTOMER_COLLECTION = "customers"
+    FIRMS_COLLECTION = "firms"
+    TRADES_COLLECTION = "tradesss"
+
     OPENAPI_URL = ""
     ORIGINS = "*"
     ROOT_PATH = ""

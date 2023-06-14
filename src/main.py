@@ -6,6 +6,7 @@ from config import settings
 from routers.marketer import marketer
 from routers.factor import factor
 from routers.user import user
+from routers.database import database
 from routers.subuser import subuser
 from src.tools.logger import logger
 from src.tools.database import get_database
@@ -52,4 +53,5 @@ async def validation_exception_handler(request, exc):
 app.include_router(marketer, prefix="")
 app.include_router(factor, prefix="")
 app.include_router(user, prefix="")
-app.include_router(subuser, prefix="")
+app.include_router(database, prefix="")
+# app.include_router(subuser, prefix="")
