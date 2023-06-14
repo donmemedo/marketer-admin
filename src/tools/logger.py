@@ -46,23 +46,23 @@ log_config = {
     },
     'loggers': {
         'marketer-admin': {
-            'handlers': ['default', 'splunk'],
+            'handlers': ['splunk', 'default'],
             'level': 'DEBUG',
             'propagate': True,
         },
         'uvicorn': {
             'handlers': ['default', 'splunk'],
             'level': 'DEBUG',
-            'propagate': True,
+            'propagate': False,
         },
         'uvicorn.access': {
             'handlers': ['access', 'splunk'],
             'level': 'INFO',
-            'propagate': True,
+            'propagate': False,
         },
         'uvicorn.error': {
             'level': 'INFO',
-            'propagate': True},
+            'propagate': False},
     },
 }
 
