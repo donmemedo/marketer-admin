@@ -1063,10 +1063,15 @@ async def search_marketers_relations(
                 "errorcode": "30003",
             },
         )
+    result={}
+    result["errorCode"] = 'Null'
+    result["errorMessage"] = 'Null'
+    result["totalCount"] = len(marketers)
+    result["pagedData"] = results
     return ResponseListOut(
-        result=results,
+        result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
+        error="null",
     )
 
 
