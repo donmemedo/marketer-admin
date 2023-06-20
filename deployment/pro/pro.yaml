@@ -7,13 +7,14 @@ metadata:
     instance: marketer-admin
 data:
   VERSION: "0.0.1"
+  MONGO_CONNECTION_STRING: "mongodb://root:1219S4OiIhSXPJmOGfmdlFlsQ121@mongo-marketer-headless.pro-marketer-db.svc.cluster.local:27017/"
   MONGO_DATABASE: "brokerage"
   SWAGGER_TITLE: "Marketer Admin"
   API_PREFIX: ""
   DOCS_URL: ""
   OPENAPI_URL: ""
   ROOT_PATH: ""
-  SPLUNK_HOST: "172.24.65.206"
+  SPLUNK_HOST: "log.tech1a.co"
   SPLUNK_PORT: "6141"
 ---
 apiVersion: apps/v1
@@ -52,10 +53,10 @@ spec:
   selector:
     app: marketer-admin
   ports:
-    - port: 80
+    - port: 443
       protocol: TCP
-      targetPort: http
----
+      targetPort: 8000
+---         
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -63,13 +64,15 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: promarketer-admin.tech1a.co
+    - host: marketer-admin.tavanabroker.ir
       http:
         paths:
         - path: /
           pathType: Prefix
           backend:
             service:
-              name: marketer-admin
+              name: marketer-api
               port:
-                number: 80
+                number: 443
+
+
