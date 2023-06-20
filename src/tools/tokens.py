@@ -210,6 +210,24 @@ def get_sub(req: Request):
         token, public_key, verify=True, algorithms=["RS256"], issuer=issuer
     )
     logger.info(decoded)
-    # return decoded.get('sub')
+    role_perm = {}
+    role_perm['sub'] = decoded['sub']
+    role_perm['client_id'] = decoded['client_id']
+    role_perm['roles'] = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+    role_perm['scopes'] = decoded['scope']
+    if decoded['CustomerManagement']:
+        role_perm['CustomerManagement'] = decoded['CustomerManagement']
+    else:
+        role_perm['CustomerManagement'] = ''
+    if decoded['Marketer']:
+        role_perm['Marketer'] = decoded['Marketer']
+    else:
+        role_perm['Marketer'] = ''
+    if decoded['MarketerAdmin']:
+        role_perm['MarketerAdmin'] = decoded['MarketerAdmin']
+    else:
+        role_perm['MarketerAdmin'] = ''
+
+    # return role_perm e892eae7-cf2e-48d8-a024-a7c9eb0f8668
     return "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156"
 
