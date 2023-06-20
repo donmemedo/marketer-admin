@@ -351,9 +351,10 @@ async def search_factor(
 
     database = get_database()
 
-    factor_coll = database["factorsFIN"]
-    if args.MarketerID and args.Period:
-        pass
+    factor_coll = database["factors"]
+    # if args.MarketerID and args.Period:
+    if args.Period:
+            pass
     else:
         return ResponseListOut(
             result=[],
@@ -366,43 +367,56 @@ async def search_factor(
 
     # filter = {"IdpID": args.MarketerID}
     per = args.Period
-    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
-    if not query_result:
+    if args.MarketerID:
+        querry_result = factor_coll.find({"IdpID": args.MarketerID}, {"_id": False})
+    else:
+        querry_result = factor_coll.find({}, {"_id": False})
+    if not querry_result:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
         )
-    result = {}
+
+    results = []
     tma = per
     if int(per[4:6]) < 3:
         tma = str(int(per[0:4]) - 1) + str(int(per[4:6]) + 10)
     else:
-        tma[5] = int(per[5]) - 2
+        tma = str(int(per[0:4])) + f"{(int(per[4:6]) - 2):02}"
 
-    try:
-        result["MarketerName"] = query_result.get("FullName")
-        result["Doreh"] = per
-        result["TotalPureVolume"] = query_result.get(per + "TPV")
-        result["TotalFee"] = query_result.get(per + "TF")
-        result["PureFee"] = query_result.get(per + "PureFee")
-        result["MarketerFee"] = query_result.get(per + "MarFee")
-        result["Plan"] = query_result.get(per + "Plan")
-        result["Tax"] = query_result.get(per + "Tax")
-        result["ThisMonthCollateral"] = query_result.get(per + "Collateral")
-        result["TwoMonthsAgoCollateral"] = query_result.get(tma + "Collateral")
-        result["FinalFee"] = query_result.get(per + "FinalFee")
-        result["Payment"] = query_result.get(per + "Payment")
-        result["FactStatus"] = query_result.get(per + "FactStatus")
-        query_result.values()
-    except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
-        )
+    qresult = dict(enumerate(querry_result))
+    for i in range(len(qresult)):
+        try:
+            query_result = qresult[i]
+            result = {}
+            result["MarketerName"] = query_result.get("FullName")
+            result["Doreh"] = per
+            result["TotalPureVolume"] = query_result.get(per + "TPV")
+            result["TotalFee"] = query_result.get(per + "TF")
+            result["PureFee"] = query_result.get(per + "PureFee")
+            result["MarketerFee"] = query_result.get(per + "MarFee")
+            result["Plan"] = query_result.get(per + "Plan")
+            result["Tax"] = query_result.get(per + "Tax")
+            result["ThisMonthCollateral"] = query_result.get(per + "Collateral")
+            result["TwoMonthsAgoCollateral"] = query_result.get(tma + "Collateral")
+            result["FinalFee"] = query_result.get(per + "FinalFee")
+            result["Payment"] = query_result.get(per + "Payment")
+            result["FactStatus"] = query_result.get(per + "FactStatus")
+            results.append(result)
+            # query_result.values()
+        except:
+            return ResponseListOut(
+                result=[],
+                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
+            )
+    if args.MarketerID:
+        last_result = results
+    else:
+        last_result = {"errorCode": 'Null', "errorMessage": 'Null', "totalCount": len(qresult), "pagedData": results}
     return ResponseListOut(
-        result=result,
+        result=last_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
