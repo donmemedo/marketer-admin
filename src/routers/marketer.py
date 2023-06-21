@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.tools.tokens import JWTBearer, get_sub
+from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.database import get_database
 from src.schemas.marketer import (
     ModifyMarketerIn,
@@ -24,7 +24,7 @@ from src.schemas.marketer import (
     DelMarketerRelations,
     SearchMarketerRelations,
 )
-from src.tools.utils import peek, to_gregorian_, marketer_entity, get_marketer_name
+from src.tools.utils import peek, to_gregorian_, marketer_entity, get_marketer_name, check_permissions
 
 
 marketer = APIRouter(prefix="/marketer")
@@ -47,6 +47,16 @@ async def get_marketer_profile(
     Returns:
         _type_: _description_
     """
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
     brokerage = get_database()
     marketers_coll = brokerage["marketers"]
     # results = []
@@ -94,9 +104,14 @@ async def get_marketer(request: Request):
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
-
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
@@ -137,10 +152,19 @@ async def modify_marketer(
         _type_: _description_
     """
 
-    user_id = get_sub(request)
+    # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Write', 'MarketerAdmin.Marketer.Update', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
     marketer_coll = database["marketers"]
@@ -167,18 +191,20 @@ async def modify_marketer(
     if args.RefererType is not None:
         update["$set"]["RefererType"] = args.RefererType
 
-    # ToDo: Let Super Admin can change CreatedDate
-    #     if args.CreateDate is not None and user_id == 'Super Admin IDPID':
-    #         update["$set"]["CreateDate"] = args.CreateDate
+    #Let Super Admin can change CreatedDate
+    if check_permissions(role_perm['MarketerAdmin'], ['MarketerAdmin.All.All', 'MarketerAdmin.Marketer.All']):
+        if args.CreateDate is not None:
+            update["$set"]["CreateDate"] = args.CreateDate
 
     if args.ModifiedBy is not None:
         update["$set"]["ModifiedBy"] = admins_coll.find_one(
             {"IdpId": user_id}, {"_id": False}
         ).get("FullName")
 
-    # ToDo: Let Super Admin can change CreatedBy
-    #     if args.CreatedBy is not None and user_id == 'Super Admin IDPID':
-    #         update["$set"]["CreatedBy"] = args.CreatedBy
+    #Let Super Admin can change CreatedBy
+    if check_permissions(role_perm['MarketerAdmin'], ['MarketerAdmin.All.All', 'MarketerAdmin.Marketer.All']):
+        if args.CreatedBy is not None:
+            update["$set"]["CreatedBy"] = args.CreatedBy
 
     update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
@@ -215,7 +241,7 @@ async def modify_marketer(
     )
 
 
-@marketer.put(
+@marketer.post(
     "/add-marketer",
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],  # , response_model=None
@@ -231,10 +257,19 @@ async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarket
         _type_: _description_
     """
 
-    user_id = get_sub(request)
+    # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Create', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Create', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
     admins_coll = database["factors"]
@@ -330,6 +365,16 @@ def get_marketer_total_trades(
         _type_: _description_
     """
     # get all current marketers
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
     database = get_database()
 
     customers_coll = database["customers"]
@@ -535,6 +580,16 @@ async def search_user_profile(
     Returns:
         _type_: _description_
     """
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
     brokerage = get_database()
     marketer_coll = brokerage["marketers"]
     query = {
@@ -581,7 +636,7 @@ async def search_user_profile(
     )
 
 
-@marketer.put(
+@marketer.post(
     "/add-marketers-relations",
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
@@ -599,10 +654,19 @@ async def add_marketers_relations(
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
+    # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Create', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Create', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -767,10 +831,19 @@ async def modify_marketers_relations(
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
+    # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Write', 'MarketerAdmin.Marketer.Update', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -888,10 +961,19 @@ async def search_marketers_relations(
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
+    # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
     from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
@@ -1094,10 +1176,19 @@ async def delete_marketers_relations(
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
+    # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Delete', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Delete', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -1183,7 +1274,17 @@ async def users_diff_with_tbs(
     """
 
     # get user id
-    # marketer_id = get_sub(request)
+    # marketer_id = get_role_permission(request)
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
     database = get_database()
 
     customers_coll = database["customers"]

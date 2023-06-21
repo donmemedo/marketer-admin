@@ -194,7 +194,7 @@ class JWTBearer(HTTPBearer):
         return isTokenValid
 
 
-def get_sub(req: Request):
+def get_role_permission(req: Request):
     """_summary_
 
     Args:
@@ -213,21 +213,24 @@ def get_sub(req: Request):
     role_perm = {}
     role_perm['sub'] = decoded['sub']
     role_perm['client_id'] = decoded['client_id']
-    role_perm['roles'] = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+    try:
+        role_perm['roles'] = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+    except:
+        role_perm['roles'] = []
     role_perm['scopes'] = decoded['scope']
-    if decoded['CustomerManagement']:
-        role_perm['CustomerManagement'] = decoded['CustomerManagement']
-    else:
-        role_perm['CustomerManagement'] = ''
-    if decoded['Marketer']:
+    # if decoded['CustomerManagement']:
+    #     role_perm['CustomerManagement'] = decoded['CustomerManagement']
+    # else:
+    #     role_perm['CustomerManagement'] = ''
+    try:
         role_perm['Marketer'] = decoded['Marketer']
-    else:
-        role_perm['Marketer'] = ''
-    if decoded['MarketerAdmin']:
+    except:
+        role_perm['Marketer'] = []
+    try:
         role_perm['MarketerAdmin'] = decoded['MarketerAdmin']
-    else:
-        role_perm['MarketerAdmin'] = ''
+    except:
+        role_perm['MarketerAdmin'] = []
 
-    # return role_perm e892eae7-cf2e-48d8-a024-a7c9eb0f8668
-    return "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156"
+    return role_perm #e892eae7-cf2e-48d8-a024-a7c9eb0f8668
+    # return "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156"
 
