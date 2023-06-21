@@ -111,3 +111,10 @@ def marketer_entity(marketer) -> dict:
         "IdpId": marketer.get("IdpId"),
         "InvitationLink": marketer.get("InvitationLink"),
     }
+
+
+def check_permissions(permissions,allow) -> bool:
+    if any(x in permissions for x in allow):
+        return True
+    else:
+        return False

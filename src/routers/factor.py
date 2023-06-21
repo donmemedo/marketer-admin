@@ -17,8 +17,8 @@ from src.schemas.factor import (
     SearchFactorIn,
 )
 from src.tools.database import get_database
-from src.tools.tokens import JWTBearer, get_sub
-from src.tools.utils import get_marketer_name, peek, to_gregorian_
+from src.tools.tokens import JWTBearer, get_role_permission
+from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
 from src.tools.logger import logger
 
 
@@ -40,9 +40,18 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
-
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    # user_id = get_role_permission(request)
+    #
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Factor.Read', 'MarketerAdmin.Factor.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     marketer_id = args.IdpID
@@ -82,9 +91,18 @@ async def get_all_factors_consts(request: Request):
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
-
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    # user_id = get_role_permission(request)
+    #
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Factor.Read', 'MarketerAdmin.Factor.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
@@ -128,9 +146,18 @@ async def modify_factor_consts(
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
-
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    # user_id = get_role_permission(request)
+    #
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Factor.Write', 'MarketerAdmin.Factor.Update', 'MarketerAdmin.Factor.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
@@ -192,10 +219,19 @@ async def modify_factor(
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
+    # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Factor.Write', 'MarketerAdmin.Factor.Update', 'MarketerAdmin.Factor.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -256,7 +292,7 @@ async def modify_factor(
     )
 
 
-@factor.put("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+@factor.post("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
 async def add_factor(request: Request, args: ModifyFactorIn = Depends(ModifyFactorIn)):
     """_summary_
 
@@ -270,10 +306,19 @@ async def add_factor(request: Request, args: ModifyFactorIn = Depends(ModifyFact
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
+    # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Create', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Factor.Write', 'MarketerAdmin.Factor.Create', 'MarketerAdmin.Factor.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -344,16 +389,26 @@ async def search_factor(
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
-
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    # user_id = get_role_permission(request)
+    #
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Factor.Read', 'MarketerAdmin.Factor.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
-    factor_coll = database["factorsFIN"]
-    if args.MarketerID and args.Period:
-        pass
+    factor_coll = database["factors"]
+    # if args.MarketerID and args.Period:
+    if args.Period:
+            pass
     else:
         return ResponseListOut(
             result=[],
@@ -366,43 +421,56 @@ async def search_factor(
 
     # filter = {"IdpID": args.MarketerID}
     per = args.Period
-    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
-    if not query_result:
+    if args.MarketerID:
+        querry_result = factor_coll.find({"IdpID": args.MarketerID}, {"_id": False})
+    else:
+        querry_result = factor_coll.find({}, {"_id": False})
+    if not querry_result:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
         )
-    result = {}
+
+    results = []
     tma = per
     if int(per[4:6]) < 3:
         tma = str(int(per[0:4]) - 1) + str(int(per[4:6]) + 10)
     else:
-        tma[5] = int(per[5]) - 2
+        tma = str(int(per[0:4])) + f"{(int(per[4:6]) - 2):02}"
 
-    try:
-        result["MarketerName"] = query_result.get("FullName")
-        result["Doreh"] = per
-        result["TotalPureVolume"] = query_result.get(per + "TPV")
-        result["TotalFee"] = query_result.get(per + "TF")
-        result["PureFee"] = query_result.get(per + "PureFee")
-        result["MarketerFee"] = query_result.get(per + "MarFee")
-        result["Plan"] = query_result.get(per + "Plan")
-        result["Tax"] = query_result.get(per + "Tax")
-        result["ThisMonthCollateral"] = query_result.get(per + "Collateral")
-        result["TwoMonthsAgoCollateral"] = query_result.get(tma + "Collateral")
-        result["FinalFee"] = query_result.get(per + "FinalFee")
-        result["Payment"] = query_result.get(per + "Payment")
-        result["FactStatus"] = query_result.get(per + "FactStatus")
-        query_result.values()
-    except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
-        )
+    qresult = dict(enumerate(querry_result))
+    for i in range(len(qresult)):
+        try:
+            query_result = qresult[i]
+            result = {}
+            result["MarketerName"] = query_result.get("FullName")
+            result["Doreh"] = per
+            result["TotalPureVolume"] = query_result.get(per + "TPV")
+            result["TotalFee"] = query_result.get(per + "TF")
+            result["PureFee"] = query_result.get(per + "PureFee")
+            result["MarketerFee"] = query_result.get(per + "MarFee")
+            result["Plan"] = query_result.get(per + "Plan")
+            result["Tax"] = query_result.get(per + "Tax")
+            result["ThisMonthCollateral"] = query_result.get(per + "Collateral")
+            result["TwoMonthsAgoCollateral"] = query_result.get(tma + "Collateral")
+            result["FinalFee"] = query_result.get(per + "FinalFee")
+            result["Payment"] = query_result.get(per + "Payment")
+            result["FactStatus"] = query_result.get(per + "FactStatus")
+            results.append(result)
+            # query_result.values()
+        except:
+            return ResponseListOut(
+                result=[],
+                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
+            )
+    if args.MarketerID:
+        last_result = results
+    else:
+        last_result = {"errorCode": 'Null', "errorMessage": 'Null', "totalCount": len(qresult), "pagedData": results}
     return ResponseListOut(
-        result=result,
+        result=last_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
@@ -424,9 +492,18 @@ async def delete_factor(
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
-
-    if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    # user_id = get_role_permission(request)
+    #
+    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Delete', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.Factor.Delete', 'MarketerAdmin.Factor.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
@@ -487,12 +564,12 @@ async def delete_factor(
     )
 
 
-@factor.get(
-    "/total-factors",
-    dependencies=[Depends(JWTBearer())],
-    tags=["Factor"],
-    response_model=None,
-)
+# @factor.get(
+#     "/total-factors",
+#     dependencies=[Depends(JWTBearer())],
+#     tags=["Factor"],
+#     response_model=None,
+# )
 def total_factors(request: Request):#, args: FactorsListIn = Depends(FactorsListIn)):
     """_summary_
 
@@ -504,7 +581,7 @@ def total_factors(request: Request):#, args: FactorsListIn = Depends(FactorsList
         _type_: _description_
     """
     # get user id
-    # marketer_id = get_sub(request)
+    # marketer_id = get_role_permission(request)
     database = get_database()
 
     # customers_coll = database["customers"]

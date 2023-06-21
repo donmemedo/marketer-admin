@@ -7,25 +7,11 @@ from datetime import datetime, timedelta, date
 
 # import pymongo.errors
 from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.tools.tokens import JWTBearer, get_sub
+from src.tools.tokens import JWTBearer, get_role_permission
+from src.tools.utils import check_permissions
 from src.tools.database import get_database
-from src.schemas.database import (
-    ModifyMarketerIn,
-    AddMarketerIn,
-    UsersTotalPureIn,
-    MarketersProfileIn,
-    MarketerIn,
-    DiffTradesIn,
-    ResponseOut,
-    ResponseListOut,
-    MarketerRelations,
-    DelMarketerRelations,
-    SearchMarketerRelations,
-    CollectionRestore
-)
-from src.tools.utils import peek, to_gregorian_, marketer_entity, get_marketer_name
+from src.schemas.database import ResponseListOut, CollectionRestore
 from src.config import settings
 from src.tools.logger import logger, log_config
 import requests
@@ -34,7 +20,7 @@ from pymongo import MongoClient, errors
 
 database = APIRouter(prefix="/database")
 
-@database.get(
+@database.put(
     "/get-customers",
     dependencies=[Depends(JWTBearer())],
     tags=["Database"],
@@ -51,6 +37,18 @@ async def get_customers(
     Returns:
         _type_: _description_
     """
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.All','MarketerAdmin.Database.All','MarketerAdmin.TBSSync.All',
+                   'MarketerAdmin.All.Write','MarketerAdmin.Database.Write','MarketerAdmin.TBSSync.Write',
+                   'MarketerAdmin.All.Update','MarketerAdmin.Database.Update','MarketerAdmin.TBSSync.Update']
+    allowed = check_permissions(role_perm['MarketerAdmin'],permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
+
     brokerage = get_database()
     try:
         cus_collection = brokerage[settings.CUSTOMER_COLLECTION]
@@ -70,6 +68,7 @@ async def get_customers(
         )
 
     cus_getter(date=given_date)
+    logger.info(f"Updating Customers Database was requested by {user_id}")
     logger.info("Ending Time of getting List of Registered Customers in %s: %s", args.date,
                 jd.now())
     return ResponseListOut(
@@ -79,7 +78,7 @@ async def get_customers(
     )
 
 
-@database.get(
+@database.put(
     "/get-firms",
     dependencies=[Depends(JWTBearer())],
     tags=["Database"],
@@ -96,6 +95,17 @@ async def get_firms(
     Returns:
         _type_: _description_
     """
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.All','MarketerAdmin.Database.All','MarketerAdmin.TBSSync.All',
+                   'MarketerAdmin.All.Write','MarketerAdmin.Database.Write','MarketerAdmin.TBSSync.Write',
+                   'MarketerAdmin.All.Update','MarketerAdmin.Database.Update','MarketerAdmin.TBSSync.Update']
+    allowed = check_permissions(role_perm['MarketerAdmin'],permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
     brokerage = get_database()
     try:
         firm_collection = brokerage[settings.FIRMS_COLLECTION]
@@ -115,6 +125,7 @@ async def get_firms(
         )
 
     firm_getter(date=given_date)
+    logger.info(f"Updating Firms Database was requested by {user_id}")
     logger.info("Ending Time of getting List of Registered Firms in %s: %s", args.date,
                 jd.now())
     return ResponseListOut(
@@ -124,7 +135,7 @@ async def get_firms(
     )
 
 
-@database.get(
+@database.post(
     "/get-trades",
     dependencies=[Depends(JWTBearer())],
     tags=["Database"],
@@ -141,6 +152,16 @@ async def get_trades(
     Returns:
         _type_: _description_
     """
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.All','MarketerAdmin.Database.All','MarketerAdmin.TBSSync.All',
+                   'MarketerAdmin.All.Create', 'MarketerAdmin.Database.Create', 'MarketerAdmin.TBSSync.Create']
+    allowed = check_permissions(role_perm['MarketerAdmin'],permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
     brokerage = get_database()
     try:
         trades_collection = brokerage[settings.TRADES_COLLECTION]
@@ -160,6 +181,7 @@ async def get_trades(
         )
 
     trade_getter(date=given_date)
+    logger.info(f"Updating Trades Database was requested by {user_id}")
     logger.info("Ending Time of getting List of Trades in %s is: %s", args.date, jd.now())
     return ResponseListOut(
         result=[],
@@ -184,6 +206,16 @@ async def delete_trades(
     Returns:
         _type_: _description_
     """
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.All','MarketerAdmin.Database.All','MarketerAdmin.TBSSync.All',
+                   'MarketerAdmin.All.Delete', 'MarketerAdmin.Database.Delete', 'MarketerAdmin.TBSSync.Delete']
+    allowed = check_permissions(role_perm['MarketerAdmin'],permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
     brokerage = get_database()
     try:
         trades_collection = brokerage[settings.TRADES_COLLECTION]
@@ -203,6 +235,7 @@ async def delete_trades(
         )
 
     trades_collection.delete_many({'TradeDate': {'$regex': str(given_date)}})
+    logger.info(f"Updating Trades Database was requested by {user_id}")
     logger.info("Ending Time of deleting List of Trades in %s is: %s", args.date, jd.now())
     return ResponseListOut(
         result=[],

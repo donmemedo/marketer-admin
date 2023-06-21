@@ -169,7 +169,7 @@ class ModifyFactorIn:
 @dataclass
 class SearchFactorIn:
 
-    MarketerID: str
+    MarketerID: str = Query("")
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
 
 

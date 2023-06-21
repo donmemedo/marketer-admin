@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.tools.tokens import JWTBearer, get_sub
+from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.database import get_database
-from src.tools.utils import to_gregorian_, peek
+from src.tools.utils import to_gregorian_, peek, check_permissions
 from src.schemas.user import (
     UserTradesIn,
     UsersListIn,
@@ -40,10 +40,20 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     Returns:
         _type_: _description_
     """
-    user_id = get_sub(request)
+    # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=403, detail="Not authorized.")
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
     if args.TradeCode is None:
         return ResponseListOut(
             result=[],
@@ -104,7 +114,16 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         _type_: _description_
     """
     # get user id
-    marketer_id = get_sub(request)
+    # marketer_id = get_role_permission(request)
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -115,18 +134,18 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     marketers_coll = database["marketers"]
 
     # check if marketer exists and return his name
-    query_result = marketers_coll.find({"IdpId": marketer_id})
-
-    marketer_dict = peek(query_result)
-
-    if marketer_dict.get("FirstName") == "":
-        marketer_fullname = marketer_dict.get("LastName")
-    elif marketer_dict.get("LastName") == "":
-        marketer_fullname = marketer_dict.get("FirstName")
-    else:
-        marketer_fullname = (
-            marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
-        )
+    # query_result = marketers_coll.find({"IdpId": marketer_id})
+    #
+    # marketer_dict = peek(query_result)
+    #
+    # if marketer_dict.get("FirstName") == "":
+    #     marketer_fullname = marketer_dict.get("LastName")
+    # elif marketer_dict.get("LastName") == "":
+    #     marketer_fullname = marketer_dict.get("FirstName")
+    # else:
+    #     marketer_fullname = (
+    #         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
+    #     )
 
     from_gregorian_date = to_gregorian_(args.from_date)
     to_gregorian_date = to_gregorian_(args.to_date)
@@ -134,7 +153,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         days=1
     )
     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-    query = {"$and": [{"Referer": marketer_fullname}]}
+    query = {"$and": [{"Referer": ''}]}
     if args.marketername:
         query = {"Referer": {"$regex": args.marketername}}
     fields = {"PAMCode": 1}
@@ -289,7 +308,17 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
         _type_: _description_
     """
     # get user id
-    marketer_id = get_sub(request)
+    # marketer_id = get_role_permission(request)
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
     database = get_database()
 
     customers_coll = database["customers"]
@@ -298,18 +327,18 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     marketers_coll = database["marketers"]
 
     # check if marketer exists and return his name
-    query_result = marketers_coll.find({"IdpId": marketer_id})
-
-    marketer_dict = peek(query_result)
-
-    if marketer_dict.get("FirstName") == "":
-        marketer_fullname = marketer_dict.get("LastName")
-    elif marketer_dict.get("LastName") == "":
-        marketer_fullname = marketer_dict.get("FirstName")
-    else:
-        marketer_fullname = (
-            marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
-        )
+    # query_result = marketers_coll.find({"IdpId": marketer_id})
+    #
+    # marketer_dict = peek(query_result)
+    #
+    # if marketer_dict.get("FirstName") == "":
+    #     marketer_fullname = marketer_dict.get("LastName")
+    # elif marketer_dict.get("LastName") == "":
+    #     marketer_fullname = marketer_dict.get("FirstName")
+    # else:
+    #     marketer_fullname = (
+    #         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
+    #     )
 
     from_gregorian_date = to_gregorian_(args.from_date)
     to_gregorian_date = to_gregorian_(args.to_date)
@@ -319,7 +348,7 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
     # get all customers' TradeCodes
-    query = {"$and": [{"Referer": marketer_fullname}]}
+    query = {"$and": [{"Referer": ''}]}
 
     fields = {"PAMCode": 1}
 
@@ -492,7 +521,17 @@ async def users_diff_with_tbs(
         _type_: _description_
     """
     # get user id
-    # marketer_id = get_sub(request)
+    # marketer_id = get_role_permission(request)
+    role_perm = get_role_permission(request)
+    user_id = role_perm['sub']
+    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
+                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
+    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
     start_date = jd.strptime(args.from_date, "%Y-%m-%d")
     end_date = jd.strptime(args.to_date, "%Y-%m-%d")
     if args.TradeCode is None:
