@@ -32,7 +32,7 @@ spec:
         app: marketer-admin
     spec:
       containers:
-      - name: marketer-api
+      - name: marketer-admin
         image: "registry.tech1a.co:81/repository/tech1a-docker-registry/marketer-admin:latest"
         envFrom:
           - configMapRef:
@@ -71,7 +71,7 @@ spec:
           pathType: Prefix
           backend:
             service:
-              name: marketer-api
+              name: marketer-admin
               port:
                 number: 443
 
