@@ -18,7 +18,7 @@ from src.schemas.subuser import (
     ResponseListOut,
 )
 from src.tools.database import get_database
-from src.tools.tokens import JWTBearer, get_sub
+from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import peek, to_gregorian_
 
 subuser = APIRouter(prefix="/subuser")
@@ -87,7 +87,7 @@ async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn
         _type_: _description_
     """
     # get user id
-    marketer_id = get_sub(request)
+    marketer_id = get_role_permission(request)
     brokerage = get_database()
 
     customer_coll = brokerage["customers"]
@@ -138,7 +138,7 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
         _type_: _description_
     """
     # get user id
-    marketer_id = get_sub(request)
+    marketer_id = get_role_permission(request)
     brokerage = get_database()
 
     customer_coll = brokerage["customers"]
@@ -200,7 +200,7 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
     """
 
     # get user id
-    marketer_id = get_sub(request)
+    marketer_id = get_role_permission(request)
     brokerage = get_database()
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
@@ -344,7 +344,7 @@ async def marketer_subuser_lists(
     """
     # get all current marketers
     database = get_database()
-    marketer_id = get_sub(request)
+    marketer_id = get_role_permission(request)
     customers_coll = database["customers"]
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
@@ -654,7 +654,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         _type_: _description_
     """
     # get user id
-    # marketer_id = get_sub(request)
+    # marketer_id = get_role_permission(request)
     database = get_database()
 
     customers_coll = database["customers"]
@@ -917,7 +917,7 @@ def total_users_cost(
         _type_: _description_
     """
     # get user id
-    # marketer_id = get_sub(request)
+    # marketer_id = get_role_permission(request)
     database = get_database()
 
     customers_coll = database["customers"]
