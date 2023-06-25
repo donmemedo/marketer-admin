@@ -16,6 +16,6 @@ sniffio==1.3.0
 starlette==0.25.0
 typing_extensions==4.5.0
 uvicorn==0.20.0
-requests
-python-json-logger
-splunk-handler
+requests==2.31.0
+python-json-logger==2.0.7
+splunk-handler==3.0.0

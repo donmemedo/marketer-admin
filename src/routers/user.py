@@ -43,7 +43,7 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
@@ -52,7 +52,7 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     if args.TradeCode is None:
         return ResponseListOut(
@@ -123,7 +123,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
@@ -317,7 +317,7 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
@@ -530,7 +530,7 @@ async def users_diff_with_tbs(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     start_date = jd.strptime(args.from_date, "%Y-%m-%d")
     end_date = jd.strptime(args.to_date, "%Y-%m-%d")

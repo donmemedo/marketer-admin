@@ -55,7 +55,7 @@ async def get_marketer_profile(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     brokerage = get_database()
     marketers_coll = brokerage["marketers"]
@@ -112,7 +112,7 @@ async def get_marketer(request: Request):
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
     marketers_coll = database["marketers"]
@@ -155,7 +155,7 @@ async def modify_marketer(
     # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
@@ -164,7 +164,7 @@ async def modify_marketer(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
     marketer_coll = database["marketers"]
@@ -260,7 +260,7 @@ async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarket
     # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Create', 'MarketerAdmin.All.All',
@@ -269,7 +269,7 @@ async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarket
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
     admins_coll = database["factors"]
@@ -373,7 +373,7 @@ def get_marketer_total_trades(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
@@ -588,7 +588,7 @@ async def search_user_profile(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     brokerage = get_database()
     marketer_coll = brokerage["marketers"]
@@ -657,7 +657,7 @@ async def add_marketers_relations(
     # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Create', 'MarketerAdmin.All.All',
@@ -666,7 +666,7 @@ async def add_marketers_relations(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
@@ -834,7 +834,7 @@ async def modify_marketers_relations(
     # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
@@ -843,7 +843,7 @@ async def modify_marketers_relations(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
@@ -964,7 +964,7 @@ async def search_marketers_relations(
     # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
@@ -973,7 +973,7 @@ async def search_marketers_relations(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
     from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
@@ -1179,7 +1179,7 @@ async def delete_marketers_relations(
     # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Delete', 'MarketerAdmin.All.All',
@@ -1188,7 +1188,7 @@ async def delete_marketers_relations(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
@@ -1283,7 +1283,7 @@ async def users_diff_with_tbs(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
