@@ -314,8 +314,3 @@ __pycache__/**
 __pycache__/
 *.py[cod]
 **/*.pdf
-deployment
-**/Dockerfile
-!/config.py
-!/tokens.py
-typings
