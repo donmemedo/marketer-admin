@@ -117,7 +117,7 @@ deploy-staging:
     - mkdir -p ~/.kube
     - chmod 700 ~/.kube
     - echo "$K8S_STG" | base64 -d > ~/.kube/config
-    - kubectl -n "$NAMESPACE_Stg" apply -f deployment/stg/stage.yaml
+    - kubectl -n "$NAMESPACE_Stg" apply -f deployment/stg/stg.yaml
     - kubectl set image -n "$NAMESPACE_Stg" deployment/$IMAGE_NAME $IMAGE_NAME=$REGISTRY_HOST/repository/tech1a-docker-registry/$IMAGE_NAME:$IMAGE_TAG_PID
   needs:
     - job: build
