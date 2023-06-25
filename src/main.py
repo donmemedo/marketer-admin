@@ -7,7 +7,7 @@ from routers.marketer import marketer
 from routers.factor import factor
 from routers.user import user
 from routers.database import database
-from routers.subuser import subuser
+# from routers.subuser import subuser
 from src.tools.logger import logger
 from src.tools.database import get_database
 from fastapi.exceptions import RequestValidationError
