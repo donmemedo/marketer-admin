@@ -318,3 +318,4 @@ deployment
 Dockerfile
 typings
 sonar-project.properties
+.gitlab-ci.yml
