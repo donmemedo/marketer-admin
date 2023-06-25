@@ -7,6 +7,8 @@ metadata:
     instance: marketer-admin
 data:
   VERSION: "0.0.1"
+  ORIGINS: "*,localhost:3000,cluster.tech1a.co:9021"
+  MONGO_CONNECTION_STRING: "mongodb://root:3tliSqt3tDD5Bg@mongo-marketer-headless.stg-marketer-db.svc.cluster.local:27017/"
   MONGO_DATABASE: "brokerage"
   SWAGGER_TITLE: "Marketer Admin"
   API_PREFIX: ""
@@ -31,7 +33,7 @@ spec:
         app: marketer-admin
     spec:
       containers:
-      - name: marketer-api
+      - name: marketer-admin
         image: "registry.tech1a.co:81/repository/tech1a-docker-registry/marketer-admin:latest"
         envFrom:
           - configMapRef:
