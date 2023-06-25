@@ -43,7 +43,7 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     # user_id = get_role_permission(request)
     #
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
@@ -52,7 +52,7 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     marketer_id = args.IdpID
     brokerage = get_database()
@@ -94,7 +94,7 @@ async def get_all_factors_consts(request: Request):
     # user_id = get_role_permission(request)
     #
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
@@ -103,7 +103,7 @@ async def get_all_factors_consts(request: Request):
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
     results = []
@@ -149,7 +149,7 @@ async def modify_factor_consts(
     # user_id = get_role_permission(request)
     #
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
@@ -158,7 +158,7 @@ async def modify_factor_consts(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
@@ -222,7 +222,7 @@ async def modify_factor(
     # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
@@ -231,7 +231,7 @@ async def modify_factor(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
@@ -309,7 +309,7 @@ async def add_factor(request: Request, args: ModifyFactorIn = Depends(ModifyFact
     # user_id = get_role_permission(request)
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Create', 'MarketerAdmin.All.All',
@@ -318,7 +318,7 @@ async def add_factor(request: Request, args: ModifyFactorIn = Depends(ModifyFact
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
@@ -392,7 +392,7 @@ async def search_factor(
     # user_id = get_role_permission(request)
     #
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
@@ -401,7 +401,7 @@ async def search_factor(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 
@@ -495,7 +495,7 @@ async def delete_factor(
     # user_id = get_role_permission(request)
     #
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
+    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
     user_id = role_perm['sub']
     permissions = ['MarketerAdmin.All.Delete', 'MarketerAdmin.All.All',
@@ -504,7 +504,7 @@ async def delete_factor(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
 

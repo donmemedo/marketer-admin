@@ -46,7 +46,7 @@ async def get_customers(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
 
     brokerage = get_database()
@@ -104,7 +104,7 @@ async def get_firms(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     brokerage = get_database()
     try:
@@ -160,7 +160,7 @@ async def get_trades(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     brokerage = get_database()
     try:
@@ -214,7 +214,7 @@ async def delete_trades(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+        raise HTTPException(status_code=401, detail="Not authorized.")
 
     brokerage = get_database()
     try:
