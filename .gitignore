@@ -315,7 +315,6 @@ __pycache__/
 *.py[cod]
 **/*.pdf
 deployment
-**/Dockerfile
-!/config.py
-!/tokens.py
+Dockerfile
 typings
+sonar-project.properties
