@@ -888,14 +888,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     # if aggre_dict is None:
     #     return {}
 
-    #aggre_dict["page"] = 1#args.page
-    #aggre_dict["size"] = 1000000#args.size
-    #aggre_dict["pages"] = - (aggre_dict.get("total") // - args.size)
-
-    # aggre_dict["page"] = 1#args.page
-    # aggre_dict["size"] = 1000000#args.size
-    # aggre_dict["pages"] = - (aggre_dict.get("total") // - args.size)
-
 
     # return aggre_dict
 
