@@ -7,7 +7,7 @@ from routers.marketer import marketer
 from routers.factor import factor
 from routers.user import user
 from routers.database import database
-from routers.subuser import subuser
+# from routers.subuser import subuser
 from src.tools.logger import logger
 from src.tools.database import get_database
 from fastapi.exceptions import RequestValidationError
@@ -19,7 +19,7 @@ app = FastAPI(version=settings.VERSION, title=settings.SWAGGER_TITLE)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ORIGINS,
+    allow_origins=settings.ORIGINS.split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
