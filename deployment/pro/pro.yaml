@@ -15,7 +15,7 @@ data:
   DOCS_URL: ""
   OPENAPI_URL: ""
   ROOT_PATH: ""
-  SPLUNK_HOST: "log.tech1a.co"
+  SPLUNK_HOST: "172.24.65.206"
   SPLUNK_PORT: "6141"
 ---
 apiVersion: apps/v1
