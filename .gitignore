@@ -314,7 +314,6 @@ __pycache__/**
 __pycache__/
 *.py[cod]
 **/*.pdf
-deployment
 Dockerfile
 typings
 sonar-project.properties
