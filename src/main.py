@@ -38,8 +38,12 @@ def health_check():
 @app.get("/ip-getter")
 async def read_root(request: Request):
     client_host = request.client.host
+    client_scope = request.scope['client']
     logger.info(f"client host is {client_host}")
-    return {"client_host": client_host}
+    logger.info(f"client scope is {client_scope}")
+    
+    return {"client_host": client_host,
+            "client_scope": client_scope}
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
