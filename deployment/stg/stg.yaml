@@ -7,7 +7,7 @@ metadata:
     instance: marketer-admin
 data:
   VERSION: "0.0.1"
-  ORIGINS: "*,10.233.113.128,localhost:3000,cluster.tech1a.co:9021"
+  ORIGINS: "*,10.233.113.128,172.24.137.10:3000,cluster.tech1a.co:9021"
   MONGO_CONNECTION_STRING: "mongodb://root:3tliSqt3tDD5Bg@mongo-marketer-headless.stg-marketer-db.svc.cluster.local:27017/"
   MONGO_DATABASE: "brokerage"
   SWAGGER_TITLE: "Marketer Admin"
