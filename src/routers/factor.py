@@ -457,6 +457,7 @@ async def search_factor(
             result["FinalFee"] = query_result.get(per + "FinalFee")
             result["Payment"] = query_result.get(per + "Payment")
             result["FactStatus"] = query_result.get(per + "FactStatus")
+            result["IdpID"] = query_result.get("IdpID")
             results.append(result)
             # query_result.values()
         except:
