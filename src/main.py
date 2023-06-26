@@ -35,7 +35,7 @@ def health_check():
     logger.info("Status of Marketer Admin Service is OK")
     return {"status": "OK"}
 
-@app.get("/ip-getter")
+@app.get("/ip-getter", tags=["Deafult"])
 async def read_root(request: Request):
     client_host = request.client.host
     client_scope = request.scope['client']
