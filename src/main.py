@@ -35,6 +35,11 @@ def health_check():
     logger.info("Status of Marketer Admin Service is OK")
     return {"status": "OK"}
 
+@app.get("/ip-getter")
+async def read_root(request: Request):
+    client_host = request.client.host
+    logger.info(f"client host is {client_host}")
+    return {"client_host": client_host}
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
