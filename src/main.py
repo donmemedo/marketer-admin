@@ -1,6 +1,6 @@
 """_summary_
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from routers.marketer import marketer
@@ -35,6 +35,15 @@ def health_check():
     logger.info("Status of Marketer Admin Service is OK")
     return {"status": "OK"}
 
+@app.get("/ip-getter")
+async def read_root(request: Request):
+    client_host = request.client.host
+    client_scope = request.scope['client']
+    logger.info(f"client host is {client_host}")
+    logger.info(f"client scope is {client_scope}")
+    
+    return {"client_host": client_host,
+            "client_scope": client_scope}
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
