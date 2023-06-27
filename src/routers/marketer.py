@@ -1246,7 +1246,7 @@ async def delete_marketers_relations(
     results.append(
         {"MSG": f"ارتباط بین {LeaderMarketerName} و{FollowerMarketerName} برداشته شد."}
     )
-
+    marketers_relations_coll.delete_one({"FollowerMarketerID": args.FollowerMarketerID})
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
