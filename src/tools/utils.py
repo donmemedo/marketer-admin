@@ -113,7 +113,7 @@ def marketer_entity(marketer) -> dict:
     }
 
 
-def check_permissions(permissions,allow) -> bool:
+def check_permissions(permissions, allow) -> bool:
     if any(x in permissions for x in allow):
         return True
     else:

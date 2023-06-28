@@ -28,8 +28,10 @@ class Settings(BaseSettings):
     SWAGGER_TITLE = "Marketer Admin"
     VERSION = "0.1.1"
     ROOT_PATH = ""
-    #Added from Marketer
-    JWKS_CONFIGURATION_URL = "https://cluster.tech1a.co/.well-known/openid-configuration/jwks"
+    # Added from Marketer
+    JWKS_CONFIGURATION_URL = (
+        "https://cluster.tech1a.co/.well-known/openid-configuration/jwks"
+    )
     ISSUER = "https://cluster.tech1a.co"
     APPLICATION_ID = "d7f48c21-2a19-4bdb-ace8-48928bff0eb5"
     SPLUNK_HOST = "172.24.65.206"

@@ -34,13 +34,14 @@ class InvalidAuthorizationToken(Exception):
 
     Args:
         Exception (_type_): _description_
-    """    
+    """
+
     def __init__(self, details):
         """_summary_
 
         Args:
             details (_type_): _description_
-        """        
+        """
         super().__init__("Invalid authorization token: " + details)
 
 
@@ -56,7 +57,7 @@ def get_kid(token):
 
     Returns:
         _type_: _description_
-    """    
+    """
     headers = jwt.get_unverified_header(token)
     if not headers:
         raise InvalidAuthorizationToken("missing headers")
@@ -77,7 +78,7 @@ def get_jwk(kid):
 
     Returns:
         _type_: _description_
-    """    
+    """
     for jwk in jwks.get("keys"):
         if jwk.get("kid") == kid:
             return jwk
@@ -92,7 +93,7 @@ def get_public_key(token):
 
     Returns:
         _type_: _description_
-    """    
+    """
     return rsa_pem_from_jwk(get_jwk(get_kid(token)))
 
 
@@ -104,7 +105,7 @@ def validate_jwt(jwt_to_validate):
 
     Returns:
         _type_: _description_
-    """    
+    """
     public_key = get_public_key(jwt_to_validate)
 
     try:
@@ -129,19 +130,19 @@ def validate_jwt(jwt_to_validate):
     return False
 
 
-
 class JWTBearer(HTTPBearer):
     """_summary_
 
     Args:
         HTTPBearer (_type_): _description_
-    """    
+    """
+
     def __init__(self, auto_error: bool = True):
         """_summary_
 
         Args:
             auto_error (bool, optional): _description_. Defaults to True.
-        """        
+        """
         super(JWTBearer, self).__init__(auto_error=auto_error)
 
     async def __call__(self, request: Request):
@@ -157,7 +158,7 @@ class JWTBearer(HTTPBearer):
 
         Returns:
             _type_: _description_
-        """        
+        """
         credentials: HTTPAuthorizationCredentials = await super(
             JWTBearer, self
         ).__call__(request)
@@ -182,7 +183,7 @@ class JWTBearer(HTTPBearer):
 
         Returns:
             bool: _description_
-        """        
+        """
         isTokenValid: bool = False
 
         try:
@@ -202,7 +203,7 @@ def get_role_permission(req: Request):
 
     Returns:
         _type_: _description_
-    """    
+    """
     token = req.headers.get("authorization").split()[1]
     public_key = get_public_key(token)
 
@@ -211,26 +212,27 @@ def get_role_permission(req: Request):
     )
     logger.info(decoded)
     role_perm = {}
-    role_perm['sub'] = decoded['sub']
-    role_perm['client_id'] = decoded['client_id']
+    role_perm["sub"] = decoded["sub"]
+    role_perm["client_id"] = decoded["client_id"]
     try:
-        role_perm['roles'] = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+        role_perm["roles"] = decoded[
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ]
     except:
-        role_perm['roles'] = []
-    role_perm['scopes'] = decoded['scope']
+        role_perm["roles"] = []
+    role_perm["scopes"] = decoded["scope"]
     # if decoded['CustomerManagement']:
     #     role_perm['CustomerManagement'] = decoded['CustomerManagement']
     # else:
     #     role_perm['CustomerManagement'] = ''
     try:
-        role_perm['Marketer'] = decoded['Marketer']
+        role_perm["Marketer"] = decoded["Marketer"]
     except:
-        role_perm['Marketer'] = []
+        role_perm["Marketer"] = []
     try:
-        role_perm['MarketerAdmin'] = decoded['MarketerAdmin']
+        role_perm["MarketerAdmin"] = decoded["MarketerAdmin"]
     except:
-        role_perm['MarketerAdmin'] = []
+        role_perm["MarketerAdmin"] = []
 
-    return role_perm #e892eae7-cf2e-48d8-a024-a7c9eb0f8668
+    return role_perm  # e892eae7-cf2e-48d8-a024-a7c9eb0f8668
     # return "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156"
-

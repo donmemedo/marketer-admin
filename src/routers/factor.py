@@ -40,15 +40,15 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-    #
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Factor.Read', 'MarketerAdmin.Factor.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:
@@ -91,15 +91,15 @@ async def get_all_factors_consts(request: Request):
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-    #
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Factor.Read', 'MarketerAdmin.Factor.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:
@@ -132,7 +132,7 @@ async def get_all_factors_consts(request: Request):
     "/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"]
 )
 async def modify_factor_consts(
-    request: Request, mci : ModifyConstIn#args: ModifyConstIn = Depends(ModifyConstIn)
+    request: Request, mci: ModifyConstIn
 ):
     """_summary_
 
@@ -146,15 +146,17 @@ async def modify_factor_consts(
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-    #
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Factor.Write', 'MarketerAdmin.Factor.Update', 'MarketerAdmin.Factor.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Write",
+        "MarketerAdmin.Factor.Update",
+        "MarketerAdmin.Factor.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:
@@ -205,7 +207,8 @@ async def modify_factor_consts(
 
 @factor.put("/modify-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
 async def modify_factor(
-    request: Request, mfi: ModifyFactorIn#args: ModifyFactorIn = Depends(ModifyFactorIn)
+    request: Request,
+    mfi: ModifyFactorIn,
 ):
     """_summary_
 
@@ -219,15 +222,17 @@ async def modify_factor(
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Factor.Write', 'MarketerAdmin.Factor.Update', 'MarketerAdmin.Factor.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Write",
+        "MarketerAdmin.Factor.Update",
+        "MarketerAdmin.Factor.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:
@@ -293,7 +298,9 @@ async def modify_factor(
 
 
 @factor.post("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
-async def add_factor(request: Request, mfi: ModifyFactorIn):#args: ModifyFactorIn = Depends(ModifyFactorIn)):
+async def add_factor(
+    request: Request, mfi: ModifyFactorIn
+):
     """_summary_
 
     Args:
@@ -306,15 +313,17 @@ async def add_factor(request: Request, mfi: ModifyFactorIn):#args: ModifyFactorI
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Create', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Factor.Write', 'MarketerAdmin.Factor.Create', 'MarketerAdmin.Factor.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Create",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Write",
+        "MarketerAdmin.Factor.Create",
+        "MarketerAdmin.Factor.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:
@@ -388,15 +397,15 @@ async def search_factor(
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-    #
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Factor.Read', 'MarketerAdmin.Factor.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:
@@ -407,7 +416,7 @@ async def search_factor(
     factor_coll = database["factors"]
     # if args.MarketerID and args.Period:
     if args.Period:
-            pass
+        pass
     else:
         return ResponseListOut(
             result=[],
@@ -463,12 +472,20 @@ async def search_factor(
             return ResponseListOut(
                 result=[],
                 timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
+                error={
+                    "errormessage": "موردی در دیتابیس یافت نشد.",
+                    "errorcode": "30001",
+                },
             )
     if args.MarketerID:
         last_result = results
     else:
-        last_result = {"errorCode": 'Null', "errorMessage": 'Null', "totalCount": len(qresult), "pagedData": results}
+        last_result = {
+            "errorCode": "Null",
+            "errorMessage": "Null",
+            "totalCount": len(qresult),
+            "pagedData": results,
+        }
     return ResponseListOut(
         result=last_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -492,15 +509,15 @@ async def delete_factor(
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-    #
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Delete', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Factor.Delete', 'MarketerAdmin.Factor.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Delete",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Delete",
+        "MarketerAdmin.Factor.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:
@@ -562,215 +579,6 @@ async def delete_factor(
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
-
-
-# @factor.get(
-#     "/total-factors",
-#     dependencies=[Depends(JWTBearer())],
-#     tags=["Factor"],
-#     response_model=None,
-# )
-def total_factors(request: Request):#, args: FactorsListIn = Depends(FactorsListIn)):
-    """_summary_
-
-    Args:
-        request (Request): _description_
-        args (FactorsListIn, optional): _description_. Defaults to Depends(FactorsListIn).
-
-    Returns:
-        _type_: _description_
-    """
-    # get user id
-    # marketer_id = get_role_permission(request)
-    database = get_database()
-
-    # customers_coll = database["customers"]
-    # trades_coll = database["trades"]
-    # firms_coll = database["firms"]
-    marketers_coll = database["marketers"]
-    # factors_coll = database["factors"]
-    factors_coll = database["factors"]
-
-    marketers_query = marketers_coll.find(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-        {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
-    )
-    marketers_list = list(marketers_query)
-    results = []
-    for marketer in marketers_list:
-        marketer_fullname = get_marketer_name(marketer)
-        response_dict = {}
-        for year in range(1400, jd.today().year):
-            for i in range(12):
-                period = f"{year+1}{(i+1):02}"
-                try:
-                    zizo = factors_coll.find_one({"FullName": marketer_fullname})
-                    response_dict[marketer_fullname][
-                        period + "FactStatus"
-                    ] = factors_coll.find_one({"FullName": marketer_fullname}).get(
-                        period + "FactStatus"
-                    )
-                    response_dict[marketer_fullname][period + "FactStatus"] = zizo.get(
-                        period + "FactStatus"
-                    )
-                except:
-                    print(str(year) + "yoyo")
-        # from_gregorian_date = to_gregorian_(args.from_date)
-        # to_gregorian_date = to_gregorian_(args.to_date)
-        # to_gregorian_date = datetime.strptime(
-        #     to_gregorian_date, "%Y-%m-%d"
-        # ) + timedelta(days=1)
-        # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-        #
-        # # get all customers' TradeCodes
-        # query = {"$and": [{"Referer": marketer_fullname}]}
-        #
-        # fields = {"PAMCode": 1}
-        #
-        # customers_records = customers_coll.find(query, fields)
-        # firms_records = firms_coll.find(query, fields)
-        # trade_codes = [c.get("PAMCode") for c in customers_records] + [
-        #     c.get("PAMCode") for c in firms_records
-        # ]
-        # querrrry = {
-        #     "$group": {
-        #         "_id": "$IdpID",
-        #     },
-        # }
-        #
-        # pipeline = [
-        #     {
-        #         "$match": {
-        #             # "TradeCode": {"$in": trade_codes}
-        #             "$and": [
-        #                 {"TradeCode": {"$in": trade_codes}},
-        #                 {"TradeDate": {"$gte": from_gregorian_date}},
-        #                 {"TradeDate": {"$lte": to_gregorian_date}},
-        #             ]
-        #         }
-        #     },
-        #     {
-        #         "$project": {
-        #             "Price": 1,
-        #             "Volume": 1,
-        #             "Total": {"$multiply": ["$Price", "$Volume"]},
-        #             "TotalCommission": 1,
-        #             "TradeItemBroker": 1,
-        #             "TradeCode": 1,
-        #             "Commission": {
-        #                 "$cond": {
-        #                     "if": {"$eq": ["$TradeType", 1]},
-        #                     "then": {
-        #                         "$add": [
-        #                             "$TotalCommission",
-        #                             {"$multiply": ["$Price", "$Volume"]},
-        #                         ]
-        #                     },
-        #                     "else": {
-        #                         "$subtract": [
-        #                             {"$multiply": ["$Price", "$Volume"]},
-        #                             "$TotalCommission",
-        #                         ]
-        #                     },
-        #                 }
-        #             },
-        #         }
-        #     },
-        #     {
-        #         "$group": {
-        #             "_id": "$TradeCode",
-        #             "TotalFee": {"$sum": "$TradeItemBroker"},
-        #             "TotalPureVolume": {"$sum": "$Commission"},
-        #         }
-        #     },
-        #     {
-        #         "$project": {
-        #             "_id": 0,
-        #             "TradeCode": "$_id",
-        #             "TotalPureVolume": 1,
-        #             "TotalFee": 1,
-        #         }
-        #     },
-        #     {
-        #         "$lookup": {
-        #             "from": "firms",
-        #             "localField": "TradeCode",
-        #             "foreignField": "PAMCode",
-        #             "as": "FirmProfile",
-        #         },
-        #     },
-        #     {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
-        #     {
-        #         "$lookup": {
-        #             "from": "customers",
-        #             "localField": "TradeCode",
-        #             "foreignField": "PAMCode",
-        #             "as": "UserProfile",
-        #         }
-        #     },
-        #     {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
-        #     {
-        #         "$project": {
-        #             "TradeCode": 1,
-        #             "TotalFee": 1,
-        #             "TotalPureVolume": 1,
-        #             "Refferer": "$FirmProfile.Referer",
-        #             "Referer": "$UserProfile.Referer",
-        #             "FirmTitle": "$FirmProfile.FirmTitle",
-        #             # "FirmRegisterDate": "$FirmTitle.RegisterDate",
-        #             # "FirmBankAccountNumber": "$FirmTitle.BankAccountNumber",
-        #             "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
-        #             "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
-        #             "FirstName": "$UserProfile.FirstName",
-        #             "LastName": "$UserProfile.LastName",
-        #             "Username": "$UserProfile.Username",
-        #             "Mobile": "$UserProfile.Mobile",
-        #             "RegisterDate": "$UserProfile.RegisterDate",
-        #             "BankAccountNumber": "$UserProfile.BankAccountNumber",
-        #         }
-        #     },
-        #     {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
-        #     ###########END of Refactor############
-        #     {
-        #         "$facet": {
-        #             "metadata": [{"$count": "totalCount"}],
-        #             "items": [
-        #                 {"$skip": (args.page - 1) * args.size},
-        #                 {"$limit": args.size},
-        #             ],
-        #         }
-        #     },
-        #     {"$unwind": "$metadata"},
-        #     {
-        #         "$project": {
-        #             "totalCount": "$metadata.totalCount",
-        #             "items": 1,
-        #         }
-        #     },
-        # ]
-        #
-        # aggr_result = trades_coll.aggregate(pipeline=pipeline)
-        # aggre_dict = next(aggr_result, None)
-        # if aggre_dict is not None:
-        #     results.append(aggre_dict)
-        # results.append(aggre_dict)
-    # aggre_dict = next(aggr_result, None)
-
-    # if aggre_dict is None:
-    #     return {}
-
-    # aggre_dict["page"] = 1#args.page
-    # aggre_dict["size"] = 1000000#args.size
-    # aggre_dict["pages"] = - (aggre_dict.get("total") // - args.size)
-
-    # return aggre_dict
-
-    return ResponseListOut(
-        result=results,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
-
 
 add_pagination(factor)
 

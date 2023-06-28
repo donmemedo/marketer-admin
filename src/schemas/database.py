@@ -218,6 +218,7 @@ class ResponseListOut:
     timeGenerated: JalaliDatetime
     error: str = Query("nothing")
 
+
 @dataclass
 class CollectionRestore:
     date: str = Query(default=current_date, alias="StartDate")
