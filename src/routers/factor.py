@@ -132,7 +132,7 @@ async def get_all_factors_consts(request: Request):
     "/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"]
 )
 async def modify_factor_consts(
-    request: Request, args: ModifyConstIn = Depends(ModifyConstIn)
+    request: Request, mci : ModifyConstIn#args: ModifyConstIn = Depends(ModifyConstIn)
 ):
     """_summary_
 
@@ -163,30 +163,30 @@ async def modify_factor_consts(
     database = get_database()
 
     consts_coll = database["consts"]
-    if args.MarketerID is None:
+    if mci.MarketerID is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
         )
 
-    filter = {"MarketerID": args.MarketerID}
+    filter = {"MarketerID": mci.MarketerID}
     update = {"$set": {}}
 
-    if args.FixIncome is not None:
-        update["$set"]["FixIncome"] = args.FixIncome
+    if mci.FixIncome is not None:
+        update["$set"]["FixIncome"] = mci.FixIncome
 
-    if args.Insurance is not None:
-        update["$set"]["Insurance"] = args.Insurance
+    if mci.Insurance is not None:
+        update["$set"]["Insurance"] = mci.Insurance
 
-    if args.Collateral is not None:
-        update["$set"]["Collateral"] = args.Collateral
+    if mci.Collateral is not None:
+        update["$set"]["Collateral"] = mci.Collateral
 
-    if args.Tax is not None:
-        update["$set"]["Tax"] = args.Tax
+    if mci.Tax is not None:
+        update["$set"]["Tax"] = mci.Tax
 
     consts_coll.update_one(filter, update)
-    query_result = consts_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
+    query_result = consts_coll.find_one({"MarketerID": mci.MarketerID}, {"_id": False})
     if not query_result:
         return ResponseListOut(
             result=[],
@@ -205,7 +205,7 @@ async def modify_factor_consts(
 
 @factor.put("/modify-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
 async def modify_factor(
-    request: Request, args: ModifyFactorIn = Depends(ModifyFactorIn)
+    request: Request, mfi: ModifyFactorIn#args: ModifyFactorIn = Depends(ModifyFactorIn)
 ):
     """_summary_
 
@@ -236,49 +236,49 @@ async def modify_factor(
     database = get_database()
 
     factor_coll = database["factorsFIN"]
-    if args.MarketerID is None:
+    if mfi.MarketerID is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
         )
 
-    filter = {"IdpID": args.MarketerID}
+    filter = {"IdpID": mfi.MarketerID}
     update = {"$set": {}}
-    per = args.Period
+    per = mfi.Period
 
-    if args.TotalPureVolume is not None:
-        update["$set"][per + "TPV"] = args.TotalPureVolume
+    if mfi.TotalPureVolume is not None:
+        update["$set"][per + "TPV"] = mfi.TotalPureVolume
 
-    if args.TotalFee is not None:
-        update["$set"][per + "TF"] = args.TotalFee
+    if mfi.TotalFee is not None:
+        update["$set"][per + "TF"] = mfi.TotalFee
 
-    if args.PureFee is not None:
-        update["$set"][per + "PureFee"] = args.PureFee
+    if mfi.PureFee is not None:
+        update["$set"][per + "PureFee"] = mfi.PureFee
 
-    if args.MarketerFee is not None:
-        update["$set"][per + "MarFee"] = args.MarketerFee
+    if mfi.MarketerFee is not None:
+        update["$set"][per + "MarFee"] = mfi.MarketerFee
 
-    if args.Plan is not None:
-        update["$set"][per + "Plan"] = args.Plan
+    if mfi.Plan is not None:
+        update["$set"][per + "Plan"] = mfi.Plan
 
-    if args.Tax is not None:
-        update["$set"][per + "Tax"] = args.Tax
+    if mfi.Tax is not None:
+        update["$set"][per + "Tax"] = mfi.Tax
 
-    if args.Collateral is not None:
-        update["$set"][per + "Collateral"] = args.Collateral
+    if mfi.Collateral is not None:
+        update["$set"][per + "Collateral"] = mfi.Collateral
 
-    if args.FinalFee is not None:
-        update["$set"][per + "FinalFee"] = args.FinalFee
+    if mfi.FinalFee is not None:
+        update["$set"][per + "FinalFee"] = mfi.FinalFee
 
-    if args.Payment is not None:
-        update["$set"][per + "Payment"] = args.Payment
+    if mfi.Payment is not None:
+        update["$set"][per + "Payment"] = mfi.Payment
 
-    if args.FactorStatus is not None:
-        update["$set"][per + "FactStatus"] = args.FactorStatus
+    if mfi.FactorStatus is not None:
+        update["$set"][per + "FactStatus"] = mfi.FactorStatus
 
     factor_coll.update_one(filter, update)
-    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
+    query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
     if not query_result:
         return ResponseListOut(
             result=[],
@@ -293,7 +293,7 @@ async def modify_factor(
 
 
 @factor.post("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
-async def add_factor(request: Request, args: ModifyFactorIn = Depends(ModifyFactorIn)):
+async def add_factor(request: Request, mfi: ModifyFactorIn):#args: ModifyFactorIn = Depends(ModifyFactorIn)):
     """_summary_
 
     Args:
@@ -321,51 +321,50 @@ async def add_factor(request: Request, args: ModifyFactorIn = Depends(ModifyFact
         raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
-
     factor_coll = database["factorsFIN"]
-    if args.MarketerID is None:
+    if mfi.MarketerID is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
         )
 
-    filter = {"IdpID": args.MarketerID}
+    filter = {"IdpID": mfi.MarketerID}
     update = {"$set": {}}
-    per = args.Period
+    per = mfi.Period
 
-    if args.TotalPureVolume is not None:
-        update["$set"][per + "TPV"] = args.TotalPureVolume
+    if mfi.TotalPureVolume is not None:
+        update["$set"][per + "TPV"] = mfi.TotalPureVolume
 
-    if args.TotalFee is not None:
-        update["$set"][per + "TF"] = args.TotalFee
+    if mfi.TotalFee is not None:
+        update["$set"][per + "TF"] = mfi.TotalFee
 
-    if args.PureFee is not None:
+    if mfi.PureFee is not None:
         update["$set"][per + "PureFee"] = args.PureFee
 
-    if args.MarketerFee is not None:
-        update["$set"][per + "MarFee"] = args.MarketerFee
+    if mfi.MarketerFee is not None:
+        update["$set"][per + "MarFee"] = mfi.MarketerFee
 
-    if args.Plan is not None:
-        update["$set"][per + "Plan"] = args.Plan
+    if mfi.Plan is not None:
+        update["$set"][per + "Plan"] = mfi.Plan
 
-    if args.Tax is not None:
-        update["$set"][per + "Tax"] = args.Tax
+    if mfi.Tax is not None:
+        update["$set"][per + "Tax"] = mfi.Tax
 
-    if args.Collateral is not None:
-        update["$set"][per + "Collateral"] = args.Collateral
+    if mfi.Collateral is not None:
+        update["$set"][per + "Collateral"] = mfi.Collateral
 
-    if args.FinalFee is not None:
-        update["$set"][per + "FinalFee"] = args.FinalFee
+    if mfi.FinalFee is not None:
+        update["$set"][per + "FinalFee"] = mfi.FinalFee
 
-    if args.Payment is not None:
-        update["$set"][per + "Payment"] = args.Payment
+    if mfi.Payment is not None:
+        update["$set"][per + "Payment"] = mfi.Payment
 
-    if args.FactorStatus is not None:
-        update["$set"][per + "FactStatus"] = args.FactorStatus
+    if mfi.FactorStatus is not None:
+        update["$set"][per + "FactStatus"] = mfi.FactorStatus
 
     factor_coll.update_one(filter, update)
-    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
+    query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
     return ResponseListOut(
         result=query_result,  # marketer_entity(marketer_dict),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),

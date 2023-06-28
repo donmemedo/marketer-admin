@@ -140,7 +140,7 @@ async def get_marketer(request: Request):
     tags=["Marketer"],  # , response_model=None
 )
 async def modify_marketer(
-    request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)
+    request: Request, mmi: ModifyMarketerIn#args: ModifyMarketerIn = Depends(ModifyMarketerIn)
 ):
     """_summary_
 
@@ -169,53 +169,53 @@ async def modify_marketer(
     database = get_database()
     marketer_coll = database["marketers"]
     admins_coll = database["factors"]
-    if args.CurrentIdpId is None:
+    if mmi.CurrentIdpId is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
         )
-    filter = {"IdpId": args.CurrentIdpId}
-    idpid = args.CurrentIdpId
+    filter = {"IdpId": mmi.CurrentIdpId}
+    idpid = mmi.CurrentIdpId
     update = {"$set": {}}
 
-    if args.FirstName is not None:
-        update["$set"]["FirstName"] = args.FirstName
+    if mmi.FirstName is not None:
+        update["$set"]["FirstName"] = mmi.FirstName
 
-    if args.LastName is not None:
-        update["$set"]["LastName"] = args.LastName
+    if mmi.LastName is not None:
+        update["$set"]["LastName"] = mmi.LastName
 
-    if args.InvitationLink is not None:
-        update["$set"]["InvitationLink"] = args.InvitationLink
+    if mmi.InvitationLink is not None:
+        update["$set"]["InvitationLink"] = mmi.InvitationLink
 
-    if args.RefererType is not None:
-        update["$set"]["RefererType"] = args.RefererType
+    if mmi.RefererType is not None:
+        update["$set"]["RefererType"] = mmi.RefererType
 
     #Let Super Admin can change CreatedDate
     if check_permissions(role_perm['MarketerAdmin'], ['MarketerAdmin.All.All', 'MarketerAdmin.Marketer.All']):
-        if args.CreateDate is not None:
-            update["$set"]["CreateDate"] = args.CreateDate
+        if mmi.CreateDate is not None:
+            update["$set"]["CreateDate"] = mmi.CreateDate
 
-    if args.ModifiedBy is not None:
+    if mmi.ModifiedBy is not None:
         update["$set"]["ModifiedBy"] = admins_coll.find_one(
             {"IdpId": user_id}, {"_id": False}
         ).get("FullName")
 
     #Let Super Admin can change CreatedBy
     if check_permissions(role_perm['MarketerAdmin'], ['MarketerAdmin.All.All', 'MarketerAdmin.Marketer.All']):
-        if args.CreatedBy is not None:
-            update["$set"]["CreatedBy"] = args.CreatedBy
+        if mmi.CreatedBy is not None:
+            update["$set"]["CreatedBy"] = mmi.CreatedBy
 
     update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
-    if args.NewIdpId is not None:
-        update["$set"]["IdpId"] = args.NewIdpId
-        idpid = args.NewIdpId
+    if mmi.NewIdpId is not None:
+        update["$set"]["IdpId"] = mmi.NewIdpId
+        idpid = mmi.NewIdpId
 
-    if args.NationalID is not None:
+    if mmi.NationalID is not None:
         try:
-            ddd = int(args.NationalID)
-            update["$set"]["Id"] = args.NationalID
+            ddd = int(mmi.NationalID)
+            update["$set"]["Id"] = mmi.NationalID
         except:
             return ResponseListOut(
                 result=[],
@@ -246,7 +246,7 @@ async def modify_marketer(
     dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],  # , response_model=None
 )
-async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarketerIn)):
+async def add_marketer(request: Request, ami: AddMarketerIn):#args: AddMarketerIn = Depends(AddMarketerIn)):
     """_summary_
 
     Args:
@@ -274,27 +274,27 @@ async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarket
     database = get_database()
     admins_coll = database["factors"]
     marketer_coll = database["marketers"]
-    if args.CurrentIdpId is None:
+    if ami.CurrentIdpId is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
         )
 
-    filter = {"IdpId": args.CurrentIdpId}
+    filter = {"IdpId": ami.CurrentIdpId}
     update = {"$set": {}}
 
-    if args.FirstName is not None:
-        update["$set"]["FirstName"] = args.FirstName
+    if ami.FirstName is not None:
+        update["$set"]["FirstName"] = ami.FirstName
 
-    if args.LastName is not None:
-        update["$set"]["LastName"] = args.LastName
+    if ami.LastName is not None:
+        update["$set"]["LastName"] = ami.LastName
 
-    if args.InvitationLink is not None:
-        update["$set"]["InvitationLink"] = args.InvitationLink
+    if ami.InvitationLink is not None:
+        update["$set"]["InvitationLink"] = ami.InvitationLink
 
-    if args.RefererType is not None:
-        update["$set"]["RefererType"] = args.RefererType
+    if ami.RefererType is not None:
+        update["$set"]["RefererType"] = ami.RefererType
 
     update["$set"]["CreateDate"] = jd.today().strftime("%Y-%m-%d")
     update["$set"]["ModifiedBy"] = admins_coll.find_one(
@@ -305,10 +305,10 @@ async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarket
     ).get("FullName")
     update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
-    if args.NationalID is not None:
+    if ami.NationalID is not None:
         try:
-            ddd = int(args.NationalID)
-            update["$set"]["Id"] = args.NationalID
+            ddd = int(ami.NationalID)
+            update["$set"]["Id"] = ami.NationalID
         except:
             return ResponseListOut(
                 result=[],
@@ -319,7 +319,7 @@ async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarket
                 },
             )
 
-    update["$set"]["IdpId"] = args.CurrentIdpId
+    update["$set"]["IdpId"] = ami.CurrentIdpId
     try:
         marketer_coll.insert_one(update["$set"])
     except:
@@ -643,7 +643,7 @@ async def search_user_profile(
     response_model=None,
 )
 async def add_marketers_relations(
-    request: Request, args: MarketerRelations = Depends(MarketerRelations)
+    request: Request, mrel: MarketerRelations#args: MarketerRelations = Depends(MarketerRelations)
 ):
     """_summary_
 
@@ -672,7 +672,7 @@ async def add_marketers_relations(
 
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
-    if args.LeaderMarketerID and args.FollowerMarketerID:
+    if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
     else:
         return ResponseListOut(
@@ -681,7 +681,7 @@ async def add_marketers_relations(
             error={"errormessage": "IDP مارکترها را وارد کنید.", "errorcode": "30009"},
         )
     try:
-        d= int(args.CommissionCoefficient)
+        d= int(mrel.CommissionCoefficient)
     except:
     # if args.CommissionCoefficient is None:
     # if d is None:
@@ -692,19 +692,19 @@ async def add_marketers_relations(
         )
     update = {"$set": {}}
 
-    update["$set"]["LeaderMarketerID"] = args.LeaderMarketerID
-    update["$set"]["FollowerMarketerID"] = args.FollowerMarketerID
-    if args.LeaderMarketerID == args.FollowerMarketerID:
+    update["$set"]["LeaderMarketerID"] = mrel.LeaderMarketerID
+    update["$set"]["FollowerMarketerID"] = mrel.FollowerMarketerID
+    if mrel.LeaderMarketerID == mrel.FollowerMarketerID:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "مارکترها نباید یکسان باشند.", "errorcode": "30011"},
         )
     if marketers_relations_coll.find_one(
-        {"FollowerMarketerID": args.FollowerMarketerID}
+        {"FollowerMarketerID": mrel.FollowerMarketerID}
     ):
         if marketers_relations_coll.find_one(
-                {"LeaderMarketerID": args.LeaderMarketerID}
+                {"LeaderMarketerID": mrel.LeaderMarketerID}
         ):
             return ResponseListOut(
                 result=[],
@@ -725,9 +725,9 @@ async def add_marketers_relations(
                 },
             )
     try:
-        d= int(args.CommissionCoefficient)
-        if 0<args.CommissionCoefficient<1:
-            update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
+        d= int(mrel.CommissionCoefficient)
+        if 0<mrel.CommissionCoefficient<1:
+            update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
         else:
             return ResponseListOut(
                 result=[],
@@ -748,10 +748,10 @@ async def add_marketers_relations(
     update["$set"]["UpdateDate"] = update["$set"]["CreateDate"]
     update["$set"]["StartDate"] = str(jd.today().date())
 
-    if args.StartDate is not None:
-        update["$set"]["StartDate"] = args.StartDate
-    if args.EndDate is not None:
-        update["$set"]["EndDate"] = args.EndDate
+    if mrel.StartDate is not None:
+        update["$set"]["StartDate"] = mrel.StartDate
+    if mrel.EndDate is not None:
+        update["$set"]["EndDate"] = mrel.EndDate
         try:
             update["$set"]["GEndDate"] = jd.strptime(
             update["$set"]["EndDate"], "%Y-%m-%d"
@@ -783,7 +783,7 @@ async def add_marketers_relations(
     update["$set"]["GUpdateDate"] = jd.strptime(
         update["$set"]["UpdateDate"], "%Y-%m-%d %H:%M:%S.%f"
     ).todatetime()
-    if marketers_coll.find_one({"IdpId": args.FollowerMarketerID}) and marketers_coll.find_one({"IdpId": args.LeaderMarketerID}):
+    if marketers_coll.find_one({"IdpId": mrel.FollowerMarketerID}) and marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID}):
         pass
     else:
         return ResponseListOut(
@@ -796,17 +796,17 @@ async def add_marketers_relations(
 
 
     update["$set"]["FollowerMarketerName"] = get_marketer_name(
-        marketers_coll.find_one({"IdpId": args.FollowerMarketerID})
+        marketers_coll.find_one({"IdpId": mrel.FollowerMarketerID})
     )
     update["$set"]["LeaderMarketerName"] = get_marketer_name(
-        marketers_coll.find_one({"IdpId": args.LeaderMarketerID})
+        marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID})
     )
 
     marketers_relations_coll.insert_one(update["$set"])
 
     return ResponseListOut(
         result=marketers_relations_coll.find_one(
-            {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
+            {"FollowerMarketerID": mrel.FollowerMarketerID}, {"_id": False}
         ),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
@@ -820,7 +820,7 @@ async def add_marketers_relations(
     response_model=None,
 )
 async def modify_marketers_relations(
-    request: Request, args: MarketerRelations = Depends(MarketerRelations)
+    request: Request, mrel: MarketerRelations#args: MarketerRelations = Depends(MarketerRelations)
 ):
     """_summary_
 
@@ -848,7 +848,7 @@ async def modify_marketers_relations(
     database = get_database()
 
     marketers_relations_coll = database["mrelations"]
-    if args.LeaderMarketerID and args.FollowerMarketerID:
+    if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
     else:
         return ResponseListOut(
@@ -856,24 +856,32 @@ async def modify_marketers_relations(
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "IDP مارکترها را وارد کنید.", "errorcode": "30009"},
         )
+    query = {
+        "$and": [
+            {"LeaderMarketerID": mrel.LeaderMarketerID},
+            {"FollowerMarketerID": mrel.FollowerMarketerID},
+        ]
+    }
+    if marketers_relations_coll.find_one(query) is None:
+        return ResponseListOut(
+            result=[],
+            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            error={"errormessage": "این رابطه وجود ندارد.", "errorcode": "30011"},
+        )
 
-    if args.CommissionCoefficient is None:
+
+    if mrel.CommissionCoefficient is None:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "کمیسیون را وارد کنید.", "errorcode": "30010"},
         )
 
-
-
-
     update = {"$set": {}}
-
-
     try:
-        d= int(args.CommissionCoefficient)
-        if 0<args.CommissionCoefficient<1:
-            update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
+        d= int(mrel.CommissionCoefficient)
+        if 0<mrel.CommissionCoefficient<1:
+            update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
         else:
             return ResponseListOut(
                 result=[],
@@ -890,27 +898,27 @@ async def modify_marketers_relations(
 
 
 
-    update["$set"]["LeaderMarketerID"] = args.LeaderMarketerID
-    update["$set"]["FollowerMarketerID"] = args.FollowerMarketerID
-    if args.LeaderMarketerID == args.FollowerMarketerID:
+    update["$set"]["LeaderMarketerID"] = mrel.LeaderMarketerID
+    update["$set"]["FollowerMarketerID"] = mrel.FollowerMarketerID
+    if mrel.LeaderMarketerID == mrel.FollowerMarketerID:
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"errormessage": "مارکترها نباید یکسان باشند.", "errorcode": "30011"},
         )
     # if marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID}):
-    update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
+    update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
     update["$set"]["UpdateDate"] = str(jd.now())
     update["$set"]["StartDate"] = str(jd.today().date())
 
-    if args.StartDate is not None:
-        update["$set"]["StartDate"] = args.StartDate
+    if mrel.StartDate is not None:
+        update["$set"]["StartDate"] = mrel.StartDate
 
     update["$set"]["GStartDate"] = jd.strptime(
         update["$set"]["StartDate"], "%Y-%m-%d"
     ).todatetime()
-    if args.EndDate is not None:
-        update["$set"]["EndDate"] = args.EndDate
+    if mrel.EndDate is not None:
+        update["$set"]["EndDate"] = mrel.EndDate
 
         update["$set"]["GEndDate"] = jd.strptime(
             update["$set"]["EndDate"], "%Y-%m-%d"
@@ -928,14 +936,14 @@ async def modify_marketers_relations(
 
     query = {
         "$and": [
-            {"LeaderMarketerID": args.LeaderMarketerID},
-            {"FollowerMarketerID": args.FollowerMarketerID},
+            {"LeaderMarketerID": mrel.LeaderMarketerID},
+            {"FollowerMarketerID": mrel.FollowerMarketerID},
         ]
     }
     marketers_relations_coll.update_one(query, update)
     return ResponseListOut(
         result=marketers_relations_coll.find_one(
-            {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
+            {"FollowerMarketerID": mrel.FollowerMarketerID}, {"_id": False}
         ),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
