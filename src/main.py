@@ -15,7 +15,9 @@ from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
 
 
-app = FastAPI(version=settings.VERSION, title=settings.SWAGGER_TITLE)
+app = FastAPI(version=settings.VERSION, title=settings.SWAGGER_TITLE,
+              docs_url="/docs",redoc_url="/redocs"
+              )
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,7 +53,8 @@ async def validation_exception_handler(request, exc):
         "result": [],
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         "error": {
-            "errormessage": "کمیسیون را وارد کنید.",
+            # "errormessage": "کمیسیون را وارد کنید.",
+            "errormessage": "ورودی‌ها را چک کرده و سپس به درستی وارد کنید.",
             "errorcode": "30010"
         }
     }

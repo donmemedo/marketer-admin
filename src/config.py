@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     ORIGINS = "*"
     ROOT_PATH = ""
     SWAGGER_TITLE = "Marketer Admin"
-    VERSION = "0.1.0"
+    VERSION = "0.1.1"
     ROOT_PATH = ""
     #Added from Marketer
     JWKS_CONFIGURATION_URL = "https://cluster.tech1a.co/.well-known/openid-configuration/jwks"

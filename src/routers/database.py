@@ -27,7 +27,7 @@ database = APIRouter(prefix="/database")
     response_model=None,
 )
 async def get_customers(
-    request: Request, args: CollectionRestore = Depends(CollectionRestore)
+    request: Request, coll_ress: CollectionRestore#args: CollectionRestore = Depends(CollectionRestore)
 ):
     """_summary_
 
@@ -55,7 +55,7 @@ async def get_customers(
     except errors.CollectionInvalid as err:
         logger.error("No Connection to Collection",err)
     try:
-        given_date = jd.strptime(args.date, "%Y-%m-%d").todate()
+        given_date = jd.strptime(coll_ress.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
         return ResponseListOut(
@@ -69,7 +69,7 @@ async def get_customers(
 
     cus_getter(date=given_date)
     logger.info(f"Updating Customers Database was requested by {user_id}")
-    logger.info("Ending Time of getting List of Registered Customers in %s: %s", args.date,
+    logger.info("Ending Time of getting List of Registered Customers in %s: %s", coll_ress.date,
                 jd.now())
     return ResponseListOut(
         result=[],
@@ -85,7 +85,7 @@ async def get_customers(
     response_model=None,
 )
 async def get_firms(
-        request: Request, args: CollectionRestore = Depends(CollectionRestore)
+        request: Request, coll_ress: CollectionRestore#args: CollectionRestore = Depends(CollectionRestore)
 ):
     """_summary_
 
@@ -112,7 +112,7 @@ async def get_firms(
     except errors.CollectionInvalid as err:
         logger.error("No Connection to Collection", err)
     try:
-        given_date = jd.strptime(args.date, "%Y-%m-%d").todate()
+        given_date = jd.strptime(coll_ress.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
         return ResponseListOut(
@@ -126,7 +126,7 @@ async def get_firms(
 
     firm_getter(date=given_date)
     logger.info(f"Updating Firms Database was requested by {user_id}")
-    logger.info("Ending Time of getting List of Registered Firms in %s: %s", args.date,
+    logger.info("Ending Time of getting List of Registered Firms in %s: %s", coll_ress.date,
                 jd.now())
     return ResponseListOut(
         result=[],
@@ -142,7 +142,7 @@ async def get_firms(
     response_model=None,
 )
 async def get_trades(
-        request: Request, args: CollectionRestore = Depends(CollectionRestore)
+        request: Request, coll_ress: CollectionRestore#args: CollectionRestore = Depends(CollectionRestore)
 ):
     """_summary_
 
@@ -168,7 +168,7 @@ async def get_trades(
     except errors.CollectionInvalid as err:
         logger.error("No Connection to Collection", err)
     try:
-        given_date = jd.strptime(args.date, "%Y-%m-%d").todate()
+        given_date = jd.strptime(coll_ress.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
         return ResponseListOut(
@@ -182,7 +182,7 @@ async def get_trades(
 
     trade_getter(date=given_date)
     logger.info(f"Updating Trades Database was requested by {user_id}")
-    logger.info("Ending Time of getting List of Trades in %s is: %s", args.date, jd.now())
+    logger.info("Ending Time of getting List of Trades in %s is: %s", coll_ress.date, jd.now())
     return ResponseListOut(
         result=[],
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
