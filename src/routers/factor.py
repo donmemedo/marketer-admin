@@ -240,7 +240,7 @@ async def modify_factor(
 
     database = get_database()
 
-    factor_coll = database["factorsFIN"]
+    factor_coll = database["factors"]
     if mfi.MarketerID is None:
         return ResponseListOut(
             result=[],
@@ -330,7 +330,8 @@ async def add_factor(
         raise HTTPException(status_code=401, detail="Not authorized.")
 
     database = get_database()
-    factor_coll = database["factorsFIN"]
+    factor_coll = database["factors"]
+    marketers_coll = database["marketers"]
     if mfi.MarketerID is None:
         return ResponseListOut(
             result=[],
@@ -349,7 +350,7 @@ async def add_factor(
         update["$set"][per + "TF"] = mfi.TotalFee
 
     if mfi.PureFee is not None:
-        update["$set"][per + "PureFee"] = args.PureFee
+        update["$set"][per + "PureFee"] = mfi.PureFee
 
     if mfi.MarketerFee is not None:
         update["$set"][per + "MarFee"] = mfi.MarketerFee
@@ -372,7 +373,12 @@ async def add_factor(
     if mfi.FactorStatus is not None:
         update["$set"][per + "FactStatus"] = mfi.FactorStatus
 
-    factor_coll.update_one(filter, update)
+    try:
+        marketer_name = get_marketer_name(marketers_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False}))
+        factor_coll.insert_one({"IdpID": mfi.MarketerID, "MarketerName": marketer_name})
+        factor_coll.update_one(filter, update)
+    except:
+        factor_coll.update_one(filter, update)
     query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
     return ResponseListOut(
         result=query_result,  # marketer_entity(marketer_dict),
@@ -525,7 +531,7 @@ async def delete_factor(
 
     database = get_database()
 
-    factor_coll = database["factorsFIN"]
+    factor_coll = database["factors"]
     if args.MarketerID and args.Period:
         pass
     else:

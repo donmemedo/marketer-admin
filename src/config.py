@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     MONGO_DATABASE = "brokerage"
     CUSTOMER_COLLECTION = "customers"
     FIRMS_COLLECTION = "firms"
-    TRADES_COLLECTION = "tradesss"
+    TRADES_COLLECTION = "trades"
 
     OPENAPI_URL = ""
     ORIGINS = "*"
@@ -37,12 +37,6 @@ class Settings(BaseSettings):
     SPLUNK_HOST = "172.24.65.206"
     SPLUNK_PORT = 5141
     SPLUNK_INDEX = "dev"
-
-    # SPLUNK_PORT = 5142
-    # SPLUNK_INDEX = "stg"
-    #
-    # SPLUNK_PORT = 6141
-    # SPLUNK_INDEX = "pro"
 
 
 settings = Settings()
