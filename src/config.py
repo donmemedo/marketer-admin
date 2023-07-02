@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     MONGO_DATABASE = "brokerage"
     CUSTOMER_COLLECTION = "customers"
     FIRMS_COLLECTION = "firms"
-    TRADES_COLLECTION = "tradesss"
+    TRADES_COLLECTION = "trades"
 
     OPENAPI_URL = ""
     ORIGINS = "*"
@@ -28,19 +28,15 @@ class Settings(BaseSettings):
     SWAGGER_TITLE = "Marketer Admin"
     VERSION = "0.1.1"
     ROOT_PATH = ""
-    #Added from Marketer
-    JWKS_CONFIGURATION_URL = "https://cluster.tech1a.co/.well-known/openid-configuration/jwks"
+    # Added from Marketer
+    JWKS_CONFIGURATION_URL = (
+        "https://cluster.tech1a.co/.well-known/openid-configuration/jwks"
+    )
     ISSUER = "https://cluster.tech1a.co"
     APPLICATION_ID = "d7f48c21-2a19-4bdb-ace8-48928bff0eb5"
     SPLUNK_HOST = "172.24.65.206"
     SPLUNK_PORT = 5141
     SPLUNK_INDEX = "dev"
-
-    # SPLUNK_PORT = 5142
-    # SPLUNK_INDEX = "stg"
-    #
-    # SPLUNK_PORT = 6141
-    # SPLUNK_INDEX = "pro"
 
 
 settings = Settings()

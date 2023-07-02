@@ -108,6 +108,7 @@ class UserTotalFee:
 #     from_date: str = Query(default=current_date, alias="StartDate")
 #     to_date: str = Query(default=current_date, alias="EndDate")
 
+
 @dataclass
 class UsersTotalPureIn:
     # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
@@ -343,8 +344,6 @@ class TotalUsersListIn(Pages):
     sorted: bool = False
 
 
-
-
 @dataclass
 class ResponseOut:
     timeGenerated: JalaliDatetime
@@ -357,5 +356,3 @@ class ResponseListOut:
     timeGenerated: JalaliDatetime
     result: Dict
     error: str = Query("nothing")
-
-
