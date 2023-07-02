@@ -7,6 +7,7 @@ from routers.marketer import marketer
 from routers.factor import factor
 from routers.user import user
 from routers.database import database
+
 # from routers.subuser import subuser
 from src.tools.logger import logger
 from src.tools.database import get_database
@@ -15,9 +16,12 @@ from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
 
 
-app = FastAPI(version=settings.VERSION, title=settings.SWAGGER_TITLE,
-              docs_url="/docs",redoc_url="/redocs"
-              )
+app = FastAPI(
+    version=settings.VERSION,
+    title=settings.SWAGGER_TITLE,
+    docs_url="/docs",
+    redoc_url="/redocs",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,31 +36,33 @@ app.add_middleware(
 async def startup_events():
     get_database()
 
+
 @app.get("/health-check", tags=["Deafult"])
 def health_check():
     logger.info("Status of Marketer Admin Service is OK")
     return {"status": "OK"}
 
+
 @app.get("/ip-getter", tags=["Deafult"])
 async def read_root(request: Request):
     client_host = request.client.host
-    client_scope = request.scope['client']
+    client_scope = request.scope["client"]
     logger.info(f"client host is {client_host}")
     logger.info(f"client scope is {client_scope}")
-    
-    return {"client_host": client_host,
-            "client_scope": client_scope}
+
+    return {"client_host": client_host, "client_scope": client_scope}
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
-    zizo= {
+    zizo = {
         "result": [],
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         "error": {
             # "errormessage": "کمیسیون را وارد کنید.",
             "errormessage": "ورودی‌ها را چک کرده و سپس به درستی وارد کنید.",
-            "errorcode": "30010"
-        }
+            "errorcode": "30010",
+        },
     }
     return JSONResponse(status_code=422, content=zizo)
 

@@ -45,10 +45,14 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=401, detail="Not authorized.")
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:
@@ -116,10 +120,14 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     # get user id
     # marketer_id = get_role_permission(request)
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:
@@ -153,7 +161,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         days=1
     )
     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-    query = {"$and": [{"Referer": ''}]}
+    query = {"$and": [{"Referer": ""}]}
     if args.marketername:
         query = {"Referer": {"$regex": args.marketername}}
     fields = {"PAMCode": 1}
@@ -310,10 +318,14 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     # get user id
     # marketer_id = get_role_permission(request)
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:
@@ -348,7 +360,7 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
     # get all customers' TradeCodes
-    query = {"$and": [{"Referer": ''}]}
+    query = {"$and": [{"Referer": ""}]}
 
     fields = {"PAMCode": 1}
 
@@ -523,10 +535,14 @@ async def users_diff_with_tbs(
     # get user id
     # marketer_id = get_role_permission(request)
     role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
     if allowed:
         pass
     else:

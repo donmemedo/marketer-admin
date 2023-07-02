@@ -425,9 +425,9 @@ async def marketer_subuser_lists(
             #     last_month
             # )
         # if last_month == 12:
-            # last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year - 1) + str(
-            #     last_month
-            # )
+        # last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year - 1) + str(
+        #     last_month
+        # )
         # print(last_month_str)
         to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
         lmd_to_gregorian_date = lmd_to_gregorian_date.strftime("%Y-%m-%d")
@@ -888,7 +888,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     # if aggre_dict is None:
     #     return {}
 
-
     # return aggre_dict
 
     return ResponseListOut(
@@ -1176,9 +1175,7 @@ def total_users_cost(
         dicter.sort(key=lambda x: x["TotalPureVolume"], reverse=args.asc_desc_TPV)
 
     return ResponseListOut(
-        result=dicter,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error=""
+        result=dicter, timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"), error=""
     )
 
 
