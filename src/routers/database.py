@@ -5,6 +5,8 @@ Returns:
 """
 from datetime import datetime, date
 from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi.responses import JSONResponse
+
 from khayyam import JalaliDatetime as jd
 from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import check_permissions
@@ -54,7 +56,7 @@ async def get_customers(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     brokerage = get_database()
     try:
@@ -65,12 +67,22 @@ async def get_customers(
         given_date = jd.strptime(coll_ress.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "تاریخ اشتباه وارد شده است.",
+                "code": "30090",
+            },
+        }
+        return JSONResponse(status_code=412, content=resp)
+
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errormessage": "تاریخ اشتباه وارد شده است.",
-                "errorcode": "30090",
+                "message": "تاریخ اشتباه وارد شده است.",
+                "code": "30090",
             },
         )
 
@@ -123,7 +135,7 @@ async def get_firms(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     brokerage = get_database()
     try:
@@ -134,14 +146,24 @@ async def get_firms(
         given_date = jd.strptime(coll_ress.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "تاریخ اشتباه وارد شده است.",
-                "errorcode": "30090",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "تاریخ اشتباه وارد شده است.",
+                "code": "30090",
             },
-        )
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "تاریخ اشتباه وارد شده است.",
+        #         "code": "30090",
+        #     },
+        # )
 
     firm_getter(date=given_date)
     logger.info(f"Updating Firms Database was requested by {user_id}")
@@ -189,7 +211,7 @@ async def get_trades(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     brokerage = get_database()
     try:
@@ -200,14 +222,24 @@ async def get_trades(
         given_date = jd.strptime(coll_ress.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "تاریخ اشتباه وارد شده است.",
-                "errorcode": "30090",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "تاریخ اشتباه وارد شده است.",
+                "code": "30090",
             },
-        )
+        }
+        return JSONResponse(status_code=412, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "تاریخ اشتباه وارد شده است.",
+        #         "code": "30090",
+        #     },
+        # )
 
     trade_getter(date=given_date)
     logger.info(f"Updating Trades Database was requested by {user_id}")
@@ -252,7 +284,7 @@ async def delete_trades(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     brokerage = get_database()
     try:
@@ -263,14 +295,24 @@ async def delete_trades(
         given_date = jd.strptime(args.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "تاریخ اشتباه وارد شده است.",
-                "errorcode": "30090",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "تاریخ اشتباه وارد شده است.",
+                "code": "30090",
             },
-        )
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "تاریخ اشتباه وارد شده است.",
+        #         "code": "30090",
+        #     },
+        # )
 
     trades_collection.delete_many({"TradeDate": {"$regex": str(given_date)}})
     logger.info(f"Updating Trades Database was requested by {user_id}")

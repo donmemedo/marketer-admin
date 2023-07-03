@@ -55,16 +55,16 @@ async def read_root(request: Request):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
-    zizo = {
+    response = {
         "result": [],
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         "error": {
-            # "errormessage": "کمیسیون را وارد کنید.",
-            "errormessage": "ورودی‌ها را چک کرده و سپس به درستی وارد کنید.",
-            "errorcode": "30010",
+            # "message": "کمیسیون را وارد کنید.",
+            "message": "ورودی‌ها را چک کرده و سپس به درستی وارد کنید.",
+            "code": "30010",
         },
     }
-    return JSONResponse(status_code=422, content=zizo)
+    return JSONResponse(status_code=400, content=response)
 
 
 # Add all routers

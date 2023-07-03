@@ -6,6 +6,8 @@ Returns:
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi_pagination import add_pagination
+from fastapi.responses import JSONResponse
+
 from khayyam import JalaliDatetime as jd
 from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.database import get_database
@@ -62,7 +64,7 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "PAMCode  را وارد کنید.", "errorcode": "30015"},
+            error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
         )
     database = get_database()
     results = []
@@ -90,8 +92,8 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errormessage": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
-                "errorcode": "30017",
+                "message": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
+                "code": "30017",
             },
         )
     return ResponseListOut(
@@ -288,8 +290,8 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errormessage": "خروجی برای متغیرهای داده شده نداریم.",
-                "errorcode": "30020",
+                "message": "خروجی برای متغیرهای داده شده نداریم.",
+                "code": "30020",
             },
         )
     return ResponseOut(
@@ -503,8 +505,8 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errormessage": "خروجی برای متغیرهای داده شده نداریم.",
-                "errorcode": "30020",
+                "message": "خروجی برای متغیرهای داده شده نداریم.",
+                "code": "30020",
             },
         )
     return ResponseOut(
@@ -554,7 +556,7 @@ async def users_diff_with_tbs(
         return ResponseListOut(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "PAMCode  را وارد کنید.", "errorcode": "30015"},
+            error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
         )
 
     delta = timedelta(days=1)
@@ -580,8 +582,8 @@ async def users_diff_with_tbs(
             result=[],
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={
-                "errormessage": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-                "errorcode": "30013",
+                "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
+                "code": "30013",
             },
         )
     return ResponseListOut(

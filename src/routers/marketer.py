@@ -5,6 +5,7 @@ Returns:
 """
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
 from src.tools.tokens import JWTBearer, get_role_permission
@@ -63,26 +64,43 @@ async def get_marketer_profile(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     brokerage = get_database()
     marketers_coll = brokerage["marketers"]
     if args.IdpID is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
     query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
     if not query_result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "موردی با IDP داده شده یافت نشد.",
-                "errorcode": "30004",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "موردی با IDP داده شده یافت نشد.",
+                "code": "30004",
             },
-        )
+        }
+        return JSONResponse(status_code=404, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "موردی با IDP داده شده یافت نشد.",
+        #         "code": "30004",
+        #     },
+        # )
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -120,7 +138,7 @@ async def get_marketer(request: Request):
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
     marketers_coll = database["marketers"]
@@ -130,11 +148,21 @@ async def get_marketer(request: Request):
     for i in range(len(marketers)):
         results.append(marketer_entity(marketers[i]))
     if not results:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "موردی در دیتابیس یافت نشد.",
+                "code": "30001",
+            },
+        }
+        return JSONResponse(status_code=404, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # )
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -174,17 +202,24 @@ async def modify_marketer(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
     marketer_coll = database["marketers"]
     admins_coll = database["factors"]
     if mmi.CurrentIdpId is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
     filter = {"IdpId": mmi.CurrentIdpId}
     idpid = mmi.CurrentIdpId
     update = {"$set": {}}
@@ -233,23 +268,40 @@ async def modify_marketer(
             ddd = int(mmi.NationalID)
             update["$set"]["Id"] = mmi.NationalID
         except:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "کد ملی را درست وارد کنید.",
-                    "errorcode": "30066",
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "کد ملی را درست وارد کنید.",
+                    "code": "30066",
                 },
-            )
+            }
+            return JSONResponse(status_code=412, content=resp)
+
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "کد ملی را درست وارد کنید.",
+            #         "code": "30066",
+            #     },
+            # )
 
     marketer_coll.update_one(filter, update)
     query_result = marketer_coll.find_one({"IdpId": idpid}, {"_id": False})
     if not query_result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        }
+        return JSONResponse(status_code=404, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # )
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -286,17 +338,24 @@ async def add_marketer(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
     admins_coll = database["factors"]
     marketer_coll = database["marketers"]
     if ami.CurrentIdpId is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
 
     filter = {"IdpId": ami.CurrentIdpId}
     update = {"$set": {}}
@@ -327,35 +386,62 @@ async def add_marketer(
             ddd = int(ami.NationalID)
             update["$set"]["Id"] = ami.NationalID
         except:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "کد ملی را درست وارد کنید.",
-                    "errorcode": "30066",
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "کد ملی را درست وارد کنید.",
+                    "code": "30066",
                 },
-            )
+            }
+            return JSONResponse(status_code=412, content=resp)
+            #
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "کد ملی را درست وارد کنید.",
+            #         "code": "30066",
+            #     },
+            # )
 
     update["$set"]["IdpId"] = ami.CurrentIdpId
     try:
         marketer_coll.insert_one(update["$set"])
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "مارکتر در دیتابیس وجود دارد.",
-                "errorcode": "30006",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "مارکتر در دیتابیس وجود دارد.",
+                "code": "30006",
             },
-        )
+        }
+        return JSONResponse(status_code=409, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "مارکتر در دیتابیس وجود دارد.",
+        #         "code": "30006",
+        #     },
+        # )
 
     query_result = marketer_coll.find_one(filter, {"_id": False})
     if not query_result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "ورودی ها را دوباره چک کنید.", "errorcode": "30051"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "ورودی ها را دوباره چک کنید.", "code": "30051"},
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "ورودی ها را دوباره چک کنید.", "code": "30051"},
+        # )
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -394,7 +480,7 @@ def get_marketer_total_trades(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -613,7 +699,7 @@ async def search_user_profile(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     brokerage = get_database()
     marketer_coll = brokerage["marketers"]
@@ -635,25 +721,42 @@ async def search_user_profile(
     try:
         query_result = marketer_coll.find_one(query, {"_id": False})
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "ورودی نام غیرقابل قبول است.", "errorcode": "30050"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
+        # )
 
     query_result = marketer_coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
         results.append(marketer_entity(marketers[i]))
     if not results:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "موردی با متغیرهای داده شده یافت نشد.",
-                "errorcode": "30008",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "موردی با متغیرهای داده شده یافت نشد.",
+                "code": "30008",
             },
-        )
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "موردی با متغیرهای داده شده یافت نشد.",
+        #         "code": "30008",
+        #     },
+        # )
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -692,7 +795,7 @@ async def add_marketers_relations(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -701,77 +804,138 @@ async def add_marketers_relations(
     if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
     else:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکترها را وارد کنید.", "errorcode": "30009"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # )
     try:
         d = int(mrel.CommissionCoefficient)
     except:
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "کمیسیون را وارد کنید.", "code": "30010"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+
         # if args.CommissionCoefficient is None:
         # if d is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "کمیسیون را وارد کنید.", "errorcode": "30010"},
-        )
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "کمیسیون را وارد کنید.", "code": "30010"},
+        # )
     update = {"$set": {}}
 
     update["$set"]["LeaderMarketerID"] = mrel.LeaderMarketerID
     update["$set"]["FollowerMarketerID"] = mrel.FollowerMarketerID
     if mrel.LeaderMarketerID == mrel.FollowerMarketerID:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "مارکترها نباید یکسان باشند.", "errorcode": "30011"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        }
+        return JSONResponse(status_code=409, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # )
     if marketers_relations_coll.find_one(
         {"FollowerMarketerID": mrel.FollowerMarketerID}
     ):
         if marketers_relations_coll.find_one(
             {"LeaderMarketerID": mrel.LeaderMarketerID}
         ):
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "این ارتباط وجود دارد.",
-                    "errorcode": "30072",
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "این ارتباط وجود دارد.",
+                    "code": "30072",
                 },
-            )
+            }
+            return JSONResponse(status_code=409, content=resp)
+
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "این ارتباط وجود دارد.",
+            #         "code": "30072",
+            #     },
+            # )
 
         else:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "این مارکتر زیرمجموعه نفر دیگری است.",
-                    "errorcode": "30012",
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "این مارکتر زیرمجموعه نفر دیگری است.",
+                    "code": "30012",
                 },
-            )
+            }
+            return JSONResponse(status_code=406, content=resp)
+            #
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "این مارکتر زیرمجموعه نفر دیگری است.",
+            #         "code": "30012",
+            #     },
+            # )
     try:
         d = int(mrel.CommissionCoefficient)
         if 0 < mrel.CommissionCoefficient < 1:
             update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
         else:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "کمیسیون را به درستی وارد کنید.",
-                    "errorcode": "30010",
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "کمیسیون را به درستی وارد کنید.",
+                    "code": "30010",
                 },
-            )
+            }
+            return JSONResponse(status_code=412, content=resp)
+
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "کمیسیون را به درستی وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # )
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "کمیسیون را به درستی وارد کنید.",
-                "errorcode": "30010",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "کمیسیون را به درستی وارد کنید.",
+                "code": "30010",
             },
-        )
+        }
+        return JSONResponse(status_code=412, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "کمیسیون را به درستی وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # )
 
     update["$set"]["CreateDate"] = str(jd.now())
     update["$set"]["UpdateDate"] = update["$set"]["CreateDate"]
@@ -786,14 +950,24 @@ async def add_marketers_relations(
                 update["$set"]["EndDate"], "%Y-%m-%d"
             ).todatetime()
         except:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "تاریخ انتها را درست وارد کنید.",
-                    "errorcode": "30010",
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "تاریخ انتها را درست وارد کنید.",
+                    "code": "30010",
                 },
-            )
+            }
+            return JSONResponse(status_code=412, content=resp)
+
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "تاریخ انتها را درست وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # )
 
     else:
         update["$set"]["GEndDate"] = jd.strptime("1500-12-29", "%Y-%m-%d").todatetime()
@@ -802,14 +976,24 @@ async def add_marketers_relations(
             update["$set"]["StartDate"], "%Y-%m-%d"
         ).todatetime()
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "تاریخ ابتدا را درست وارد کنید.",
-                "errorcode": "30010",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "تاریخ ابتدا را درست وارد کنید.",
+                "code": "30010",
             },
-        )
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "تاریخ ابتدا را درست وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # )
 
     update["$set"]["GCreateDate"] = jd.strptime(
         update["$set"]["CreateDate"], "%Y-%m-%d %H:%M:%S.%f"
@@ -822,14 +1006,24 @@ async def add_marketers_relations(
     ) and marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID}):
         pass
     else:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "مارکتری با ID داده شده وجود ندارد.",
-                "errorcode": "30010",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "مارکتری با ID داده شده وجود ندارد.",
+                "code": "30010",
             },
-        )
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "مارکتری با ID داده شده وجود ندارد.",
+        #         "code": "30010",
+        #     },
+        # )
 
     update["$set"]["FollowerMarketerName"] = get_marketer_name(
         marketers_coll.find_one({"IdpId": mrel.FollowerMarketerID})
@@ -882,7 +1076,7 @@ async def modify_marketers_relations(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -890,11 +1084,18 @@ async def modify_marketers_relations(
     if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
     else:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکترها را وارد کنید.", "errorcode": "30009"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # )
     query = {
         "$and": [
             {"LeaderMarketerID": mrel.LeaderMarketerID},
@@ -902,18 +1103,32 @@ async def modify_marketers_relations(
         ]
     }
     if marketers_relations_coll.find_one(query) is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "این رابطه وجود ندارد.", "errorcode": "30011"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "این رابطه وجود ندارد.", "code": "30011"},
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "این رابطه وجود ندارد.", "code": "30011"},
+        # )
 
     if mrel.CommissionCoefficient is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "کمیسیون را وارد کنید.", "errorcode": "30010"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "کمیسیون را وارد کنید.", "code": "30010"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "کمیسیون را وارد کنید.", "code": "30010"},
+        # )
 
     update = {"$set": {}}
     try:
@@ -921,32 +1136,59 @@ async def modify_marketers_relations(
         if 0 < mrel.CommissionCoefficient < 1:
             update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
         else:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "کمیسیون را به درستی وارد کنید.",
-                    "errorcode": "30010",
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "کمیسیون را به درستی وارد کنید.",
+                    "code": "30010",
                 },
-            )
+            }
+            return JSONResponse(status_code=412, content=resp)
+            #
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "کمیسیون را به درستی وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # )
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "کمیسیون را به درستی وارد کنید.",
-                "errorcode": "30010",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "کمیسیون را به درستی وارد کنید.",
+                "code": "30010",
             },
-        )
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "کمیسیون را به درستی وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # )
 
     update["$set"]["LeaderMarketerID"] = mrel.LeaderMarketerID
     update["$set"]["FollowerMarketerID"] = mrel.FollowerMarketerID
     if mrel.LeaderMarketerID == mrel.FollowerMarketerID:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "مارکترها نباید یکسان باشند.", "errorcode": "30011"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        }
+        return JSONResponse(status_code=409, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # )
     # if marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID}):
     update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
     update["$set"]["UpdateDate"] = str(jd.now())
@@ -954,25 +1196,57 @@ async def modify_marketers_relations(
 
     if mrel.StartDate is not None:
         update["$set"]["StartDate"] = mrel.StartDate
+        try:
+            update["$set"]["GStartDate"] = jd.strptime(
+                update["$set"]["StartDate"], "%Y-%m-%d"
+            ).todatetime()
+        except:
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "تاریخ ابتدا را درست وارد کنید.",
+                    "code": "30010",
+                },
+            }
+            return JSONResponse(status_code=412, content=resp)
 
-    update["$set"]["GStartDate"] = jd.strptime(
-        update["$set"]["StartDate"], "%Y-%m-%d"
-    ).todatetime()
     if mrel.EndDate is not None:
         update["$set"]["EndDate"] = mrel.EndDate
-
-        update["$set"]["GEndDate"] = jd.strptime(
-            update["$set"]["EndDate"], "%Y-%m-%d"
-        ).todatetime()
-        if update["$set"]["GEndDate"] < update["$set"]["GStartDate"]:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "تاریخ پایان قبل از شروع است.",
-                    "errorcode": "30071",
+        try:
+            update["$set"]["GEndDate"] = jd.strptime(
+                update["$set"]["EndDate"], "%Y-%m-%d"
+            ).todatetime()
+        except:
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "تاریخ انتها را درست وارد کنید.",
+                    "code": "30010",
                 },
-            )
+            }
+            return JSONResponse(status_code=412, content=resp)
+
+        if update["$set"]["GEndDate"] < update["$set"]["GStartDate"]:
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "تاریخ پایان قبل از شروع است.",
+                    "code": "30071",
+                },
+            }
+            return JSONResponse(status_code=400, content=resp)
+            #
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "تاریخ پایان قبل از شروع است.",
+            #         "code": "30071",
+            #     },
+            # )
 
     update["$set"]["GUpdateDate"] = jd.strptime(
         update["$set"]["UpdateDate"], "%Y-%m-%d %H:%M:%S.%f"
@@ -1025,7 +1299,7 @@ async def search_marketers_relations(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
     from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
@@ -1094,28 +1368,45 @@ async def search_marketers_relations(
     try:
         query_result = marketers_relations_coll.find_one(query, {"_id": False})
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "ورودی نام غیرقابل قبول است.", "errorcode": "30050"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
+        # )
 
     query_result = marketers_relations_coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "موردی برای متغیرهای داده شده یافت نشد.",
-                "errorcode": "30003",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "موردی برای متغیرهای داده شده یافت نشد.",
+                "code": "30003",
             },
-        )
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "موردی برای متغیرهای داده شده یافت نشد.",
+        #         "code": "30003",
+        #     },
+        # )
     result = {}
-    result["errorCode"] = "Null"
-    result["errorMessage"] = "Null"
+    result["code"] = "Null"
+    result["message"] = "Null"
     result["totalCount"] = len(marketers)
     result["pagedData"] = results
     return ResponseListOut(
@@ -1156,7 +1447,7 @@ async def delete_marketers_relations(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -1165,39 +1456,73 @@ async def delete_marketers_relations(
     if args.LeaderMarketerID and args.FollowerMarketerID:
         pass
     else:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکترها را وارد کنید.", "errorcode": "30009"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        }
+        return JSONResponse(status_code=400, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # )
     if args.LeaderMarketerID == args.FollowerMarketerID:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "مارکترها نباید یکسان باشند.", "errorcode": "30011"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        }
+        return JSONResponse(status_code=409, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # )
     q = marketers_relations_coll.find_one(
         {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
     )
 
     if not q:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "این مارکتر زیرمجموعه کسی نیست.",
-                "errorcode": "30052",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "این مارکتر زیرمجموعه کسی نیست.",
+                "code": "30052",
             },
-        )
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "این مارکتر زیرمجموعه کسی نیست.",
+        #         "code": "30052",
+        #     },
+        # )
     if not q.get("LeaderMarketerID") == args.LeaderMarketerID:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "این مارکتر زیرمجموعه نفر دیگری است.",
-                "errorcode": "30012",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "این مارکتر زیرمجموعه نفر دیگری است.",
+                "code": "30012",
             },
-        )
+        }
+        return JSONResponse(status_code=409, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "این مارکتر زیرمجموعه نفر دیگری است.",
+        #         "code": "30012",
+        #     },
+        # )
 
     results = []
     FollowerMarketerName = get_marketer_name(
@@ -1252,7 +1577,7 @@ async def users_diff_with_tbs(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -1261,11 +1586,18 @@ async def users_diff_with_tbs(
     # trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     if args.IdpID is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
 
     # check if marketer exists and return his name
     query_result = marketers_coll.find({"IdpId": args.IdpID})
@@ -1306,14 +1638,24 @@ async def users_diff_with_tbs(
             else:
                 result.append(q)
     if not result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-                "errorcode": "30013",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
+                "code": "30013",
             },
-        )
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
+        #         "code": "30013",
+        #     },
+        # )
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
