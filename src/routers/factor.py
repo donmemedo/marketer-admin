@@ -6,6 +6,8 @@ Returns:
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
+
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
 
@@ -52,7 +54,7 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     marketer_id = args.IdpID
     brokerage = get_database()
@@ -60,11 +62,18 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
     if not query_result:
         logger.error("No Record- Error 30001")
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی یافت نشد.", "errorcode": "30001"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "موردی یافت نشد.", "code": "30001"},
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "موردی یافت نشد.", "code": "30001"},
+        # )
     logger.info("Factor Constants were gotten Successfully.")
     return ResponseListOut(
         result=query_result,
@@ -103,7 +112,7 @@ async def get_all_factors_consts(request: Request):
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
     results = []
@@ -113,14 +122,24 @@ async def get_all_factors_consts(request: Request):
     for i in range(len(consts)):
         results.append((consts[i]))
     if not results:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "موردی برای ثابتهای فاکتورها یافت نشد.",
-                "errorcode": "30002",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "موردی برای ثابتهای فاکتورها یافت نشد.",
+                "code": "30002",
             },
-        )
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "موردی برای ثابتهای فاکتورها یافت نشد.",
+        #         "code": "30002",
+        #     },
+        # )
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -160,17 +179,24 @@ async def modify_factor_consts(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
     consts_coll = database["consts"]
     if mci.MarketerID is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
 
     filter = {"MarketerID": mci.MarketerID}
     update = {"$set": {}}
@@ -190,14 +216,24 @@ async def modify_factor_consts(
     consts_coll.update_one(filter, update)
     query_result = consts_coll.find_one({"MarketerID": mci.MarketerID}, {"_id": False})
     if not query_result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "موردی با IDP داده شده یافت نشد.",
-                "errorcode": "30004",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "موردی با IDP داده شده یافت نشد.",
+                "code": "30004",
             },
-        )
+        }
+        return JSONResponse(status_code=404, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "موردی با IDP داده شده یافت نشد.",
+        #         "code": "30004",
+        #     },
+        # )
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -236,17 +272,24 @@ async def modify_factor(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
     factor_coll = database["factors"]
     if mfi.MarketerID is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
 
     filter = {"IdpID": mfi.MarketerID}
     update = {"$set": {}}
@@ -285,11 +328,18 @@ async def modify_factor(
     factor_coll.update_one(filter, update)
     query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
     if not query_result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        }
+        return JSONResponse(status_code=404, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # )
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -327,17 +377,24 @@ async def add_factor(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
     factor_coll = database["factors"]
     marketers_coll = database["marketers"]
     if mfi.MarketerID is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        }
+        return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
 
     filter = {"IdpID": mfi.MarketerID}
     update = {"$set": {}}
@@ -415,7 +472,7 @@ async def search_factor(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -424,14 +481,24 @@ async def search_factor(
     if args.Period:
         pass
     else:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "IDP مارکتر و دوره را وارد کنید.",
-                "errorcode": "30030",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "IDP مارکتر و دوره را وارد کنید.",
+                "code": "30030",
             },
-        )
+        }
+        return JSONResponse(status_code=400, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "IDP مارکتر و دوره را وارد کنید.",
+        #         "code": "30030",
+        #     },
+        # )
 
     # filter = {"IdpID": args.MarketerID}
     per = args.Period
@@ -440,11 +507,18 @@ async def search_factor(
     else:
         querry_result = factor_coll.find({}, {"_id": False})
     if not querry_result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # )
 
     results = []
     tma = per
@@ -475,20 +549,30 @@ async def search_factor(
             results.append(result)
             # query_result.values()
         except:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "موردی در دیتابیس یافت نشد.",
-                    "errorcode": "30001",
+            resp = {
+                "result": [],
+                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                "error": {
+                    "message": "موردی در دیتابیس یافت نشد.",
+                    "code": "30001",
                 },
-            )
+            }
+            return JSONResponse(status_code=404, content=resp)
+
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "موردی در دیتابیس یافت نشد.",
+            #         "code": "30001",
+            #     },
+            # )
     if args.MarketerID:
         last_result = results
     else:
         last_result = {
-            "errorCode": "Null",
-            "errorMessage": "Null",
+            "code": "Null",
+            "message": "Null",
             "totalCount": len(qresult),
             "pagedData": results,
         }
@@ -527,7 +611,7 @@ async def delete_factor(
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
     database = get_database()
 
@@ -535,25 +619,42 @@ async def delete_factor(
     if args.MarketerID and args.Period:
         pass
     else:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "IDP مارکتر و دوره را وارد کنید.",
-                "errorcode": "30030",
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "IDP مارکتر و دوره را وارد کنید.",
+                "code": "30030",
             },
-        )
+        }
+        return JSONResponse(status_code=400, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "IDP مارکتر و دوره را وارد کنید.",
+        #         "code": "30030",
+        #     },
+        # )
 
     filter = {"IdpID": args.MarketerID}
     update = {"$set": {}}
     per = args.Period
     query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
     if not query_result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        }
+        return JSONResponse(status_code=404, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # )
     result = [
         f"از ماکتر {query_result.get('FullName')}فاکتور مربوط به دوره {args.Period} پاک شد."
     ]
@@ -574,11 +675,18 @@ async def delete_factor(
         factor_coll.update_one({"IdpID": args.MarketerID}, update)
 
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
-        )
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        }
+        return JSONResponse(status_code=404, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # )
     result.append(factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False}))
     return ResponseListOut(
         result=result,  # factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False}),
