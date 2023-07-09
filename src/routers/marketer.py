@@ -1386,15 +1386,21 @@ async def search_marketers_relations(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
+        result = {}
+        result["code"] = "Null"
+        result["message"] = "Null"
+        result["totalCount"] = len(marketers)
+        result["pagedData"] = results
+
         resp = {
-            "result": [],
+            "result": result,
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {
                 "message": "موردی برای متغیرهای داده شده یافت نشد.",
                 "code": "30003",
             },
         }
-        return JSONResponse(status_code=204, content=resp)
+        return JSONResponse(status_code=200, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
