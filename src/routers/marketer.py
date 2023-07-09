@@ -91,7 +91,7 @@ async def get_marketer_profile(
                 "code": "30004",
             },
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -156,7 +156,7 @@ async def get_marketer(request: Request):
                 "code": "30001",
             },
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -295,7 +295,7 @@ async def modify_marketer(
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -435,7 +435,7 @@ async def add_marketer(
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {"message": "ورودی ها را دوباره چک کنید.", "code": "30051"},
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -747,7 +747,7 @@ async def search_user_profile(
                 "code": "30008",
             },
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1014,7 +1014,7 @@ async def add_marketers_relations(
                 "code": "30010",
             },
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1108,7 +1108,7 @@ async def modify_marketers_relations(
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {"message": "این رابطه وجود ندارد.", "code": "30011"},
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1394,7 +1394,7 @@ async def search_marketers_relations(
                 "code": "30003",
             },
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1494,7 +1494,7 @@ async def delete_marketers_relations(
                 "code": "30052",
             },
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1646,7 +1646,7 @@ async def users_diff_with_tbs(
                 "code": "30013",
             },
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],

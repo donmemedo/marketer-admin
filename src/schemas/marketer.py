@@ -195,7 +195,7 @@ class SearchMarketerRelations:
     FollowerMarketerName: str = None
     FollowerMarketerID: str = None
     StartDate: str = Query(default="1301-01-01")
-    EndDate: str = Query(default="1501-12-29")
+    EndDate: str = Query(default="2501-12-29")
 
 
 @dataclass
