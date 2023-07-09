@@ -67,7 +67,7 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {"message": "موردی یافت نشد.", "code": "30001"},
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -130,7 +130,7 @@ async def get_all_factors_consts(request: Request):
                 "code": "30002",
             },
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -224,7 +224,7 @@ async def modify_factor_consts(
                 "code": "30004",
             },
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -333,7 +333,7 @@ async def modify_factor(
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -512,7 +512,7 @@ async def search_factor(
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -557,7 +557,7 @@ async def search_factor(
                     "code": "30001",
                 },
             }
-            return JSONResponse(status_code=404, content=resp)
+            return JSONResponse(status_code=204, content=resp)
 
             # return ResponseListOut(
             #     result=[],
@@ -648,7 +648,7 @@ async def delete_factor(
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -680,7 +680,7 @@ async def delete_factor(
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
         }
-        return JSONResponse(status_code=404, content=resp)
+        return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
