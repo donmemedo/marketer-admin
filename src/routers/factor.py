@@ -22,6 +22,7 @@ from src.tools.database import get_database
 from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
 from src.tools.logger import logger
+from pymongo import MongoClient, errors
 
 
 factor = APIRouter(prefix="/factor")
@@ -33,7 +34,11 @@ factor = APIRouter(prefix="/factor")
     tags=["Factor"],
     response_model=None,
 )
-async def get_factors_consts(request: Request, args: MarketerIn = Depends(MarketerIn)):
+async def get_factors_consts(
+        request: Request,
+        args: MarketerIn = Depends(MarketerIn),
+        brokerage: MongoClient = Depends(get_database)
+):
     """_summary_
 
     Args:
@@ -57,7 +62,7 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     marketer_id = args.IdpID
-    brokerage = get_database()
+    # brokerage = get_database()
     consts_coll = brokerage["consts"]
     query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
     if not query_result:
@@ -88,7 +93,10 @@ async def get_factors_consts(request: Request, args: MarketerIn = Depends(Market
     tags=["Factor"],
     response_model=None,
 )
-async def get_all_factors_consts(request: Request):
+async def get_all_factors_consts(
+        request: Request,
+        database: MongoClient = Depends(get_database)
+):
     """_summary_
 
     Args:
@@ -114,7 +122,7 @@ async def get_all_factors_consts(request: Request):
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
     results = []
     consts_coll = database["consts"]
     query_result = consts_coll.find({}, {"_id": False})
@@ -151,7 +159,9 @@ async def get_all_factors_consts(request: Request):
     "/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"]
 )
 async def modify_factor_consts(
-    request: Request, mci: ModifyConstIn
+    request: Request,
+    mci: ModifyConstIn,
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -181,7 +191,7 @@ async def modify_factor_consts(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     consts_coll = database["consts"]
     if mci.MarketerID is None:
@@ -245,6 +255,7 @@ async def modify_factor_consts(
 async def modify_factor(
     request: Request,
     mfi: ModifyFactorIn,
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -274,7 +285,7 @@ async def modify_factor(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     factor_coll = database["factors"]
     if mfi.MarketerID is None:
@@ -349,7 +360,9 @@ async def modify_factor(
 
 @factor.post("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
 async def add_factor(
-    request: Request, mfi: ModifyFactorIn
+    request: Request,
+    mfi: ModifyFactorIn,
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -379,7 +392,7 @@ async def add_factor(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
     factor_coll = database["factors"]
     marketers_coll = database["marketers"]
     if mfi.MarketerID is None:
@@ -446,7 +459,9 @@ async def add_factor(
 
 @factor.get("/search-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
 async def search_factor(
-    request: Request, args: SearchFactorIn = Depends(SearchFactorIn)
+    request: Request,
+    args: SearchFactorIn = Depends(SearchFactorIn),
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -474,7 +489,7 @@ async def search_factor(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     factor_coll = database["factors"]
     # if args.MarketerID and args.Period:
@@ -585,7 +600,9 @@ async def search_factor(
 
 @factor.delete("/delete-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
 async def delete_factor(
-    request: Request, args: SearchFactorIn = Depends(SearchFactorIn)
+    request: Request,
+    args: SearchFactorIn = Depends(SearchFactorIn),
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -613,7 +630,7 @@ async def delete_factor(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     factor_coll = database["factors"]
     if args.MarketerID and args.Period:

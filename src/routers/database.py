@@ -30,6 +30,7 @@ database = APIRouter(prefix="/database")
 async def get_customers(
     request: Request,
     coll_ress: CollectionRestore,
+    brokerage: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -58,7 +59,7 @@ async def get_customers(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    brokerage = get_database()
+    # brokerage = get_database()
     try:
         cus_collection = brokerage[settings.CUSTOMER_COLLECTION]
     except errors.CollectionInvalid as err:
@@ -109,6 +110,7 @@ async def get_customers(
 async def get_firms(
     request: Request,
     coll_ress: CollectionRestore,
+    brokerage: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -137,7 +139,7 @@ async def get_firms(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    brokerage = get_database()
+    # brokerage = get_database()
     try:
         firm_collection = brokerage[settings.FIRMS_COLLECTION]
     except errors.CollectionInvalid as err:
@@ -188,6 +190,7 @@ async def get_firms(
 async def get_trades(
     request: Request,
     coll_ress: CollectionRestore,
+    brokerage: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -213,7 +216,7 @@ async def get_trades(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    brokerage = get_database()
+    # brokerage = get_database()
     try:
         trades_collection = brokerage[settings.TRADES_COLLECTION]
     except errors.CollectionInvalid as err:
@@ -260,7 +263,9 @@ async def get_trades(
     response_model=None,
 )
 async def delete_trades(
-    request: Request, args: CollectionRestore = Depends(CollectionRestore)
+    request: Request,
+    args: CollectionRestore = Depends(CollectionRestore),
+    brokerage: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -286,7 +291,7 @@ async def delete_trades(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    brokerage = get_database()
+    # brokerage = get_database()
     try:
         trades_collection = brokerage[settings.TRADES_COLLECTION]
     except errors.CollectionInvalid as err:
