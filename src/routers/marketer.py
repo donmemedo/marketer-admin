@@ -30,6 +30,7 @@ from src.tools.utils import (
     get_marketer_name,
     check_permissions,
 )
+from pymongo import MongoClient
 
 
 marketer = APIRouter(prefix="/marketer")
@@ -42,7 +43,9 @@ marketer = APIRouter(prefix="/marketer")
     response_model=None,
 )
 async def get_marketer_profile(
-    request: Request, args: MarketerIn = Depends(MarketerIn)
+    request: Request,
+    args: MarketerIn = Depends(MarketerIn),
+    brokerage: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -66,7 +69,7 @@ async def get_marketer_profile(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    brokerage = get_database()
+    # brokerage = get_database()
     marketers_coll = brokerage["marketers"]
     if args.IdpID is None:
         resp = {
@@ -114,7 +117,10 @@ async def get_marketer_profile(
     tags=["Marketer"],
     response_model=None,
 )
-async def get_marketer(request: Request):
+async def get_marketer(
+        request: Request,
+        database: MongoClient = Depends(get_database)
+):
     """_summary_
 
     Args:
@@ -140,7 +146,7 @@ async def get_marketer(request: Request):
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
     marketers_coll = database["marketers"]
     results = []
     query_result = marketers_coll.find({})
@@ -178,6 +184,7 @@ async def get_marketer(request: Request):
 async def modify_marketer(
     request: Request,
     mmi: ModifyMarketerIn,
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -204,7 +211,7 @@ async def modify_marketer(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
     marketer_coll = database["marketers"]
     admins_coll = database["factors"]
     if mmi.CurrentIdpId is None:
@@ -315,7 +322,9 @@ async def modify_marketer(
     tags=["Marketer"],
 )
 async def add_marketer(
-    request: Request, ami: AddMarketerIn
+    request: Request,
+    ami: AddMarketerIn,
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -340,7 +349,7 @@ async def add_marketer(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
     admins_coll = database["factors"]
     marketer_coll = database["marketers"]
     if ami.CurrentIdpId is None:
@@ -456,7 +465,9 @@ async def add_marketer(
     response_model=None,
 )
 def get_marketer_total_trades(
-    request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
+    request: Request,
+    args: UsersTotalPureIn = Depends(UsersTotalPureIn),
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -482,7 +493,7 @@ def get_marketer_total_trades(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     customers_coll = database["customers"]
     trades_coll = database["trades"]
@@ -676,7 +687,9 @@ def get_marketer_total_trades(
     tags=["Marketer"],
 )
 async def search_user_profile(
-    request: Request, args: MarketersProfileIn = Depends(MarketersProfileIn)
+    request: Request,
+    args: MarketersProfileIn = Depends(MarketersProfileIn),
+    brokerage: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -701,7 +714,7 @@ async def search_user_profile(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    brokerage = get_database()
+    # brokerage = get_database()
     marketer_coll = brokerage["marketers"]
     query = {
         "$and": [
@@ -773,6 +786,7 @@ async def search_user_profile(
 async def add_marketers_relations(
     request: Request,
     mrel: MarketerRelations,
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -797,7 +811,7 @@ async def add_marketers_relations(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
@@ -1052,6 +1066,7 @@ async def add_marketers_relations(
 async def modify_marketers_relations(
     request: Request,
     mrel: MarketerRelations,
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -1078,7 +1093,7 @@ async def modify_marketers_relations(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     marketers_relations_coll = database["mrelations"]
     if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
@@ -1275,7 +1290,9 @@ async def modify_marketers_relations(
     response_model=None,
 )
 async def search_marketers_relations(
-    request: Request, args: SearchMarketerRelations = Depends(SearchMarketerRelations)
+    request: Request,
+    args: SearchMarketerRelations = Depends(SearchMarketerRelations),
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -1301,7 +1318,7 @@ async def search_marketers_relations(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
     from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
     to_gregorian_date = jd.strptime(args.EndDate, "%Y-%m-%d").todatetime() + timedelta(
         days=1
@@ -1386,15 +1403,21 @@ async def search_marketers_relations(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
+        result = {}
+        result["code"] = "Null"
+        result["message"] = "Null"
+        result["totalCount"] = len(marketers)
+        result["pagedData"] = results
+
         resp = {
-            "result": [],
+            "result": result,
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {
                 "message": "موردی برای متغیرهای داده شده یافت نشد.",
                 "code": "30003",
             },
         }
-        return JSONResponse(status_code=204, content=resp)
+        return JSONResponse(status_code=200, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1423,7 +1446,9 @@ async def search_marketers_relations(
     response_model=None,
 )
 async def delete_marketers_relations(
-    request: Request, args: DelMarketerRelations = Depends(DelMarketerRelations)
+    request: Request,
+    args: DelMarketerRelations = Depends(DelMarketerRelations),
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -1449,7 +1474,7 @@ async def delete_marketers_relations(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
@@ -1554,7 +1579,9 @@ async def delete_marketers_relations(
     response_model=None,
 )
 async def users_diff_with_tbs(
-    request: Request, args: DiffTradesIn = Depends(DiffTradesIn)
+    request: Request,
+    args: DiffTradesIn = Depends(DiffTradesIn),
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
@@ -1579,7 +1606,7 @@ async def users_diff_with_tbs(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     customers_coll = database["customers"]
     firms_coll = database["firms"]

@@ -18,6 +18,7 @@ from src.schemas.user import (
     ResponseOut,
     ResponseListOut,
 )
+from pymongo import MongoClient, errors
 
 
 user = APIRouter(prefix="/user")
@@ -29,7 +30,11 @@ user = APIRouter(prefix="/user")
     tags=["User"],
     response_model=None,
 )
-async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTradesIn)):
+async def get_user_trades(
+        request: Request,
+        args: UserTradesIn = Depends(UserTradesIn),
+        database: MongoClient = Depends(get_database)
+):
     """_summary_
 
     Args:
@@ -66,7 +71,7 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
             timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
         )
-    database = get_database()
+    # database = get_database()
     results = []
     from_gregorian_date = to_gregorian_(args.from_date)
     to_gregorian_date = to_gregorian_(args.to_date)
@@ -109,7 +114,12 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
     tags=["User"],
     response_model=None,
 )
-def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersListIn)):
+def users_list_by_volume(
+        request: Request,
+        args: UsersListIn = Depends(UsersListIn),
+        database: MongoClient = Depends(get_database)
+
+):
     """_summary_
 
     Args:
@@ -135,7 +145,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     customers_coll = database["customers"]
     firms_coll = database["firms"]
@@ -307,7 +317,11 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     tags=["User"],
     response_model=None,
 )
-def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
+def users_total(
+        request: Request,
+        args: UsersListIn = Depends(UsersListIn),
+        database: MongoClient = Depends(get_database)
+):
     """_summary_
 
     Args:
@@ -333,7 +347,7 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     customers_coll = database["customers"]
     firms_coll = database["firms"]
@@ -523,7 +537,9 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     response_model=None,
 )
 async def users_diff_with_tbs(
-    request: Request, args: UserTradesIn = Depends(UserTradesIn)
+    request: Request,
+    args: UserTradesIn = Depends(UserTradesIn),
+    database: MongoClient = Depends(get_database)
 ):
     """_summary_
 
