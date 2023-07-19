@@ -22,6 +22,7 @@ from src.schemas.subuser import (
 from src.tools.database import get_database
 from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import peek, to_gregorian_
+from pymongo import MongoClient
 
 subuser = APIRouter(prefix="/subuser")
 
