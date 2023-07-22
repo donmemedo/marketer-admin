@@ -4,25 +4,19 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, timedelta
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
-
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-
-from src.schemas.factor import (
-    MarketerIn,
-    ModifyConstIn,
-    ModifyFactorIn,
-    ResponseListOut,
-    SearchFactorIn,
-)
+from src.schemas.factor import *
 from src.tools.database import get_database
-from src.tools.tokens import JWTBearer, get_role_permission
+
+# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
 from src.tools.logger import logger
 from pymongo import MongoClient, errors
+from src.auth.authentication import get_role_permission
+from src.auth.authorization import authorize
 
 
 factor = APIRouter(prefix="/factor")
@@ -30,14 +24,23 @@ factor = APIRouter(prefix="/factor")
 
 @factor.get(
     "/get-factor-consts",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.All",
+    ]
+)
 async def get_factors_consts(
-        request: Request,
-        args: MarketerIn = Depends(MarketerIn),
-        brokerage: MongoClient = Depends(get_database)
+    request: Request,
+    args: MarketerIn = Depends(MarketerIn),
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -47,7 +50,7 @@ async def get_factors_consts(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -89,13 +92,22 @@ async def get_factors_consts(
 
 @factor.get(
     "/get-all-factor-consts",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.All",
+    ]
+)
 async def get_all_factors_consts(
-        request: Request,
-        database: MongoClient = Depends(get_database)
+    request: Request,
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -108,7 +120,7 @@ async def get_all_factors_consts(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -156,12 +168,25 @@ async def get_all_factors_consts(
 
 
 @factor.put(
-    "/modify-factor-consts", dependencies=[Depends(JWTBearer())], tags=["Factor"]
+    "/modify-factor-consts",
+    # dependencies=[Depends(JWTBearer())],
+    tags=["Factor"],
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Write",
+        "MarketerAdmin.Factor.Update",
+        "MarketerAdmin.Factor.All",
+    ]
 )
 async def modify_factor_consts(
     request: Request,
     mci: ModifyConstIn,
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -175,7 +200,7 @@ async def modify_factor_consts(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Write",
@@ -251,11 +276,26 @@ async def modify_factor_consts(
     )
 
 
-@factor.put("/modify-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+@factor.put(
+    "/modify-factor",
+    # dependencies=[Depends(JWTBearer())],
+    tags=["Factor"],
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Write",
+        "MarketerAdmin.Factor.Update",
+        "MarketerAdmin.Factor.All",
+    ]
+)
 async def modify_factor(
     request: Request,
     mfi: ModifyFactorIn,
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -269,7 +309,7 @@ async def modify_factor(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Write",
@@ -358,11 +398,26 @@ async def modify_factor(
     )
 
 
-@factor.post("/add-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+@factor.post(
+    "/add-factor",
+    # dependencies=[Depends(JWTBearer())],
+    tags=["Factor"],
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Create",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Write",
+        "MarketerAdmin.Factor.Create",
+        "MarketerAdmin.Factor.All",
+    ]
+)
 async def add_factor(
     request: Request,
     mfi: ModifyFactorIn,
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -376,7 +431,7 @@ async def add_factor(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Write",
@@ -444,7 +499,9 @@ async def add_factor(
         update["$set"][per + "FactStatus"] = mfi.FactorStatus
 
     try:
-        marketer_name = get_marketer_name(marketers_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False}))
+        marketer_name = get_marketer_name(
+            marketers_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
+        )
         factor_coll.insert_one({"IdpID": mfi.MarketerID, "MarketerName": marketer_name})
         factor_coll.update_one(filter, update)
     except:
@@ -457,11 +514,24 @@ async def add_factor(
     )
 
 
-@factor.get("/search-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+@factor.get(
+    "/search-factor",
+    # dependencies=[Depends(JWTBearer())],
+    tags=["Factor"],
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.All",
+    ]
+)
 async def search_factor(
     request: Request,
     args: SearchFactorIn = Depends(SearchFactorIn),
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -475,7 +545,7 @@ async def search_factor(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -598,11 +668,24 @@ async def search_factor(
     )
 
 
-@factor.delete("/delete-factor", dependencies=[Depends(JWTBearer())], tags=["Factor"])
+@factor.delete(
+    "/delete-factor",
+    # dependencies=[Depends(JWTBearer())],
+    tags=["Factor"],
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Delete",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Delete",
+        "MarketerAdmin.Factor.All",
+    ]
+)
 async def delete_factor(
     request: Request,
     args: SearchFactorIn = Depends(SearchFactorIn),
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -616,7 +699,7 @@ async def delete_factor(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Delete",
@@ -710,6 +793,7 @@ async def delete_factor(
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
+
 
 add_pagination(factor)
 

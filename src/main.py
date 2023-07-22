@@ -7,6 +7,8 @@ from routers.marketer import marketer
 from routers.factor import factor
 from routers.user import user
 from routers.database import database
+from auth.permissions import permissions
+from auth.registration import get_token, set_permissions
 
 # from routers.subuser import subuser
 from src.tools.logger import logger
@@ -35,6 +37,8 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_events():
     get_database()
+    token = await get_token()
+    await set_permissions(permissions, token)
 
 
 @app.get("/health-check", tags=["Deafult"])

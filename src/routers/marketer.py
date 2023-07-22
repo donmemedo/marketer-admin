@@ -8,29 +8,14 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.tools.tokens import JWTBearer, get_role_permission
+
+# from src.tools.tokens import JWTBearer#, get_role_permission
+from src.auth.authentication import get_role_permission
 from src.tools.database import get_database
-from src.schemas.marketer import (
-    ModifyMarketerIn,
-    AddMarketerIn,
-    UsersTotalPureIn,
-    MarketersProfileIn,
-    MarketerIn,
-    DiffTradesIn,
-    ResponseOut,
-    ResponseListOut,
-    MarketerRelations,
-    DelMarketerRelations,
-    SearchMarketerRelations,
-)
-from src.tools.utils import (
-    peek,
-    to_gregorian_,
-    marketer_entity,
-    get_marketer_name,
-    check_permissions,
-)
+from src.schemas.marketer import *
+from src.tools.utils import *
 from pymongo import MongoClient
+from src.auth.authorization import authorize
 
 
 marketer = APIRouter(prefix="/marketer")
@@ -38,14 +23,23 @@ marketer = APIRouter(prefix="/marketer")
 
 @marketer.get(
     "/get-marketer",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
 )
 async def get_marketer_profile(
     request: Request,
     args: MarketerIn = Depends(MarketerIn),
-    brokerage: MongoClient = Depends(get_database)
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -55,7 +49,7 @@ async def get_marketer_profile(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission#(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -113,13 +107,22 @@ async def get_marketer_profile(
 
 @marketer.get(
     "/marketers",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 async def get_marketer(
-        request: Request,
-        database: MongoClient = Depends(get_database)
+    request: Request,
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -132,7 +135,7 @@ async def get_marketer(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -178,13 +181,24 @@ async def get_marketer(
 
 @marketer.put(
     "/modify-marketer",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],  # , response_model=None
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Write",
+        "MarketerAdmin.Marketer.Update",
+        "MarketerAdmin.Marketer.All",
+    ]
 )
 async def modify_marketer(
     request: Request,
     mmi: ModifyMarketerIn,
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -195,7 +209,7 @@ async def modify_marketer(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Write",
@@ -318,13 +332,22 @@ async def modify_marketer(
 
 @marketer.post(
     "/add-marketer",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Create",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Create",
+        "MarketerAdmin.Marketer.All",
+    ]
 )
 async def add_marketer(
     request: Request,
     ami: AddMarketerIn,
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -335,7 +358,7 @@ async def add_marketer(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Create",
@@ -460,14 +483,23 @@ async def add_marketer(
 
 @marketer.get(
     "/marketer-total",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
 )
 def get_marketer_total_trades(
     request: Request,
     args: UsersTotalPureIn = Depends(UsersTotalPureIn),
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -479,7 +511,7 @@ def get_marketer_total_trades(
         _type_: _description_
     """
     # get all current marketers
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -512,14 +544,15 @@ def get_marketer_total_trades(
     results = []
     for marketer in marketers_list:
         response_dict = {}
-        if marketer.get("FirstName") == "":
-            marketer_fullname = marketer.get("LastName")
-        elif marketer.get("LastName") == "":
-            marketer_fullname = marketer.get("FirstName")
-        else:
-            marketer_fullname = (
-                marketer.get("FirstName") + " " + marketer.get("LastName")
-            )
+        marketer_fullname = get_marketer_name(marketer)
+        # if marketer.get("FirstName") == "":
+        #     marketer_fullname = marketer.get("LastName")
+        # elif marketer.get("LastName") == "":
+        #     marketer_fullname = marketer.get("FirstName")
+        # else:
+        #     marketer_fullname = (
+        #         marketer.get("FirstName") + " " + marketer.get("LastName")
+        #     )
 
         # Check if customer exist
         query = {"Referer": {"$regex": marketer_fullname}}
@@ -681,15 +714,24 @@ def get_marketer_total_trades(
 
 @marketer.get(
     "/search",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     # response_model=Page[MarketerOut],
     response_model=None,
     tags=["Marketer"],
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 async def search_user_profile(
     request: Request,
     args: MarketersProfileIn = Depends(MarketersProfileIn),
-    brokerage: MongoClient = Depends(get_database)
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -700,7 +742,7 @@ async def search_user_profile(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -779,14 +821,23 @@ async def search_user_profile(
 
 @marketer.post(
     "/add-marketers-relations",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Create",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Create",
+        "MarketerAdmin.Marketer.All",
+    ]
 )
 async def add_marketers_relations(
     request: Request,
     mrel: MarketerRelations,
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -797,7 +848,7 @@ async def add_marketers_relations(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Create",
@@ -1059,14 +1110,25 @@ async def add_marketers_relations(
 
 @marketer.put(
     "/modify-marketers-relations",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Write",
+        "MarketerAdmin.Marketer.Update",
+        "MarketerAdmin.Marketer.All",
+    ]
 )
 async def modify_marketers_relations(
     request: Request,
     mrel: MarketerRelations,
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -1077,7 +1139,7 @@ async def modify_marketers_relations(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Write",
@@ -1285,14 +1347,23 @@ async def modify_marketers_relations(
 
 @marketer.get(
     "/search-marketers-relations",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
 )
 async def search_marketers_relations(
     request: Request,
     args: SearchMarketerRelations = Depends(SearchMarketerRelations),
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -1304,7 +1375,7 @@ async def search_marketers_relations(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -1441,14 +1512,23 @@ async def search_marketers_relations(
 
 @marketer.delete(
     "/delete-marketers-relations",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Delete",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Delete",
+        "MarketerAdmin.Marketer.All",
+    ]
 )
 async def delete_marketers_relations(
     request: Request,
     args: DelMarketerRelations = Depends(DelMarketerRelations),
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -1460,7 +1540,7 @@ async def delete_marketers_relations(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Delete",
@@ -1574,14 +1654,23 @@ async def delete_marketers_relations(
 
 @marketer.get(
     "/users-diff-marketer",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
 )
 async def users_diff_with_tbs(
     request: Request,
     args: DiffTradesIn = Depends(DiffTradesIn),
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -1592,7 +1681,7 @@ async def users_diff_with_tbs(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",

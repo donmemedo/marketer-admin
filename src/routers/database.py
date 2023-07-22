@@ -6,16 +6,18 @@ Returns:
 from datetime import datetime, date
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
-
 from khayyam import JalaliDatetime as jd
-from src.tools.tokens import JWTBearer, get_role_permission
+
+# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import check_permissions
+from src.auth.authentication import get_role_permission
 from src.tools.database import get_database
 from src.schemas.database import ResponseListOut, CollectionRestore
 from src.config import settings
 from src.tools.logger import logger
 import requests
 from pymongo import MongoClient, errors
+from src.auth.authorization import authorize
 
 
 database = APIRouter(prefix="/database")
@@ -23,14 +25,28 @@ database = APIRouter(prefix="/database")
 
 @database.put(
     "/get-customers",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Database"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Database.All",
+        "MarketerAdmin.TBSSync.All",
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.Database.Write",
+        "MarketerAdmin.TBSSync.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.Database.Update",
+        "MarketerAdmin.TBSSync.Update",
+    ]
 )
 async def get_customers(
     request: Request,
     coll_ress: CollectionRestore,
-    brokerage: MongoClient = Depends(get_database)
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -40,7 +56,7 @@ async def get_customers(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.All",
@@ -103,14 +119,28 @@ async def get_customers(
 
 @database.put(
     "/get-firms",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Database"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Database.All",
+        "MarketerAdmin.TBSSync.All",
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.Database.Write",
+        "MarketerAdmin.TBSSync.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.Database.Update",
+        "MarketerAdmin.TBSSync.Update",
+    ]
 )
 async def get_firms(
     request: Request,
     coll_ress: CollectionRestore,
-    brokerage: MongoClient = Depends(get_database)
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -120,7 +150,7 @@ async def get_firms(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.All",
@@ -183,14 +213,25 @@ async def get_firms(
 
 @database.post(
     "/get-trades",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Database"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Database.All",
+        "MarketerAdmin.TBSSync.All",
+        "MarketerAdmin.All.Create",
+        "MarketerAdmin.Database.Create",
+        "MarketerAdmin.TBSSync.Create",
+    ]
 )
 async def get_trades(
     request: Request,
     coll_ress: CollectionRestore,
-    brokerage: MongoClient = Depends(get_database)
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -200,7 +241,7 @@ async def get_trades(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.All",
@@ -258,14 +299,25 @@ async def get_trades(
 
 @database.delete(
     "/delete-trades",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Database"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Database.All",
+        "MarketerAdmin.TBSSync.All",
+        "MarketerAdmin.All.Delete",
+        "MarketerAdmin.Database.Delete",
+        "MarketerAdmin.TBSSync.Delete",
+    ]
 )
 async def delete_trades(
     request: Request,
     args: CollectionRestore = Depends(CollectionRestore),
-    brokerage: MongoClient = Depends(get_database)
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -275,7 +327,7 @@ async def delete_trades(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.All",

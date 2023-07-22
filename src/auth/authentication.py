@@ -1,0 +1,104 @@
+import aiohttp
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBearer
+from fastapi.security.http import HTTPAuthorizationCredentials
+from jose import jwt
+from src.config import settings
+from src.tools.logger import logger
+
+bearer_scheme = HTTPBearer()
+
+
+async def get_public_key() -> str:
+    try:
+        async with aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(verify_ssl=False)
+        ) as session:
+            async with session.get(settings.OPENID_CONFIGURATION_URL) as response:
+                response.raise_for_status()
+                config = await response.json()
+                jwks_uri = config["jwks_uri"]
+                async with session.get(jwks_uri) as jwks_response:
+                    jwks_response.raise_for_status()
+                    jwks = await jwks_response.json()
+                    public_key = jwks["keys"][0]["x5c"][0]
+                    return public_key
+    except (aiohttp.ClientError, KeyError, IndexError) as err:
+        logger.exception(f"Cannot connect to IDP: {err}")
+        logger.error(f"Cannot connect to IDP: {err}")
+        raise HTTPException(status_code=500, detail="Failed to fetch public key")
+
+
+def verify_token(token: str, public_key: str) -> dict:
+    try:
+        payload = jwt.decode(
+            token,
+            public_key,
+            algorithms=["RS256"],
+            options={"verify_signature": False, "verify_aud": False},
+        )
+        return payload
+    except jwt.JWTError as err:
+        logger.error(f"Invalid token: {err}")
+        logger.exception(f"Invalid token: {err}")
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+async def get_current_user(
+    token: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+):
+    if token.scheme != "Bearer":
+        logger.exception("Invalid authentication scheme")
+        logger.error("Invalid authentication scheme")
+        raise HTTPException(status_code=401, detail="Invalid authentication scheme")
+
+    public_key = await get_public_key()
+    return verify_token(token.credentials, public_key)
+
+
+def get_role_permission(
+    token: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+):  # req: Request):
+    """_summary_
+
+    Args:
+        req (Request): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    # token = req.headers.get("authorization").split()[1]
+    public_key = get_public_key()
+
+    decoded = jwt.decode(
+        token.credentials,
+        public_key,
+        algorithms=["RS256"],  # issuer=issuer, verify=True
+        options={"verify_signature": False, "verify_aud": False},
+    )
+    logger.info(decoded)
+    role_perm = {}
+    role_perm["sub"] = decoded["sub"]
+    role_perm["client_id"] = decoded["client_id"]
+    try:
+        role_perm["roles"] = decoded[
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ]
+    except:
+        role_perm["roles"] = []
+    role_perm["scopes"] = decoded["scope"]
+    # if decoded['CustomerManagement']:
+    #     role_perm['CustomerManagement'] = decoded['CustomerManagement']
+    # else:
+    #     role_perm['CustomerManagement'] = ''
+    try:
+        role_perm["Marketer"] = decoded["Marketer"]
+    except:
+        role_perm["Marketer"] = []
+    try:
+        role_perm["MarketerAdmin"] = decoded["MarketerAdmin"]
+    except:
+        role_perm["MarketerAdmin"] = []
+
+    return role_perm  # e892eae7-cf2e-48d8-a024-a7c9eb0f8668
+    # return "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156"

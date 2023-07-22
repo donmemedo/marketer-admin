@@ -7,18 +7,15 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi_pagination import add_pagination
 from fastapi.responses import JSONResponse
-
 from khayyam import JalaliDatetime as jd
-from src.tools.tokens import JWTBearer, get_role_permission
+
+# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.database import get_database
 from src.tools.utils import to_gregorian_, peek, check_permissions
-from src.schemas.user import (
-    UserTradesIn,
-    UsersListIn,
-    ResponseOut,
-    ResponseListOut,
-)
+from src.schemas.user import *
 from pymongo import MongoClient, errors
+from src.auth.authentication import get_role_permission
+from src.auth.authorization import authorize
 
 
 user = APIRouter(prefix="/user")
@@ -26,14 +23,23 @@ user = APIRouter(prefix="/user")
 
 @user.get(
     "/user-trades",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+)
 async def get_user_trades(
-        request: Request,
-        args: UserTradesIn = Depends(UserTradesIn),
-        database: MongoClient = Depends(get_database)
+    request: Request,
+    args: UserTradesIn = Depends(UserTradesIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -51,7 +57,7 @@ async def get_user_trades(
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=401, detail="Not authorized.")
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -110,15 +116,23 @@ async def get_user_trades(
 
 @user.get(
     "/users-list-by-volume",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+)
 def users_list_by_volume(
-        request: Request,
-        args: UsersListIn = Depends(UsersListIn),
-        database: MongoClient = Depends(get_database)
-
+    request: Request,
+    args: UsersListIn = Depends(UsersListIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -131,7 +145,7 @@ def users_list_by_volume(
     """
     # get user id
     # marketer_id = get_role_permission(request)
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -313,14 +327,23 @@ def users_list_by_volume(
 
 @user.get(
     "/users-total",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+)
 def users_total(
-        request: Request,
-        args: UsersListIn = Depends(UsersListIn),
-        database: MongoClient = Depends(get_database)
+    request: Request,
+    args: UsersListIn = Depends(UsersListIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -333,7 +356,7 @@ def users_total(
     """
     # get user id
     # marketer_id = get_role_permission(request)
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -532,14 +555,23 @@ def users_total(
 
 @user.get(
     "/users-diff",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
 )
 async def users_diff_with_tbs(
     request: Request,
     args: UserTradesIn = Depends(UserTradesIn),
-    database: MongoClient = Depends(get_database)
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -552,7 +584,7 @@ async def users_diff_with_tbs(
     """
     # get user id
     # marketer_id = get_role_permission(request)
-    role_perm = get_role_permission(request)
+    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",

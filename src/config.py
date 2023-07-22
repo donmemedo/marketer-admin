@@ -3,7 +3,7 @@
 Returns:
     _type_: _description_
 """
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -13,30 +13,41 @@ class Settings(BaseSettings):
         BaseSettings (_type_): _description_
     """
 
-    API_PREFIX = ""
-    DOCS_URL = ""
-    MONGO_CONNECTION_STRING = "mongodb://root:root@172.24.65.105:30001/"
+    API_PREFIX: str = ""
+    DOCS_URL: str = ""
+    MONGO_CONNECTION_STRING: str = "mongodb://root:root@172.24.65.105:30001/"
 
-    MONGO_DATABASE = "brokerage"
-    CUSTOMER_COLLECTION = "customers"
-    FIRMS_COLLECTION = "firms"
-    TRADES_COLLECTION = "trades"
+    MONGO_DATABASE: str = "brokerage"
+    CUSTOMER_COLLECTION: str = "customers"
+    FIRMS_COLLECTION: str = "firms"
+    TRADES_COLLECTION: str = "trades"
 
-    OPENAPI_URL = ""
-    ORIGINS = "*"
-    ROOT_PATH = ""
-    SWAGGER_TITLE = "Marketer Admin"
-    VERSION = "0.1.1"
-    ROOT_PATH = ""
+    OPENAPI_URL: str = ""
+    ORIGINS: str = "*"
+    ROOT_PATH: str = ""
+    SWAGGER_TITLE: str = "Marketer Admin"
+    VERSION: str = "0.1.1"
+    ROOT_PATH: str = ""
     # Added from Marketer
-    JWKS_CONFIGURATION_URL = (
+    JWKS_CONFIGURATION_URL: str = (
         "https://cluster.tech1a.co/.well-known/openid-configuration/jwks"
     )
-    ISSUER = "https://cluster.tech1a.co"
-    APPLICATION_ID = "d7f48c21-2a19-4bdb-ace8-48928bff0eb5"
-    SPLUNK_HOST = "172.24.65.206"
-    SPLUNK_PORT = 5141
-    SPLUNK_INDEX = "dev"
+    ISSUER: str = "https://cluster.tech1a.co"
+    APPLICATION_ID: str = "d7f48c21-2a19-4bdb-ace8-48928bff0eb5"
+    TOKEN_URL: str = "https://cluster.tech1a.co/connect/token"
+    CLIENT_ID: str = "M2M.RegisterServicePermission"
+    CLIENT_SECRET: str = "IDPRegisterServicePermission"
+    GRANT_TYPE: str = "client_credentials"
+    OPENID_CONFIGURATION_URL: str = (
+        "https://cluster.tech1a.co/.well-known/openid-configuration"
+    )
+    REGISTRATION_URL: str = (
+        "https://cluster.tech1a.co/api/service-permossion/register-service-permission"
+    )
+
+    SPLUNK_HOST: str = "172.24.65.206"
+    SPLUNK_PORT: int = 5141
+    SPLUNK_INDEX: str = "dev"
 
 
 settings = Settings()
