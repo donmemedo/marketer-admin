@@ -11,7 +11,9 @@ bearer_scheme = HTTPBearer()
 
 async def get_public_key() -> str:
     try:
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
+        async with aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(verify_ssl=False)
+        ) as session:
             async with session.get(settings.OPENID_CONFIGURATION_URL) as response:
                 response.raise_for_status()
                 config = await response.json()
@@ -54,8 +56,9 @@ async def get_current_user(
     return verify_token(token.credentials, public_key)
 
 
-def get_role_permission(token: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-):#req: Request):
+def get_role_permission(
+    token: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+):  # req: Request):
     """_summary_
 
     Args:
@@ -68,7 +71,9 @@ def get_role_permission(token: HTTPAuthorizationCredentials = Depends(bearer_sch
     public_key = get_public_key()
 
     decoded = jwt.decode(
-        token.credentials, public_key, algorithms=["RS256"], #issuer=issuer, verify=True
+        token.credentials,
+        public_key,
+        algorithms=["RS256"],  # issuer=issuer, verify=True
         options={"verify_signature": False, "verify_aud": False},
     )
     logger.info(decoded)

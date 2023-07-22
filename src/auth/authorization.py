@@ -5,6 +5,7 @@ from src.auth.permission_enum import Service
 from src.tools.logger import logger
 from src.tools.tokens import get_role_permission
 
+
 def authorize(permissions):
     def decorator(func):
         @wraps(func)

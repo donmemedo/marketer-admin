@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi_pagination import add_pagination
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
+
 # from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.database import get_database
 from src.tools.utils import to_gregorian_, peek, check_permissions
@@ -15,7 +16,6 @@ from src.schemas.user import *
 from pymongo import MongoClient, errors
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
-
 
 
 user = APIRouter(prefix="/user")
@@ -27,17 +27,19 @@ user = APIRouter(prefix="/user")
     tags=["User"],
     response_model=None,
 )
-@authorize([
+@authorize(
+    [
         "MarketerAdmin.All.Read",
         "MarketerAdmin.All.All",
         "MarketerAdmin.User.Read",
         "MarketerAdmin.User.All",
-    ])
+    ]
+)
 async def get_user_trades(
-        request: Request,
-        args: UserTradesIn = Depends(UserTradesIn),
-        database: MongoClient = Depends(get_database),
-        role_perm: dict = Depends(get_role_permission)
+    request: Request,
+    args: UserTradesIn = Depends(UserTradesIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -118,18 +120,19 @@ async def get_user_trades(
     tags=["User"],
     response_model=None,
 )
-@authorize([
+@authorize(
+    [
         "MarketerAdmin.All.Read",
         "MarketerAdmin.All.All",
         "MarketerAdmin.User.Read",
         "MarketerAdmin.User.All",
-    ])
+    ]
+)
 def users_list_by_volume(
-        request: Request,
-        args: UsersListIn = Depends(UsersListIn),
-        database: MongoClient = Depends(get_database),
-        role_perm: dict = Depends(get_role_permission)
-
+    request: Request,
+    args: UsersListIn = Depends(UsersListIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -328,17 +331,19 @@ def users_list_by_volume(
     tags=["User"],
     response_model=None,
 )
-@authorize([
+@authorize(
+    [
         "MarketerAdmin.All.Read",
         "MarketerAdmin.All.All",
         "MarketerAdmin.User.Read",
         "MarketerAdmin.User.All",
-    ])
+    ]
+)
 def users_total(
-        request: Request,
-        args: UsersListIn = Depends(UsersListIn),
-        database: MongoClient = Depends(get_database),
-        role_perm: dict = Depends(get_role_permission)
+    request: Request,
+    args: UsersListIn = Depends(UsersListIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -554,17 +559,19 @@ def users_total(
     tags=["User"],
     response_model=None,
 )
-@authorize([
+@authorize(
+    [
         "MarketerAdmin.All.Read",
         "MarketerAdmin.All.All",
         "MarketerAdmin.User.Read",
         "MarketerAdmin.User.All",
-    ])
+    ]
+)
 async def users_diff_with_tbs(
     request: Request,
     args: UserTradesIn = Depends(UserTradesIn),
     database: MongoClient = Depends(get_database),
-    role_perm: dict = Depends(get_role_permission)
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
