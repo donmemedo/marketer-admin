@@ -1779,6 +1779,229 @@ async def users_diff_with_tbs(
     )
 
 
+@marketer.get("/all-users-total", tags=["Marketer"],response_model=None)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
+async def users_list_by_volume(
+        role_perm: dict = Depends(get_role_permission),
+        args: UsersListIn = Depends(UsersListIn),
+        brokerage: MongoClient = Depends(get_database),
+):
+    # check if marketer exists and return his name
+    query_result = brokerage.marketers.find_one({"IdpId": args.IdpID})
+
+    if not query_result:
+        raise HTTPException(status_code=204, detail="Unauthorized User")
+
+    marketer_fullname = get_marketer_name(query_result)
+
+    from_gregorian_date = to_gregorian_(args.from_date)
+    to_gregorian_date = to_gregorian_(args.to_date)
+    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+        days=1
+    )
+    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    query = {"Referer": {"$regex": marketer_fullname}}
+
+    trade_codes = brokerage.customers.distinct("PAMCode", query)# + brokerage.firms.distinct("PAMCode", query)
+
+    if args.user_type.value == "active":
+        pipeline = [
+            {
+                "$match": {
+                    "$and": [
+                        {"TradeCode": {"$in": trade_codes}},
+                        {"TradeDate": {"$gte": from_gregorian_date}},
+                        {"TradeDate": {"$lte": to_gregorian_date}},
+                    ]
+                }
+            },
+            {
+                "$project": {
+                    "Price": 1,
+                    "Volume": 1,
+                    "Total": {"$multiply": ["$Price", "$Volume"]},
+                    "PriorityAcceptance": 1,
+                    "TotalCommission": 1,
+                    "TradeItemBroker": 1,
+                    "TradeCode": 1,
+                    "Commission": {
+                        "$cond": {
+                            "if": {"$eq": ["$TradeType", 1]},
+                            "then": {
+                                "$add": [
+                                    "$TotalCommission",
+                                    {"$multiply": ["$Price", "$Volume"]},
+                                ]
+                            },
+                            "else": {
+                                "$subtract": [
+                                    {"$multiply": ["$Price", "$Volume"]},
+                                    "$TotalCommission",
+                                ]
+                            },
+                        }
+                    },
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$TradeCode",
+                    "TotalFee": {"$sum": "$TradeItemBroker"},
+                    "TotalPureVolume": {"$sum": "$Commission"},
+                    "TotalPriorityAcceptance": {"$sum": "$PriorityAcceptance"},
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "TradeCode": "$_id",
+                    "TotalPureVolume": {
+                        "$add": ["$TotalPriorityAcceptance", "$TotalPureVolume"]
+                    },
+                    "TotalFee": 1,
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "customers",
+                    "localField": "TradeCode",
+                    "foreignField": "PAMCode",
+                    "as": "UserProfile",
+                }
+            },
+            {"$unwind": "$UserProfile"},
+            {
+                "$project": {
+                    "TradeCode": 1,
+                    "TotalFee": 1,
+                    "TotalPureVolume": 1,
+                    "FirstName": "$UserProfile.FirstName",
+                    "LastName": "$UserProfile.LastName",
+                    "Username": "$UserProfile.Username",
+                    "Mobile": "$UserProfile.Mobile",
+                    "RegisterDate": "$UserProfile.RegisterDate",
+                    "BankAccountNumber": "$UserProfile.BankAccountNumber",
+                    "FirmTitle": "$UserProfile.FirmTitle",
+                    "Telephone": "$UserProfile.Telephone",
+                    "FirmRegisterLocation": "$UserProfile.FirmRegisterLocation",
+                    "Email": "$UserProfile.Email",
+                    "ActivityField": "$UserProfile.ActivityField",
+                }
+            },
+            {"$sort": {args.sort_by.value: args.sort_order.value}},
+            {
+                "$facet": {
+                    "metadata": [{"$count": "total"}],
+                    "items": [
+                        {"$skip": (args.page - 1) * args.size},
+                        {"$limit": args.size},
+                    ],
+                }
+            },
+            {"$unwind": "$metadata"},
+            {
+                "$project": {
+                    "total": "$metadata.total",
+                    "items": 1,
+                }
+            },
+        ]
+
+        active_dict = next(brokerage.trades.aggregate(pipeline=pipeline), {})
+
+        result = {
+            "pagedData": active_dict.get("items", []),
+            "errorCode": None,
+            "errorMessage": None,
+            "totalCount": active_dict.get("total", 0),
+        }
+
+        return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
+
+    elif args.user_type.value == "inactive":
+        active_users_pipeline = [
+            {
+                "$match": {
+                    "$and": [
+                        {"TradeCode": {"$in": trade_codes}},
+                        {"TradeDate": {"$gte": from_gregorian_date}},
+                        {"TradeDate": {"$lte": to_gregorian_date}},
+                    ]
+                }
+            },
+            {"$group": {"_id": "$TradeCode"}},
+            {"$project": {"_id": 0, "TradeCode": "$_id"}},
+        ]
+
+        active_users_res = brokerage.trades.aggregate(pipeline=active_users_pipeline)
+        active_users_set = set(i.get("TradeCode") for i in active_users_res)
+
+        # check wether it is empty or not
+        inactive_uesrs_set = set(trade_codes) - active_users_set
+
+        inactive_users_pipline = [
+            {"$match": {"PAMCode": {"$in": list(inactive_uesrs_set)}}},
+            {
+                "$project": {
+                    "_id": 0,
+                    "TradeCode": 1,
+                    "FirstName": 1,
+                    "LastName": 1,
+                    "Username": 1,
+                    "Mobile": 1,
+                    "RegisterDate": 1,
+                    "BankAccountNumber": 1,
+                    "FirmTitle": 1,
+                    "Telephone": 1,
+                    "FirmRegisterDate": 1,
+                    "Email": 1,
+                    "ActivityField": 1,
+                }
+            },
+            {"$sort": {args.sort_by.value: args.sort_order.value}},
+            {
+                "$facet": {
+                    "metadata": [{"$count": "total"}],
+                    "items": [
+                        {"$skip": (args.page - 1) * args.size},
+                        {"$limit": args.size},
+                    ],
+                }
+            },
+            {"$unwind": "$metadata"},
+            {
+                "$project": {
+                    "total": "$metadata.total",
+                    "items": 1,
+                }
+            },
+        ]
+
+        inactive_dict = next(
+            brokerage.customers.aggregate(pipeline=inactive_users_pipline), {}
+        )
+
+        result = {
+            "pagedData": inactive_dict.get("items", []),
+            "errorCode": None,
+            "errorMessage": None,
+            "totalCount": inactive_dict.get("total", 0),
+        }
+
+        return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
+    else:
+        return ResponseListOut(timeGenerated=datetime.now(), result=[], error="")
+
+
+
 add_pagination(marketer)
 
 
