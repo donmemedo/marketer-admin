@@ -65,7 +65,7 @@ async def get_user_trades(
         "MarketerAdmin.User.Read",
         "MarketerAdmin.User.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -153,7 +153,7 @@ def users_list_by_volume(
         "MarketerAdmin.User.Read",
         "MarketerAdmin.User.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -364,7 +364,7 @@ def users_total(
         "MarketerAdmin.User.Read",
         "MarketerAdmin.User.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -592,7 +592,7 @@ async def users_diff_with_tbs(
         "MarketerAdmin.User.Read",
         "MarketerAdmin.User.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
