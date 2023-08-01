@@ -69,7 +69,7 @@ async def get_customers(
         "MarketerAdmin.Database.Update",
         "MarketerAdmin.TBSSync.Update",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -163,7 +163,7 @@ async def get_firms(
         "MarketerAdmin.Database.Update",
         "MarketerAdmin.TBSSync.Update",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -251,7 +251,7 @@ async def get_trades(
         "MarketerAdmin.Database.Create",
         "MarketerAdmin.TBSSync.Create",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -337,7 +337,7 @@ async def delete_trades(
         "MarketerAdmin.Database.Delete",
         "MarketerAdmin.TBSSync.Delete",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:

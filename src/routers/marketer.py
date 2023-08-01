@@ -57,7 +57,7 @@ async def get_marketer_profile(
         "MarketerAdmin.Marketer.Read",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -143,7 +143,7 @@ async def get_marketer(
         "MarketerAdmin.Marketer.Read",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -219,7 +219,7 @@ async def modify_marketer(
         "MarketerAdmin.Marketer.Update",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -259,7 +259,7 @@ async def modify_marketer(
 
     # Let Super Admin can change CreatedDate
     if check_permissions(
-        role_perm["MarketerAdmin"],
+        role_perm["roles"],
         ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
     ):
         if mmi.CreateDate is not None:
@@ -272,7 +272,7 @@ async def modify_marketer(
 
     # Let Super Admin can change CreatedBy
     if check_permissions(
-        role_perm["MarketerAdmin"],
+        role_perm["roles"],
         ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
     ):
         if mmi.CreatedBy is not None:
@@ -366,7 +366,7 @@ async def add_marketer(
         "MarketerAdmin.Marketer.Create",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -519,7 +519,7 @@ def get_marketer_total_trades(
         "MarketerAdmin.Marketer.Read",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -750,7 +750,7 @@ async def search_user_profile(
         "MarketerAdmin.Marketer.Read",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -856,7 +856,7 @@ async def add_marketers_relations(
         "MarketerAdmin.Marketer.Create",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -1149,7 +1149,7 @@ async def modify_marketers_relations(
         "MarketerAdmin.Marketer.Update",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -1383,7 +1383,7 @@ async def search_marketers_relations(
         "MarketerAdmin.Marketer.Read",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -1548,7 +1548,7 @@ async def delete_marketers_relations(
         "MarketerAdmin.Marketer.Delete",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -1689,7 +1689,7 @@ async def users_diff_with_tbs(
         "MarketerAdmin.Marketer.Read",
         "MarketerAdmin.Marketer.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -1779,7 +1779,7 @@ async def users_diff_with_tbs(
     )
 
 
-@marketer.get("/all-users-total", tags=["Marketer"],response_model=None)
+@marketer.get("/all-users-total", tags=["Marketer"], response_model=None)
 @authorize(
     [
         "MarketerAdmin.All.Read",
@@ -1789,9 +1789,9 @@ async def users_diff_with_tbs(
     ]
 )
 async def users_list_by_volume(
-        role_perm: dict = Depends(get_role_permission),
-        args: UsersListIn = Depends(UsersListIn),
-        brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
+    args: UsersListIn = Depends(UsersListIn),
+    brokerage: MongoClient = Depends(get_database),
 ):
     # check if marketer exists and return his name
     query_result = brokerage.marketers.find_one({"IdpId": args.IdpID})
@@ -1810,7 +1810,9 @@ async def users_list_by_volume(
 
     query = {"Referer": {"$regex": marketer_fullname}}
 
-    trade_codes = brokerage.customers.distinct("PAMCode", query)# + brokerage.firms.distinct("PAMCode", query)
+    trade_codes = brokerage.customers.distinct(
+        "PAMCode", query
+    )  # + brokerage.firms.distinct("PAMCode", query)
 
     if args.user_type.value == "active":
         pipeline = [
@@ -1999,7 +2001,6 @@ async def users_list_by_volume(
         return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
     else:
         return ResponseListOut(timeGenerated=datetime.now(), result=[], error="")
-
 
 
 add_pagination(marketer)

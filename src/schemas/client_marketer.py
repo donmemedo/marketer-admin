@@ -23,6 +23,7 @@ class ModifyMarketerIn:
     NewIdpId: Optional[str] = None
     NationalID: Optional[int] = None
 
+
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 from typing import Any, Dict, List
@@ -132,3 +133,36 @@ class FactorIn:
     collateral: int = Query(0)
     month: str = Query(current_date)
     year: str = Query(current_date)
+
+
+@dataclass
+class GetMarketerList:
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
+    IdpID: Optional[str] = Query("")
+
+
+@dataclass
+class GetCostIn:
+    IdpID: Optional[str] = Query("")
+    insurance: int = Query(0, alias="Insurance")
+    tax: int = Query(0, alias="Tax")
+    salary: int = Query(0, alias="Salary")
+    collateral: int = Query(0, alias="Collateral")
+    from_date: str = Query(current_date, alias="StartDate")
+    to_date: str = Query(current_date, alias="EndDate")
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
+
+
+@dataclass
+class GetFactorIn:
+    IdpID: Optional[str] = Query("")
+    insurance: int = Query(0)
+    tax: int = Query(0)
+    salary: int = Query(0)
+    collateral: int = Query(0)
+    month: str = Query(current_month)
+    year: str = Query(current_year)
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")

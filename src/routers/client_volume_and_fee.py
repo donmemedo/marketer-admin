@@ -12,17 +12,57 @@ from khayyam import JalaliDatetime as jd
 # from src.tools.tokens import JWTBearer#, get_role_permission
 from src.auth.authentication import get_role_permission
 from src.tools.database import get_database
+from src.schemas.client_marketer import *
+from src.tools.utils import *
+from pymongo import MongoClient
+from src.auth.authorization import authorize
+
+# from fastapi import status
+from khayyam import JalaliDatetime as jd
+from pymongo import MongoClient
+
+from src.auth.authentication import get_current_user
+from src.auth.authorization import authorize
+
+# from src.schemas.schemas import CostIn, FactorIn, ResponseOut
+from src.tools.database import get_database
+from src.tools.utils import peek, to_gregorian_
+
+from datetime import datetime, timedelta
+from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi_pagination import add_pagination
+from khayyam import JalaliDatetime as jd
+
+# from src.tools.tokens import JWTBearer#, get_role_permission
+from src.auth.authentication import get_role_permission
+from src.tools.database import get_database
 from src.schemas.client_volume_and_fee import *
 from src.tools.utils import *
 from pymongo import MongoClient
 from src.auth.authorization import authorize
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from khayyam import JalaliDatetime
+from pymongo import MongoClient
+
+from src.auth.authentication import get_current_user
+from src.auth.authorization import authorize
+
+# from src.schemas.schemas import (MarketerTotalIn, ResponseListOut, ResponseOut,
+#                                  UsersListIn, UserTotalIn)
+from src.tools.database import get_database
+from src.tools.utils import get_marketer_name, to_gregorian_
+
+# client_volume_and_fee = APIRouter(prefix="/volume-and-fee", tags=["Volume and Fee"])
 
 
 client_volume_and_fee = APIRouter(prefix="/client/volume-and-fee")
 
 
 @client_volume_and_fee.get(
-    "/get-marketer",
+    "/user-total",
     # dependencies=[Depends(JWTBearer())],
     tags=["Client - Volume and Fee"],
     response_model=None,
@@ -31,13 +71,15 @@ client_volume_and_fee = APIRouter(prefix="/client/volume-and-fee")
     [
         "MarketerAdmin.All.Read",
         "MarketerAdmin.All.All",
+        "MarketerAdmin.Client.Read",
+        "MarketerAdmin.Client.All",
         "MarketerAdmin.Marketer.Read",
         "MarketerAdmin.Marketer.All",
     ]
 )
-async def get_marketer_profile(
+async def get_user_total_trades(
     request: Request,
-    args: ModifyMarketerIn = Depends(ModifyMarketerIn),
+    args: GetUserTotalIn = Depends(GetUserTotalIn),
     brokerage: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -49,38 +91,47 @@ async def get_marketer_profile(
     Returns:
         _type_: _description_
     """
-    print("Hello World!!!")
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Client.Read",
+        "MarketerAdmin.Client.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+    marketers_coll = brokerage["marketers"]
+    customers_coll = brokerage["customers"]
+    trades_coll = brokerage["trades"]
+    factors_coll = brokerage["factors"]
 
+    # marketers_query = marketers_coll.find(
+    #     {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
+    #     {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+    # ).skip(args.size * args.page).limit(args.size)
+    # if args.IdpID:
+    #     marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
+    #
+    # marketers_list = list(marketers_query)
+    # query_result = marketers_coll.find({"IdpId": {"$exists": True, "$not": {"$size": 0}}})
+    # total_count = len(dict(enumerate(query_result)))
+    #
+    # results = []
+    # for marketer in marketers_list:
+    #     marketer_total = {}
+    #
+    # print("Hello World!!!")
 
-
-from datetime import datetime, timedelta
-
-from fastapi import APIRouter, Depends, HTTPException, status
-from khayyam import JalaliDatetime
-from pymongo import MongoClient
-
-from src.auth.authentication import get_current_user
-from src.auth.authorization import authorize
-# from src.schemas.schemas import (MarketerTotalIn, ResponseListOut, ResponseOut,
-#                                  UsersListIn, UserTotalIn)
-from src.tools.database import get_database
-from src.tools.utils import get_marketer_name, to_gregorian_
-
-# client_volume_and_fee = APIRouter(prefix="/volume-and-fee", tags=["Volume and Fee"])
-
-
-@client_volume_and_fee.get("/user-total", response_model=None)
-@authorize(["Marketer.All"])
-async def get_user_total_trades(
-        user: dict = Depends(get_current_user),
-        args: UserTotalIn = Depends(UserTotalIn),
-        brokerage: MongoClient = Depends(get_database),
-):
     # check if marketer exists and return his name
-    query_result = brokerage.marketers.find_one({"IdpId": user.get("sub")})
-
-    if query_result is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized User")
+    # query_result = brokerage.marketers.find_one({"IdpId": user.get("sub")})
+    #
+    # if query_result is None:
+    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized User")
 
     # transform date from Jalali to Gregorian
     from_gregorian_date = to_gregorian_(args.from_date)
@@ -175,128 +226,285 @@ async def get_user_total_trades(
         },
     ]
 
-    result = next(brokerage.trades.aggregate(pipeline=pipeline), None)
+    res = next(brokerage.trades.aggregate(pipeline=pipeline), None)
+    # result = {}
+    # result["code"] = "Null"
+    # result["message"] = "Null"
+    # result["pagedData"] = results
+    # if not args.IdpID:
+    #     result["PageSize"] = args.size
+    #     result["PageNumber"] = args.page
+    #     # result["totalCount"] = total_count
 
-    if result:
-        return ResponseOut(
-            result=result,
-            timeGenerated=JalaliDatetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error="",
-        )
-    else:
-        return ResponseOut(
-            timeGenerated=JalaliDatetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            result=[],
-            error="",
-        )
-
-
-@client_volume_and_fee.get("/marketer-total", response_model=None)
-@authorize(["Marketer.All"])
-async def get_marketer_total_trades(
-        user: dict = Depends(get_current_user),
-        args: MarketerTotalIn = Depends(MarketerTotalIn),
-        brokerage: MongoClient = Depends(get_database),
-):
-    # check if marketer exists and return his name
-    query_result = brokerage.marketers.find_one({"IdpId": user.get("sub")})
-
-    if query_result is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized User")
-
-    marketer_fullname = get_marketer_name(query_result)
-
-    # Get all customers
-    query = {"Referer": {"$regex": marketer_fullname}}
-
-    trade_codes = brokerage.customers.distinct("PAMCode", query)
-
-    # transform date from Jalali to Gregorian
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-    pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                ]
-            }
+    resp = {
+        "result": res,
+        "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        "error": {
+            "message": "Null",
+            "code": "Null",
         },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "PriorityAcceptance": 1,
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "TradeCode": 1,
-                "Commission": {
-                    "$cond": {
-                        "if": {"$eq": ["$TradeType", 1]},
-                        "then": {
-                            "$add": [
-                                "$TotalCommission",
-                                {"$multiply": ["$Price", "$Volume"]},
-                            ]
-                        },
-                        "else": {
-                            "$subtract": [
-                                {"$multiply": ["$Price", "$Volume"]},
-                                "$TotalCommission",
-                            ]
-                        },
-                    }
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalPureVolume": {"$sum": "$Commission"},
-                "TotalPriorityAcceptance": {"$sum": "$PriorityAcceptance"},
-            }
-        },
-        {
-            "$project": {
-                "_id": 0,
-                "TradeCode": "$_id",
-                "TotalPureVolume": {
-                    "$add": ["$TotalPriorityAcceptance", "$TotalPureVolume"]
-                },
-                "TotalFee": 1,
-            }
-        },
+    }
+    return JSONResponse(status_code=200, content=resp)
+
+
+@client_volume_and_fee.get(
+    "/marketer-total",
+    # dependencies=[Depends(JWTBearer())],
+    tags=["Client - Volume and Fee"],
+    response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Client.Read",
+        "MarketerAdmin.Client.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
     ]
-
-    result = next(brokerage.trades.aggregate(pipeline=pipeline), None)
-
-    if result:
-        return ResponseOut(timeGenerated=datetime.now(), result=result, error="")
-    else:
-        return ResponseOut(timeGenerated=datetime.now(), result=[], error="")
-
-
-@client_volume_and_fee.get("/users-total", response_model=None)
-@authorize(["Marketer.All"])
-async def users_list_by_volume(
-        user: dict = Depends(get_current_user),
-        args: UsersListIn = Depends(UsersListIn),
-        brokerage: MongoClient = Depends(get_database),
+)
+async def get_marketer_total_trades(
+    request: Request,
+    args: GetMarketerTotalIn = Depends(GetMarketerTotalIn),
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
-    # check if marketer exists and return his name
-    query_result = brokerage.marketers.find_one({"IdpId": user.get("sub")})
+    """_summary_
 
+    Args:
+        request (Request): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Client.Read",
+        "MarketerAdmin.Client.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+    marketers_coll = brokerage["marketers"]
+    customers_coll = brokerage["customers"]
+    trades_coll = brokerage["trades"]
+    factors_coll = brokerage["factors"]
+
+    marketers_query = (
+        marketers_coll.find(
+            {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
+            {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+        )
+        .skip(args.size * args.page)
+        .limit(args.size)
+    )
+    if args.IdpID:
+        marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
+
+    marketers_list = list(marketers_query)
+    query_result = marketers_coll.find(
+        {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+    )
+    total_count = len(dict(enumerate(query_result)))
+
+    results = []
+    for marketer in marketers_list:
+        marketer_total = {}
+        marketer_fullname = get_marketer_name(marketer)
+        query = {"Referer": {"$regex": marketer_fullname}}
+
+        fields = {"PAMCode": 1}
+
+        customers_records = customers_coll.find(query, fields)
+
+        trade_codes = [
+            c.get("PAMCode") for c in customers_records
+        ]  # + [c.get("PAMCode") for c in firms_records]
+
+        from_gregorian_date = to_gregorian_(args.from_date)
+        to_gregorian_date = to_gregorian_(args.to_date)
+        to_gregorian_date = datetime.strptime(
+            to_gregorian_date, "%Y-%m-%d"
+        ) + timedelta(days=1)
+        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+        buy_pipeline = [
+            {
+                "$match": {
+                    "$and": [
+                        {"TradeCode": {"$in": trade_codes}},
+                        {"TradeDate": {"$gte": from_gregorian_date}},
+                        {"TradeDate": {"$lte": to_gregorian_date}},
+                        {"TradeType": 1},
+                    ]
+                }
+            },
+            {
+                "$project": {
+                    "Price": 1,
+                    "Volume": 1,
+                    "Total": {"$multiply": ["$Price", "$Volume"]},
+                    "TotalCommission": 1,
+                    "TradeItemBroker": 1,
+                    "Buy": {
+                        "$add": [
+                            "$TotalCommission",
+                            {"$multiply": ["$Price", "$Volume"]},
+                        ]
+                    },
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$id",
+                    "TotalFee": {"$sum": "$TradeItemBroker"},
+                    "TotalBuy": {"$sum": "$Buy"},
+                }
+            },
+            {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
+        ]
+
+        sell_pipeline = [
+            {
+                "$match": {
+                    "$and": [
+                        {"TradeCode": {"$in": trade_codes}},
+                        {"TradeDate": {"$gte": from_gregorian_date}},
+                        {"TradeDate": {"$lte": to_gregorian_date}},
+                        {"TradeType": 2},
+                    ]
+                }
+            },
+            {
+                "$project": {
+                    "Price": 1,
+                    "Volume": 1,
+                    "Total": {"$multiply": ["$Price", "$Volume"]},
+                    "TotalCommission": 1,
+                    "TradeItemBroker": 1,
+                    "Sell": {
+                        "$subtract": [
+                            {"$multiply": ["$Price", "$Volume"]},
+                            "$TotalCommission",
+                        ]
+                    },
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$id",
+                    "TotalFee": {"$sum": "$TradeItemBroker"},
+                    "TotalSell": {"$sum": "$Sell"},
+                }
+            },
+            {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
+        ]
+
+        buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
+        sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
+
+        buy_dict = {"vol": 0, "fee": 0}
+
+        sell_dict = {"vol": 0, "fee": 0}
+
+        if buy_agg_result:
+            buy_dict["vol"] = buy_agg_result.get("TotalBuy")
+            buy_dict["fee"] = buy_agg_result.get("TotalFee")
+
+        if sell_agg_result:
+            sell_dict["vol"] = sell_agg_result.get("TotalSell")
+            sell_dict["fee"] = sell_agg_result.get("TotalFee")
+
+        marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
+        marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
+        marketer_total["FirstName"] = marketer.get("FirstName")
+        marketer_total["LastName"] = marketer.get("LastName")
+
+        marketer_total["UsersCount"] = customers_coll.count_documents(
+            {"Referer": {"$regex": marketer_fullname}}
+        )
+        marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
+        marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
+
+        results.append(marketer_total)
+
+    result = {}
+    result["code"] = "Null"
+    result["message"] = "Null"
+    result["pagedData"] = results
+    if not args.IdpID:
+        result["PageSize"] = args.size
+        result["PageNumber"] = args.page
+        result["totalCount"] = total_count
+
+    resp = {
+        "result": result,
+        "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        "error": {
+            "message": "Null",
+            "code": "Null",
+        },
+    }
+    return JSONResponse(status_code=200, content=resp)
+
+
+@client_volume_and_fee.get(
+    "users-total",
+    # dependencies=[Depends(JWTBearer())],
+    tags=["Client - Volume and Fee"],
+    response_model=None,
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Client.Read",
+        "MarketerAdmin.Client.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
+async def users_list_by_volume(
+    request: Request,
+    args: GetUsersListIn = Depends(GetUsersListIn),
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
+):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Client.Read",
+        "MarketerAdmin.Client.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+    marketers_coll = brokerage["marketers"]
+    customers_coll = brokerage["customers"]
+    trades_coll = brokerage["trades"]
+    factors_coll = brokerage["factors"]
+
+    query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
     if not query_result:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized User")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found.")
 
     marketer_fullname = get_marketer_name(query_result)
 
@@ -415,15 +623,30 @@ async def users_list_by_volume(
         ]
 
         active_dict = next(brokerage.trades.aggregate(pipeline=pipeline), {})
+        result = {}
+        result["pagedData"] = active_dict.get("items", [])
+        result["errorCode"] = None
+        result["errorMessage"] = None
+        result["totalCount"] = active_dict.get("total", 0)
+        result["code"] = "Null"
+        result["message"] = "Null"
+        # result["pagedData"] = results
+        # if not args.IdpID:
+        result["PageSize"] = args.size
+        result["PageNumber"] = args.page
+        # result["totalCount"] = total_count
 
-        result = {
-            "pagedData": active_dict.get("items", []),
-            "errorCode": None,
-            "errorMessage": None,
-            "totalCount": active_dict.get("total", 0),
+        resp = {
+            "result": result,
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "Null",
+                "code": "Null",
+            },
         }
+        return JSONResponse(status_code=200, content=resp)
 
-        return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
+        # return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
 
     elif args.user_type.value == "inactive":
         active_users_pipeline = [
@@ -488,13 +711,36 @@ async def users_list_by_volume(
             brokerage.customers.aggregate(pipeline=inactive_users_pipline), {}
         )
 
-        result = {
-            "pagedData": inactive_dict.get("items", []),
-            "errorCode": None,
-            "errorMessage": None,
-            "totalCount": inactive_dict.get("total", 0),
-        }
+        result = {}
+        result["pagedData"] = inactive_dict.get("items", [])
+        result["errorCode"] = None
+        result["errorMessage"] = None
+        result["totalCount"] = inactive_dict.get("total", 0)
+        result["code"] = "Null"
+        result["message"] = "Null"
+        # result["pagedData"] = results
+        # if not args.IdpID:
+        result["PageSize"] = args.size
+        result["PageNumber"] = args.page
+        # result["totalCount"] = total_count
 
-        return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
+        resp = {
+            "result": result,
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "Null",
+                "code": "Null",
+            },
+        }
+        return JSONResponse(status_code=200, content=resp)
+        # return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
     else:
-        return ResponseListOut(timeGenerated=datetime.now(), result=[], error="")
+        resp = {
+            "result": [],
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            "error": {
+                "message": "Null",
+                "code": "Null",
+            },
+        }
+        return JSONResponse(status_code=200, content=resp)

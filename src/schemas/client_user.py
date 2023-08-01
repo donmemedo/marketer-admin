@@ -133,3 +133,11 @@ class FactorIn:
     collateral: int = Query(0)
     month: str = Query(current_date)
     year: str = Query(current_date)
+
+
+@dataclass
+class GetUserSearchIn:
+    IdpID: Optional[str] = Query("")
+    name: str = Query("", alias="Name")
+    page_index: int = Query(1, alias="PageNumber")
+    page_size: int = Query(5, alias="PageSize")

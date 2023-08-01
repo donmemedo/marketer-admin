@@ -23,6 +23,7 @@ class ModifyMarketerIn:
     NewIdpId: Optional[str] = None
     NationalID: Optional[int] = None
 
+
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 from typing import Any, Dict, List
@@ -132,3 +133,32 @@ class FactorIn:
     collateral: int = Query(0)
     month: str = Query(current_date)
     year: str = Query(current_date)
+
+
+@dataclass
+class GetUserTotalIn:
+    # IdpID: Optional[str] = Query("")
+    trade_code: str = Query(alias="TradeCode")
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
+    # size: int = Query(10, alias="PageSize")
+    # page: int = Query(1, alias="PageNumber")
+
+
+@dataclass
+class GetMarketerTotalIn:
+    IdpID: Optional[str] = Query("")
+    from_date: str = Query(default=current_date, alias="StartDate")
+    to_date: str = Query(default=current_date, alias="EndDate")
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
+
+
+@dataclass
+class GetUsersListIn(Pages):
+    IdpID: str = Query("")
+    sort_by: SortField = Query(SortField.REGISTRATION_DATE, alias="SortBy")
+    sort_order: SortOrder = Query(SortOrder.ASCENDING, alias="SortOrder")
+    user_type: UserTypeEnum = Query(UserTypeEnum.active, alias="UserType")
+    from_date: str = Query(current_date, alias="StartDate")
+    to_date: str = Query(current_date, alias="EndDate")

@@ -3,6 +3,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer
 from fastapi.security.http import HTTPAuthorizationCredentials
 from jose import jwt
+from jose.exceptions import ExpiredSignatureError
 from src.config import settings
 from src.tools.logger import logger
 
@@ -70,23 +71,26 @@ def get_role_permission(
     # token = req.headers.get("authorization").split()[1]
     public_key = get_public_key()
 
-    decoded = jwt.decode(
-        token.credentials,
-        public_key,
-        algorithms=["RS256"],  # issuer=issuer, verify=True
-        options={"verify_signature": False, "verify_aud": False},
-    )
+    try:
+        decoded = jwt.decode(
+            token.credentials,
+            public_key,
+            algorithms=["RS256"],  # issuer=issuer, verify=True
+            options={"verify_signature": False, "verify_aud": False},
+        )
+    except ExpiredSignatureError as err:
+        logger.error(msg=err)
+        raise HTTPException(status_code=401, detail=str(err))
+
     logger.info(decoded)
     role_perm = {}
     role_perm["sub"] = decoded["sub"]
     role_perm["client_id"] = decoded["client_id"]
     try:
-        role_perm["roles"] = decoded[
-            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ]
+        role_perm["roles"] = decoded["permission"]
     except:
         role_perm["roles"] = []
-    role_perm["scopes"] = decoded["scope"]
+    role_perm["scopes"] = decoded["role"]
     # if decoded['CustomerManagement']:
     #     role_perm['CustomerManagement'] = decoded['CustomerManagement']
     # else:
@@ -95,10 +99,10 @@ def get_role_permission(
         role_perm["Marketer"] = decoded["Marketer"]
     except:
         role_perm["Marketer"] = []
-    try:
-        role_perm["MarketerAdmin"] = decoded["MarketerAdmin"]
-    except:
-        role_perm["MarketerAdmin"] = []
+    # try:
+    #     role_perm["roles"] = decoded["MarketerAdmin"]
+    # except:
+    #     role_perm["roles"] = []
 
     return role_perm  # e892eae7-cf2e-48d8-a024-a7c9eb0f8668
     # return "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156"
