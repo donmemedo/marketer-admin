@@ -454,7 +454,7 @@ async def get_marketer_total_trades(
 
 
 @client_volume_and_fee.get(
-    "users-total",
+    "/users-total",
     # dependencies=[Depends(JWTBearer())],
     tags=["Client - Volume and Fee"],
     response_model=None,
