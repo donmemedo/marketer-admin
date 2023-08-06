@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.schemas.factor_marketer_contract import *
+from src.schemas.factor_marketer_contract_coefficient import *
 from src.tools.database import get_database
 
 # from src.tools.tokens import JWTBearer, get_role_permission
@@ -19,13 +19,13 @@ from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
 
 
-marketer_contract = APIRouter(prefix="/factor/marketer-contract")
+marketer_contract_coefficient = APIRouter(prefix="/factor/marketer-contract-coefficient")
 
 
-@marketer_contract.post(
-    "/add-marketer-contract",
+@marketer_contract_coefficient.post(
+    "/add-marketer-contract-coefficient",
     # dependencies=[Depends(JWTBearer())],
-    tags=["Factor - MarketerContract"],
+    tags=["Factor - MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -37,9 +37,9 @@ marketer_contract = APIRouter(prefix="/factor/marketer-contract")
         "MarketerAdmin.Factor.All",
     ]
 )
-async def add_marketer_contract(
+async def add_marketer_contract_coefficient(
     request: Request,
-    mmci: ModifyMarketerContractIn,
+    mmcci: ModifyMarketerContractCoefficientIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -72,9 +72,9 @@ async def add_marketer_contract(
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     # database = get_database()
-    coll = database["MarketerContract"]
+    coll = database["MarketerContractCoefficient"]
     marketers_coll = database["MarketerTable"]
-    if mmci.MarketerID is None:
+    if mmcci.MarketerID is None:
         resp = {
             "result": [],
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -88,38 +88,31 @@ async def add_marketer_contract(
         #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
         # )
 
-    filter = {"MarketerID": mmci.MarketerID}
+    filter = {"MarketerID": mmcci.MarketerID}
     update = {"$set": {}}
-
-    update["$set"]["StartDate"] = jd.today().strftime("%Y-%m-%d")
-    update["$set"]["EndDate"] = jd.today().replace(year=jd.today().year + 1).strftime("%Y-%m-%d")
-    if mmci.ID is not None:
-        update["$set"]["ID"] = mmci.ID
-    if mmci.Title is not None:
-        update["$set"]["Title"] = mmci.Title
-    if mmci.CalculationBaseType is not None:
-        update["$set"]["CalculationBaseType"] = mmci.CalculationBaseType
-    if mmci.CoefficientBaseType is not None:
-        update["$set"]["CoefficientBaseType"] = mmci.CoefficientBaseType
-    if mmci.ContractNumber is not None:
-        update["$set"]["ContractNumber"] = mmci.ContractNumber
-    if mmci.ContractType is not None:
-        update["$set"]["ContractType"] = mmci.ContractType
-    if mmci.Description is not None:
-        update["$set"]["Description"] = mmci.Description
-    if mmci.EndDate is not None:
-        update["$set"]["EndDate"] = mmci.EndDate
-    if mmci.StartDate is not None:
-        update["$set"]["StartDate"] = mmci.StartDate
+    if mmcci.ID is not None:
+        update["$set"]["ID"] = mmcci.ID
+    if mmcci.CoefficientPercentage is not None:
+        update["$set"]["CoefficientPercentage"] = mmcci.CoefficientPercentage
+    if mmcci.ContractID is not None:
+        update["$set"]["ContractID"] = mmcci.ContractID
+    if mmcci.HighThreshold is not None:
+        update["$set"]["HighThreshold"] = mmcci.HighThreshold
+    if mmcci.LowThreshold is not None:
+        update["$set"]["LowThreshold"] = mmcci.LowThreshold
+    if mmcci.StepNumber is not None:
+        update["$set"]["StepNumber"] = mmcci.StepNumber
+    if mmcci.Title is not None:
+        update["$set"]["Title"] = mmcci.Title
     update["$set"]["CreateDateTime"] = str(datetime.now())
     update["$set"]["UpdateDateTime"] = str(datetime.now())
-    update["$set"]["IsDeleted"] = False
+    update["$set"]["IsCmdConcluded"] = False
 
     try:
         marketer_name = get_marketer_name(
-            marketers_coll.find_one({"IdpID": mmci.MarketerID}, {"_id": False})
+            marketers_coll.find_one({"IdpID": mmcci.MarketerID}, {"_id": False})
         )
-        coll.insert_one({"MarketerID": mmci.MarketerID, "Title": marketer_name})
+        coll.insert_one({"MarketerID": mmcci.MarketerID, "Title": marketer_name})
         coll.update_one(filter, update)
     except:
         resp = {
@@ -130,7 +123,7 @@ async def add_marketer_contract(
         return JSONResponse(status_code=409, content=resp)
 
         # coll.update_one(filter, update)
-    query_result = coll.find_one({"MarketerID": mmci.MarketerID}, {"_id": False})
+    query_result = coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})
     return ResponseListOut(
         result=query_result,  # marketer_entity(marketer_dict),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -138,10 +131,11 @@ async def add_marketer_contract(
     )
 
 
-@marketer_contract.put(
-    "/modify-marketer-contract",
+
+@marketer_contract_coefficient.put(
+    "/modify-marketer-contract-coefficient",
     # dependencies=[Depends(JWTBearer())],
-    tags=["Factor - MarketerContract"],
+    tags=["Factor - MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -153,9 +147,9 @@ async def add_marketer_contract(
         "MarketerAdmin.Factor.All",
     ]
 )
-async def modify_marketer_contract(
+async def modify_marketer_contract_coefficient(
     request: Request,
-    mmci: ModifyMarketerContractIn,
+    mmcci: ModifyMarketerContractCoefficientIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -188,40 +182,42 @@ async def modify_marketer_contract(
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     # database = get_database()
+    coll = database["MarketerContractCoefficient"]
 
-    coll = database["MarketerContract"]
-    if mmci.MarketerID is None:
+    if mmcci.MarketerID is None:
         resp = {
             "result": [],
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
             "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
         }
         return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
 
-    filter = {"MarketerID": mmci.MarketerID}
+    filter = {"MarketerID": mmcci.MarketerID}
     update = {"$set": {}}
-    if mmci.ID is not None:
-        update["$set"]["ID"] = mmci.ID
-    if mmci.Title is not None:
-        update["$set"]["Title"] = mmci.Title
-    if mmci.CalculationBaseType is not None:
-        update["$set"]["CalculationBaseType"] = mmci.CalculationBaseType
-    if mmci.CoefficientBaseType is not None:
-        update["$set"]["CoefficientBaseType"] = mmci.CoefficientBaseType
-    if mmci.ContractNumber is not None:
-        update["$set"]["ContractNumber"] = mmci.ContractNumber
-    if mmci.ContractType is not None:
-        update["$set"]["ContractType"] = mmci.ContractType
-    if mmci.Description is not None:
-        update["$set"]["Description"] = mmci.Description
-    if mmci.EndDate is not None:
-        update["$set"]["EndDate"] = mmci.EndDate
-    if mmci.StartDate is not None:
-        update["$set"]["StartDate"] = mmci.StartDate
+    if mmcci.ID is not None:
+        update["$set"]["ID"] = mmcci.ID
+    if mmcci.CoefficientPercentage is not None:
+        update["$set"]["CoefficientPercentage"] = mmcci.CoefficientPercentage
+    if mmcci.ContractID is not None:
+        update["$set"]["ContractID"] = mmcci.ContractID
+    if mmcci.HighThreshold is not None:
+        update["$set"]["HighThreshold"] = mmcci.HighThreshold
+    if mmcci.LowThreshold is not None:
+        update["$set"]["LowThreshold"] = mmcci.LowThreshold
+    if mmcci.StepNumber is not None:
+        update["$set"]["StepNumber"] = mmcci.StepNumber
+    if mmcci.Title is not None:
+        update["$set"]["Title"] = mmcci.Title
+    update["$set"]["IsCmdConcluded"] = False
     update["$set"]["UpdateDateTime"] = str(datetime.now())
-    update["$set"]["IsDeleted"] = False
     coll.update_one(filter, update)
-    query_result = coll.find_one({"MarketerID": mmci.MarketerID}, {"_id": False})
+    query_result = coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})
     if not query_result:
         resp = {
             "result": [],
@@ -237,10 +233,10 @@ async def modify_marketer_contract(
     )
 
 
-@marketer_contract.get(
-    "/search-marketer-contract",
+@marketer_contract_coefficient.get(
+    "/search-marketer-contract-coefficient",
     # dependencies=[Depends(JWTBearer())],
-    tags=["Factor - MarketerContract"],
+    tags=["Factor - MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -250,9 +246,9 @@ async def modify_marketer_contract(
         "MarketerAdmin.Factor.All",
     ]
 )
-async def search_marketer_contract(
+async def search_marketer_contract_coefficient(
     request: Request,
-    args: SearchMarketerContractIn = Depends(SearchMarketerContractIn),
+    args: SearchMarketerContractCoefficientIn = Depends(SearchMarketerContractCoefficientIn),
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -284,30 +280,24 @@ async def search_marketer_contract(
 
     # database = get_database()
 
-    coll = database["MarketerContract"]
+    coll = database["MarketerContractCoefficient"]
     upa=[]
     if args.MarketerID:
         upa.append({"MarketerID":args.MarketerID})
     if args.ID:
         upa.append({"ID":args.ID})
-    if args.CalculationBaseType:
-        upa.append({"CalculationBaseType":args.CalculationBaseType})
-    if args.CoefficientBaseType:
-        upa.append({"CoefficientBaseType": args.CoefficientBaseType})
-    if args.ContractNumber:
-        upa.append({"ContractNumber":args.ContractNumber})
-    if args.Description:
-        upa.append({"Description":{"$regex": args.Description}})
-    if args.ContractType:
-        upa.append({"ContractType":args.ContractType})
-    if args.EndDate:
-        upa.append({"EndDate":{"$regex": args.EndDate}})
-    if args.StartDate:
-        upa.append({"StartDate":{"$regex": args.StartDate}})
+    if args.CoefficientPercentage:
+        upa.append({"CoefficientPercentage":{"$gte":args.CoefficientPercentage}})
+    if args.HighThreshold:
+        upa.append({"HighThreshold":{"$lte": args.HighThreshold}})
+    if args.LowThreshold:
+        upa.append({"LowThreshold":{"$gte": args.LowThreshold}})
+    if args.ContractID:
+        upa.append({"ContractID":{"$regex": args.ContractID}})
+    if args.StepNumber:
+        upa.append({"StepNumber":args.StepNumber})
     if args.Title:
         upa.append({"Title":{"$regex": args.Title}})
-    # if args.MarketerID and args.Period:
-
     query = {
         "$and": upa}
 
@@ -349,10 +339,11 @@ async def search_marketer_contract(
     return JSONResponse(status_code=200, content=resp)
 
 
-@marketer_contract.delete(
-    "/delete-marketer-contract",
+
+@marketer_contract_coefficient.delete(
+    "/delete-marketer-contract-coefficient",
     # dependencies=[Depends(JWTBearer())],
-    tags=["Factor - MarketerContract"],
+    tags=["Factor - MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -362,9 +353,9 @@ async def search_marketer_contract(
         "MarketerAdmin.Factor.All",
     ]
 )
-async def delete_marketer_contract(
+async def delete_marketer_contract_coefficient(
     request: Request,
-    args: DelMarketerContractIn = Depends(DelMarketerContractIn),
+    args: DelMarketerMarketerContractCoefficientIn = Depends(DelMarketerMarketerContractCoefficientIn),
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -396,7 +387,7 @@ async def delete_marketer_contract(
 
     # database = get_database()
 
-    coll = database["MarketerContract"]
+    coll = database["MarketerContractCoefficient"]
     if args.MarketerID:
         pass
     else:
@@ -429,10 +420,10 @@ async def delete_marketer_contract(
     return JSONResponse(status_code=200, content=resp)
 
 
-@marketer_contract.put(
-    "/modify-marketer-contract-status",
+@marketer_contract_coefficient.put(
+    "/modify-marketer-contract-coefficient-status",
     # dependencies=[Depends(JWTBearer())],
-    tags=["Factor - MarketerContract"],
+    tags=["Factor - MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -444,9 +435,9 @@ async def delete_marketer_contract(
         "MarketerAdmin.Factor.All",
     ]
 )
-async def modify_marketer_contract_status(
+async def modify_marketer_contract_coefficient_status(
     request: Request,
-    dmci: DelMarketerContractIn,
+    dmcci: DelMarketerMarketerContractCoefficientIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -480,8 +471,8 @@ async def modify_marketer_contract_status(
 
     # database = get_database()
 
-    coll = database["MarketerContract"]
-    if dmci.MarketerID is None:
+    coll = database["MarketerContractCoefficient"]
+    if dmcci.MarketerID is None:
         resp = {
             "result": [],
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -489,13 +480,13 @@ async def modify_marketer_contract_status(
         }
         return JSONResponse(status_code=412, content=resp)
 
-    filter = {"MarketerID": dmci.MarketerID}
-    query_result = coll.find_one({"MarketerID": dmci.MarketerID}, {"_id": False})
-    status = query_result.get("IsDeleted")
+    filter = {"MarketerID": dmcci.MarketerID}
+    query_result = coll.find_one({"MarketerID": dmcci.MarketerID}, {"_id": False})
+    status = query_result.get("IsCmdConcluded")
     update = {"$set": {}}
-    update["$set"]["IsDeleted"] = bool(status ^ 1)
+    update["$set"]["IsCmdConcluded"] = bool(status ^ 1)
     coll.update_one(filter, update)
-    query_result = coll.find_one({"MarketerID": dmci.MarketerID}, {"_id": False})
+    query_result = coll.find_one({"MarketerID": dmcci.MarketerID}, {"_id": False})
     if not query_result:
         resp = {
             "result": [],
@@ -510,5 +501,4 @@ async def modify_marketer_contract_status(
         error="",
     )
 
-
-add_pagination(marketer_contract)
+add_pagination(marketer_contract_coefficient)
