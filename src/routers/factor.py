@@ -58,7 +58,7 @@ async def get_factors_consts(
         "MarketerAdmin.Factor.Read",
         "MarketerAdmin.Factor.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -128,7 +128,7 @@ async def get_all_factors_consts(
         "MarketerAdmin.Factor.Read",
         "MarketerAdmin.Factor.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -210,7 +210,7 @@ async def modify_factor_consts(
         "MarketerAdmin.Factor.Update",
         "MarketerAdmin.Factor.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -319,7 +319,7 @@ async def modify_factor(
         "MarketerAdmin.Factor.Update",
         "MarketerAdmin.Factor.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -441,7 +441,7 @@ async def add_factor(
         "MarketerAdmin.Factor.Create",
         "MarketerAdmin.Factor.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -553,7 +553,7 @@ async def search_factor(
         "MarketerAdmin.Factor.Read",
         "MarketerAdmin.Factor.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -707,7 +707,7 @@ async def delete_factor(
         "MarketerAdmin.Factor.Delete",
         "MarketerAdmin.Factor.All",
     ]
-    allowed = check_permissions(role_perm["MarketerAdmin"], permissions)
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:

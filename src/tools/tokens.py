@@ -230,9 +230,9 @@ def get_role_permission(req: Request):
     except:
         role_perm["Marketer"] = []
     try:
-        role_perm["MarketerAdmin"] = decoded["MarketerAdmin"]
+        role_perm["roles"] = decoded["MarketerAdmin"]
     except:
-        role_perm["MarketerAdmin"] = []
+        role_perm["roles"] = []
 
     return role_perm  # e892eae7-cf2e-48d8-a024-a7c9eb0f8668
     # return "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156"

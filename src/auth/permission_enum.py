@@ -12,6 +12,7 @@ class Modules(Enum):
     User = "افراد"
     Database = "دیتابیس"
     TBSSync = "همگام‌سازی با TBS"
+    Client = "مارکتر کلاینت"
 
 
 class Actions(Enum):
