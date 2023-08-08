@@ -70,8 +70,7 @@ async def get_marketer_profile(
     marketers_coll = brokerage["marketers"]
     results = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
     if not args.IdpID:
-        query_result = marketers_coll.find({})
-        total_count = len(dict(enumerate(query_result)))
+        total_count = marketers_coll.count_documents({})
         query_result = (
             marketers_coll.find({}).skip(args.size * args.page).limit(args.size)
         )
@@ -168,11 +167,7 @@ async def cal_marketer_cost(
         marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
-    query_result = marketers_coll.find(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
-    )
-    total_count = len(dict(enumerate(query_result)))
-
+    total_count = marketers_coll.count_documents({"IdpId": {"$exists": True, "$not": {"$size": 0}}})
     results = []
     for marketer in marketers_list:
         marketer_total = {}
@@ -483,11 +478,7 @@ async def factor_print(
         marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
-    query_result = marketers_coll.find(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
-    )
-    total_count = len(dict(enumerate(query_result)))
-
+    total_count = marketers_coll.count_documents({"IdpId": {"$exists": True, "$not": {"$size": 0}}})
     results = []
     for marketer in marketers_list:
         marketer_total = {}

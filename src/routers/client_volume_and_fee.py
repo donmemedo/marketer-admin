@@ -232,10 +232,7 @@ async def get_marketer_total_trades(
         marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
-    query_result = marketers_coll.find(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
-    )
-    total_count = len(dict(enumerate(query_result)))
+    total_count = marketers_coll.count_documents({"IdpId": {"$exists": True, "$not": {"$size": 0}}})
 
     results = []
     for marketer in marketers_list:
