@@ -3,59 +3,19 @@
 Returns:
     _type_: _description_
 """
-from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
 
-# from src.tools.tokens import JWTBearer#, get_role_permission
 from src.auth.authentication import get_role_permission
-from src.tools.database import get_database
-from src.schemas.client_marketer import *
-from src.tools.utils import *
-from pymongo import MongoClient
-from src.auth.authorization import authorize
-
-# from fastapi import status
-from khayyam import JalaliDatetime as jd
-from pymongo import MongoClient
-
-from src.auth.authentication import get_current_user
-from src.auth.authorization import authorize
-
-# from src.schemas.schemas import CostIn, FactorIn, ResponseOut
-from src.tools.database import get_database
-from src.tools.utils import peek, to_gregorian_
-
-from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi_pagination import add_pagination
-from khayyam import JalaliDatetime as jd
-
-# from src.tools.tokens import JWTBearer#, get_role_permission
-from src.auth.authentication import get_role_permission
-from src.tools.database import get_database
 from src.schemas.client_volume_and_fee import *
 from src.tools.utils import *
-from pymongo import MongoClient
-from src.auth.authorization import authorize
 from datetime import datetime, timedelta
-
 from fastapi import APIRouter, Depends, HTTPException, status
-from khayyam import JalaliDatetime
 from pymongo import MongoClient
-
-from src.auth.authentication import get_current_user
 from src.auth.authorization import authorize
-
-# from src.schemas.schemas import (MarketerTotalIn, ResponseListOut, ResponseOut,
-#                                  UsersListIn, UserTotalIn)
 from src.tools.database import get_database
 from src.tools.utils import get_marketer_name, to_gregorian_
-
-# client_volume_and_fee = APIRouter(prefix="/volume-and-fee", tags=["Volume and Fee"])
 
 
 client_volume_and_fee = APIRouter(prefix="/client/volume-and-fee")
@@ -63,7 +23,6 @@ client_volume_and_fee = APIRouter(prefix="/client/volume-and-fee")
 
 @client_volume_and_fee.get(
     "/user-total",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Client - Volume and Fee"],
     response_model=None,
 )
@@ -109,31 +68,6 @@ async def get_user_total_trades(
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
     factors_coll = brokerage["factors"]
-
-    # marketers_query = marketers_coll.find(
-    #     {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-    #     {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
-    # ).skip(args.size * args.page).limit(args.size)
-    # if args.IdpID:
-    #     marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
-    #
-    # marketers_list = list(marketers_query)
-    # query_result = marketers_coll.find({"IdpId": {"$exists": True, "$not": {"$size": 0}}})
-    # total_count = len(dict(enumerate(query_result)))
-    #
-    # results = []
-    # for marketer in marketers_list:
-    #     marketer_total = {}
-    #
-    # print("Hello World!!!")
-
-    # check if marketer exists and return his name
-    # query_result = brokerage.marketers.find_one({"IdpId": user.get("sub")})
-    #
-    # if query_result is None:
-    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized User")
-
-    # transform date from Jalali to Gregorian
     from_gregorian_date = to_gregorian_(args.from_date)
     to_gregorian_date = to_gregorian_(args.to_date)
     to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
@@ -227,15 +161,6 @@ async def get_user_total_trades(
     ]
 
     res = next(brokerage.trades.aggregate(pipeline=pipeline), None)
-    # result = {}
-    # result["code"] = "Null"
-    # result["message"] = "Null"
-    # result["pagedData"] = results
-    # if not args.IdpID:
-    #     result["PageSize"] = args.size
-    #     result["PageNumber"] = args.page
-    #     # result["totalCount"] = total_count
-
     resp = {
         "result": res,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -249,7 +174,6 @@ async def get_user_total_trades(
 
 @client_volume_and_fee.get(
     "/marketer-total",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Client - Volume and Fee"],
     response_model=None,
 )
@@ -455,7 +379,6 @@ async def get_marketer_total_trades(
 
 @client_volume_and_fee.get(
     "/users-total",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Client - Volume and Fee"],
     response_model=None,
 )
@@ -630,12 +553,8 @@ async def users_list_by_volume(
         result["totalCount"] = active_dict.get("total", 0)
         result["code"] = "Null"
         result["message"] = "Null"
-        # result["pagedData"] = results
-        # if not args.IdpID:
         result["PageSize"] = args.size
         result["PageNumber"] = args.page
-        # result["totalCount"] = total_count
-
         resp = {
             "result": result,
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -645,9 +564,6 @@ async def users_list_by_volume(
             },
         }
         return JSONResponse(status_code=200, content=resp)
-
-        # return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
-
     elif args.user_type.value == "inactive":
         active_users_pipeline = [
             {
@@ -718,12 +634,8 @@ async def users_list_by_volume(
         result["totalCount"] = inactive_dict.get("total", 0)
         result["code"] = "Null"
         result["message"] = "Null"
-        # result["pagedData"] = results
-        # if not args.IdpID:
         result["PageSize"] = args.size
         result["PageNumber"] = args.page
-        # result["totalCount"] = total_count
-
         resp = {
             "result": result,
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -733,7 +645,6 @@ async def users_list_by_volume(
             },
         }
         return JSONResponse(status_code=200, content=resp)
-        # return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
     else:
         resp = {
             "result": [],

@@ -7,24 +7,15 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
-from khayyam import JalaliDatetime as jd
-
-# from src.tools.tokens import JWTBearer#, get_role_permission
 from src.auth.authentication import get_role_permission
 from src.tools.database import get_database
 from src.schemas.client_marketer import *
 from src.tools.utils import *
 from pymongo import MongoClient
-from src.auth.authorization import authorize
-
-# from fastapi import status
 from khayyam import JalaliDatetime as jd
 from pymongo import MongoClient
-
-from src.auth.authentication import get_current_user
 from src.auth.authorization import authorize
 
-# from src.schemas.schemas import CostIn, FactorIn, ResponseOut
 from src.tools.database import get_database
 from src.tools.utils import peek, to_gregorian_
 
@@ -34,7 +25,6 @@ client_marketer = APIRouter(prefix="/client/marketer")
 
 @client_marketer.get(
     "/get-marketer",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Client - Marketer"],
     response_model=None,
 )
@@ -77,25 +67,7 @@ async def get_marketer_profile(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    # brokerage = get_database()
     marketers_coll = brokerage["marketers"]
-    # if args.IdpID is None:
-    #     resp = {
-    #         "result": [],
-    #         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-    #         "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-    #     }
-    #     return JSONResponse(status_code=412, content=resp)
-
-    # return ResponseListOut(
-    #     result=[],
-    #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-    #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-    # )
-    perPage = 10
-    page = 1
-    # total_count = 1
-    # db.collection.find({})
     results = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
     if not args.IdpID:
         query_result = marketers_coll.find({})
@@ -104,9 +76,7 @@ async def get_marketer_profile(
             marketers_coll.find({}).skip(args.size * args.page).limit(args.size)
         )
         results = []
-        # query_result = marketers_coll.find({})
         marketers = dict(enumerate(query_result))
-        # total_count = len(marketers)
         for i in range(len(marketers)):
             results.append(marketer_entity(marketers[i]))
 
@@ -120,15 +90,6 @@ async def get_marketer_profile(
             },
         }
         return JSONResponse(status_code=204, content=resp)
-
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "موردی با IDP داده شده یافت نشد.",
-        #         "code": "30004",
-        #     },
-        # )
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
@@ -151,7 +112,6 @@ async def get_marketer_profile(
 
 @client_marketer.get(
     "/cost",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Client - Marketer"],
     response_model=None,
 )
@@ -330,9 +290,6 @@ async def cal_marketer_cost(
         )
         marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
         marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
-
-        ###########
-
         marketer_plans = {
             "payeh": {"start": 0, "end": 30000000000, "marketer_share": 0.05},
             "morvarid": {
@@ -367,8 +324,6 @@ async def cal_marketer_cost(
             },
             "almas": {"start": 400000000000, "marketer_share": 0.4},
         }
-
-        # pure_fee = marketer_total.get("TotalFee") * .65
         pure_fee = marketer_total.get("TotalFee") * 0.65
         marketer_fee = 0
         tpv = marketer_total.get("TotalPureVolume")
@@ -417,11 +372,7 @@ async def cal_marketer_cost(
             marketer_fee = pure_fee * marketer_plans["almas"]["marketer_share"]
             plan = "Almas"
             next_plan = 0
-
-        # final_fee = pure_fee + marketer_fee
         final_fee = marketer_fee
-        salary = 0
-        insurance = 0
         if args.salary != 0:
             salary = args.salary * marketer_fee
             final_fee -= salary
@@ -430,16 +381,13 @@ async def cal_marketer_cost(
                 final_fee -= insurance
 
         if args.tax != 0:
-            # final_fee -= args.tax
             tax = marketer_fee * args.tax
             final_fee -= tax
 
         if args.collateral != 0:
-            # final_fee -= args.tax
             collateral = marketer_fee * args.collateral
             final_fee -= collateral
         if args.tax == 0 and args.collateral == 0:
-            # final_fee -= args.tax
             collateral = marketer_fee * 0.05
             tax = marketer_fee * 0.1
             final_fee -= final_fee * 0.15
@@ -451,7 +399,7 @@ async def cal_marketer_cost(
         marketer_total["Tax"] = tax
         marketer_total["Collateral"] = collateral
         marketer_total["FinalFee"] = final_fee
-        marketer_total["Payment"] = final_fee  # + float(two_months_ago_coll),
+        marketer_total["Payment"] = final_fee
 
         results.append(marketer_total)
 
@@ -477,7 +425,6 @@ async def cal_marketer_cost(
 
 @client_marketer.get(
     "/factor-print",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Client - Marketer"],
     response_model=None,
 )
@@ -568,10 +515,8 @@ async def factor_print(
                 "TotalPureVolume": marketer[dd + "TPV"],
                 "PureFee": marketer[dd + "PureFee"],
                 "MarketerFee": marketer[dd + "MarFee"],
-                # "Plan": marketer[dd + "Plan"],
                 "Tax": marketer[dd + "Tax"],
                 "Collateral": marketer[dd + "Collateral"],
-                # "FinalFee": marketer[dd + "FinalFee"],
                 "CollateralOfTwoMonthAgo": two_months_ago_coll,
                 "Payment": marketer[dd + "Payment"],
             }
@@ -596,5 +541,3 @@ async def factor_print(
         },
     }
     return JSONResponse(status_code=200, content=resp)
-
-    # return ResponseOut(timeGenerated=datetime.now(), result=result, error="")
