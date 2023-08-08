@@ -1797,8 +1797,17 @@ async def users_list_by_volume(
     query_result = brokerage.marketers.find_one({"IdpId": args.IdpID})
 
     if not query_result:
-        raise HTTPException(status_code=204, detail="Unauthorized User")
-
+        resp = {
+            "result": {
+                "totalCount": 0,
+                "pagedData": [],
+                "errorCode": 0,
+                "errorMessage": "null"
+            },
+            "error": "null",
+            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        }
+        return JSONResponse(status_code=204, content=resp)
     marketer_fullname = get_marketer_name(query_result)
 
     from_gregorian_date = (datetime.strptime(args.from_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
