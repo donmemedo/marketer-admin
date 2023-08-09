@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-
+from fastapi.exceptions import RequestValidationError
 # from src.tools.tokens import JWTBearer#, get_role_permission
 from src.auth.authentication import get_role_permission
 from src.tools.database import get_database
@@ -66,12 +66,13 @@ async def get_marketer_profile(
     # brokerage = get_database()
     marketers_coll = brokerage["marketers"]
     if args.IdpID is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code":"30003","status":412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -80,15 +81,17 @@ async def get_marketer_profile(
         # )
     query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
     if not query_result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "موردی با IDP داده شده یافت نشد.",
-                "code": "30004",
-            },
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code":"30004","status":204})
+        #
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی با IDP داده شده یافت نشد.",
+        #         "code": "30004",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -157,15 +160,16 @@ async def get_marketer(
     for i in range(len(marketers)):
         results.append(marketer_entity(marketers[i]))
     if not results:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "موردی در دیتابیس یافت نشد.",
-                "code": "30001",
-            },
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code":"30001","status":204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی در دیتابیس یافت نشد.",
+        #         "code": "30001",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -229,12 +233,13 @@ async def modify_marketer(
     marketer_coll = database["marketers"]
     admins_coll = database["factors"]
     if mmi.CurrentIdpId is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code":"30003","status":412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -289,15 +294,16 @@ async def modify_marketer(
             ddd = int(mmi.NationalID)
             update["$set"]["Id"] = mmi.NationalID
         except:
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "کد ملی را درست وارد کنید.",
-                    "code": "30066",
-                },
-            }
-            return JSONResponse(status_code=412, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30066", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "کد ملی را درست وارد کنید.",
+            #         "code": "30066",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
 
             # return ResponseListOut(
             #     result=[],
@@ -311,12 +317,13 @@ async def modify_marketer(
     marketer_coll.update_one(filter, update)
     query_result = marketer_coll.find_one({"IdpId": idpid}, {"_id": False})
     if not query_result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -376,12 +383,13 @@ async def add_marketer(
     admins_coll = database["factors"]
     marketer_coll = database["marketers"]
     if ami.CurrentIdpId is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -418,15 +426,16 @@ async def add_marketer(
             ddd = int(ami.NationalID)
             update["$set"]["Id"] = ami.NationalID
         except:
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "کد ملی را درست وارد کنید.",
-                    "code": "30066",
-                },
-            }
-            return JSONResponse(status_code=412, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30066", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "کد ملی را درست وارد کنید.",
+            #         "code": "30066",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
             #
             # return ResponseListOut(
             #     result=[],
@@ -441,15 +450,16 @@ async def add_marketer(
     try:
         marketer_coll.insert_one(update["$set"])
     except:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "مارکتر در دیتابیس وجود دارد.",
-                "code": "30006",
-            },
-        }
-        return JSONResponse(status_code=409, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30066", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "مارکتر در دیتابیس وجود دارد.",
+        #         "code": "30006",
+        #     },
+        # }
+        # return JSONResponse(status_code=409, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -462,12 +472,13 @@ async def add_marketer(
 
     query_result = marketer_coll.find_one(filter, {"_id": False})
     if not query_result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "ورودی ها را دوباره چک کنید.", "code": "30051"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30051", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "ورودی ها را دوباره چک کنید.", "code": "30051"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -776,12 +787,13 @@ async def search_user_profile(
     try:
         query_result = marketer_coll.find_one(query, {"_id": False})
     except:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -794,15 +806,16 @@ async def search_user_profile(
     for i in range(len(marketers)):
         results.append(marketer_entity(marketers[i]))
     if not results:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "موردی با متغیرهای داده شده یافت نشد.",
-                "code": "30008",
-            },
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی با متغیرهای داده شده یافت نشد.",
+        #         "code": "30008",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -869,12 +882,13 @@ async def add_marketers_relations(
     if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
     else:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30009", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -882,14 +896,15 @@ async def add_marketers_relations(
         #     error={"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
         # )
     try:
-        d = int(mrel.CommissionCoefficient)
+        d = float(mrel.CommissionCoefficient)
     except:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "کمیسیون را وارد کنید.", "code": "30010"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30010", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "کمیسیون را وارد کنید.", "code": "30010"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
 
         # if args.CommissionCoefficient is None:
         # if d is None:
@@ -903,12 +918,13 @@ async def add_marketers_relations(
     update["$set"]["LeaderMarketerID"] = mrel.LeaderMarketerID
     update["$set"]["FollowerMarketerID"] = mrel.FollowerMarketerID
     if mrel.LeaderMarketerID == mrel.FollowerMarketerID:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
-        }
-        return JSONResponse(status_code=409, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30011", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # }
+        # return JSONResponse(status_code=409, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -921,15 +937,16 @@ async def add_marketers_relations(
         if marketers_relations_coll.find_one(
             {"LeaderMarketerID": mrel.LeaderMarketerID}
         ):
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "این ارتباط وجود دارد.",
-                    "code": "30072",
-                },
-            }
-            return JSONResponse(status_code=409, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30072", "status": 409})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "این ارتباط وجود دارد.",
+            #         "code": "30072",
+            #     },
+            # }
+            # return JSONResponse(status_code=409, content=resp)
 
             # return ResponseListOut(
             #     result=[],
@@ -941,15 +958,16 @@ async def add_marketers_relations(
             # )
 
         else:
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "این مارکتر زیرمجموعه نفر دیگری است.",
-                    "code": "30012",
-                },
-            }
-            return JSONResponse(status_code=406, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30012", "status": 406})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "این مارکتر زیرمجموعه نفر دیگری است.",
+            #         "code": "30012",
+            #     },
+            # }
+            # return JSONResponse(status_code=406, content=resp)
             #
             # return ResponseListOut(
             #     result=[],
@@ -964,15 +982,16 @@ async def add_marketers_relations(
         if 0 < mrel.CommissionCoefficient < 1:
             update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
         else:
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "کمیسیون را به درستی وارد کنید.",
-                    "code": "30010",
-                },
-            }
-            return JSONResponse(status_code=412, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30016", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "کمیسیون را به درستی وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
 
             # return ResponseListOut(
             #     result=[],
@@ -983,15 +1002,16 @@ async def add_marketers_relations(
             #     },
             # )
     except:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "کمیسیون را به درستی وارد کنید.",
-                "code": "30010",
-            },
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30015", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "کمیسیون را به درستی وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # }
+        # return JSONResponse(status_code=412, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -1015,15 +1035,16 @@ async def add_marketers_relations(
                 update["$set"]["EndDate"], "%Y-%m-%d"
             ).todatetime()
         except:
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "تاریخ انتها را درست وارد کنید.",
-                    "code": "30010",
-                },
-            }
-            return JSONResponse(status_code=412, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "تاریخ انتها را درست وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
 
             # return ResponseListOut(
             #     result=[],
@@ -1041,15 +1062,16 @@ async def add_marketers_relations(
             update["$set"]["StartDate"], "%Y-%m-%d"
         ).todatetime()
     except:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "تاریخ ابتدا را درست وارد کنید.",
-                "code": "30010",
-            },
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "تاریخ ابتدا را درست وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1071,15 +1093,16 @@ async def add_marketers_relations(
     ) and marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID}):
         pass
     else:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "مارکتری با ID داده شده وجود ندارد.",
-                "code": "30010",
-            },
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "مارکتری با ID داده شده وجود ندارد.",
+        #         "code": "30010",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1161,12 +1184,13 @@ async def modify_marketers_relations(
     if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
     else:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30009", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1180,12 +1204,13 @@ async def modify_marketers_relations(
         ]
     }
     if marketers_relations_coll.find_one(query) is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "این رابطه وجود ندارد.", "code": "30011"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30019", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "این رابطه وجود ندارد.", "code": "30011"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1194,12 +1219,13 @@ async def modify_marketers_relations(
         # )
 
     if mrel.CommissionCoefficient is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "کمیسیون را وارد کنید.", "code": "30010"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30010", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "کمیسیون را وارد کنید.", "code": "30010"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1213,15 +1239,16 @@ async def modify_marketers_relations(
         if 0 < mrel.CommissionCoefficient < 1:
             update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
         else:
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "کمیسیون را به درستی وارد کنید.",
-                    "code": "30010",
-                },
-            }
-            return JSONResponse(status_code=412, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30016", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "کمیسیون را به درستی وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
             #
             # return ResponseListOut(
             #     result=[],
@@ -1232,15 +1259,16 @@ async def modify_marketers_relations(
             #     },
             # )
     except:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "کمیسیون را به درستی وارد کنید.",
-                "code": "30010",
-            },
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30015", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "کمیسیون را به درستی وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1254,12 +1282,13 @@ async def modify_marketers_relations(
     update["$set"]["LeaderMarketerID"] = mrel.LeaderMarketerID
     update["$set"]["FollowerMarketerID"] = mrel.FollowerMarketerID
     if mrel.LeaderMarketerID == mrel.FollowerMarketerID:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
-        }
-        return JSONResponse(status_code=409, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30011", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # }
+        # return JSONResponse(status_code=409, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -1278,15 +1307,16 @@ async def modify_marketers_relations(
                 update["$set"]["StartDate"], "%Y-%m-%d"
             ).todatetime()
         except:
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "تاریخ ابتدا را درست وارد کنید.",
-                    "code": "30010",
-                },
-            }
-            return JSONResponse(status_code=412, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "تاریخ ابتدا را درست وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
 
     if mrel.EndDate is not None:
         update["$set"]["EndDate"] = mrel.EndDate
@@ -1295,26 +1325,28 @@ async def modify_marketers_relations(
                 update["$set"]["EndDate"], "%Y-%m-%d"
             ).todatetime()
         except:
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "تاریخ انتها را درست وارد کنید.",
-                    "code": "30010",
-                },
-            }
-            return JSONResponse(status_code=412, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "تاریخ انتها را درست وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
 
         if update["$set"]["GEndDate"] < update["$set"]["GStartDate"]:
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "تاریخ پایان قبل از شروع است.",
-                    "code": "30071",
-                },
-            }
-            return JSONResponse(status_code=400, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30071", "status": 400})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "تاریخ پایان قبل از شروع است.",
+            #         "code": "30071",
+            #     },
+            # }
+            # return JSONResponse(status_code=400, content=resp)
             #
             # return ResponseListOut(
             #     result=[],
@@ -1390,10 +1422,16 @@ async def search_marketers_relations(
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     # database = get_database()
-    from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
-    to_gregorian_date = jd.strptime(args.EndDate, "%Y-%m-%d").todatetime() + timedelta(
-        days=1
-    )
+    try:
+        from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
+    try:
+        to_gregorian_date = jd.strptime(args.EndDate, "%Y-%m-%d").todatetime() + timedelta(
+        days=1)
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
+
 
     marketers_relations_coll = database["mrelations"]
     # marketers_coll = database["marketers"]
@@ -1456,12 +1494,13 @@ async def search_marketers_relations(
     try:
         query_result = marketers_relations_coll.find_one(query, {"_id": False})
     except:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1474,21 +1513,22 @@ async def search_marketers_relations(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        result = {}
-        result["code"] = "Null"
-        result["message"] = "Null"
-        result["totalCount"] = len(marketers)
-        result["pagedData"] = results
-
-        resp = {
-            "result": result,
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "موردی برای متغیرهای داده شده یافت نشد.",
-                "code": "30003",
-            },
-        }
-        return JSONResponse(status_code=200, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 204})
+        # result = {}
+        # result["code"] = "Null"
+        # result["message"] = "Null"
+        # result["totalCount"] = len(marketers)
+        # result["pagedData"] = results
+        #
+        # resp = {
+        #     "result": result,
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی برای متغیرهای داده شده یافت نشد.",
+        #         "code": "30003",
+        #     },
+        # }
+        # return JSONResponse(status_code=200, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1561,12 +1601,13 @@ async def delete_marketers_relations(
     if args.LeaderMarketerID and args.FollowerMarketerID:
         pass
     else:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
-        }
-        return JSONResponse(status_code=400, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30009", "status": 400})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # }
+        # return JSONResponse(status_code=400, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1574,12 +1615,13 @@ async def delete_marketers_relations(
         #     error={"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
         # )
     if args.LeaderMarketerID == args.FollowerMarketerID:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
-        }
-        return JSONResponse(status_code=409, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30011", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # }
+        # return JSONResponse(status_code=409, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -1591,15 +1633,16 @@ async def delete_marketers_relations(
     )
 
     if not q:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "این مارکتر زیرمجموعه کسی نیست.",
-                "code": "30052",
-            },
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30052", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "این مارکتر زیرمجموعه کسی نیست.",
+        #         "code": "30052",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1610,15 +1653,16 @@ async def delete_marketers_relations(
         #     },
         # )
     if not q.get("LeaderMarketerID") == args.LeaderMarketerID:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "این مارکتر زیرمجموعه نفر دیگری است.",
-                "code": "30012",
-            },
-        }
-        return JSONResponse(status_code=409, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30012", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "این مارکتر زیرمجموعه نفر دیگری است.",
+        #         "code": "30012",
+        #     },
+        # }
+        # return JSONResponse(status_code=409, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1702,12 +1746,13 @@ async def users_diff_with_tbs(
     # trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     if args.IdpID is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -1754,15 +1799,16 @@ async def users_diff_with_tbs(
             else:
                 result.append(q)
     if not result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-                "code": "30013",
-            },
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30013", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
+        #         "code": "30013",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -1797,11 +1843,21 @@ async def users_list_by_volume(
     query_result = brokerage.marketers.find_one({"IdpId": args.IdpID})
 
     if not query_result:
-        raise HTTPException(status_code=204, detail="Unauthorized User")
-
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
+        # resp = {
+        #     "result": {
+        #         "totalCount": 0,
+        #         "pagedData": [],
+        #         "errorCode": 0,
+        #         "errorMessage": "null"
+        #     },
+        #     "error": "null",
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        # }
+        # return JSONResponse(status_code=204, content=resp)
     marketer_fullname = get_marketer_name(query_result)
 
-    from_gregorian_date = (datetime.strptime(args.from_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    from_gregorian_date = args.from_date#(datetime.strptime(args.from_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
     # from_gregorian_date = to_gregorian_(args.from_date)
     to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
     # to_gregorian_date = to_gregorian_(args.to_date)
@@ -2008,258 +2064,258 @@ async def users_list_by_volume(
 add_pagination(marketer)
 
 
-def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
-    """_summary_
+# def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
+#     """_summary_
+#
+#     Args:
+#         trade_codes (_type_): _description_
+#         from_date (_type_): _description_
+#         to_date (_type_): _description_
+#         page (int, optional): _description_. Defaults to 1.
+#         size (int, optional): _description_. Defaults to 10.
+#
+#     Returns:
+#         _type_: _description_
+#     """
+#     database = get_database()
+#     trades_coll = database["trades"]
+#     from_gregorian_date = to_gregorian_(from_date)
+#     to_gregorian_date = to_gregorian_(to_date)
+#     to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+#         days=1
+#     )
+#     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+#
+#     pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "TradeCode": 1,
+#                 "Commission": {
+#                     "$cond": {
+#                         "if": {"$eq": ["$TradeType", 1]},
+#                         "then": {
+#                             "$add": [
+#                                 "$TotalCommission",
+#                                 {"$multiply": ["$Price", "$Volume"]},
+#                             ]
+#                         },
+#                         "else": {
+#                             "$subtract": [
+#                                 {"$multiply": ["$Price", "$Volume"]},
+#                                 "$TotalCommission",
+#                             ]
+#                         },
+#                     }
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$TradeCode",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalPureVolume": {"$sum": "$Commission"},
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "_id": 0,
+#                 "TradeCode": "$_id",
+#                 "TotalPureVolume": 1,
+#                 "TotalFee": 1,
+#             }
+#         },
+#         {
+#             "$lookup": {
+#                 "from": "firms",
+#                 "localField": "TradeCode",
+#                 "foreignField": "PAMCode",
+#                 "as": "FirmProfile",
+#             },
+#         },
+#         {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
+#         {
+#             "$lookup": {
+#                 "from": "customers",
+#                 "localField": "TradeCode",
+#                 "foreignField": "PAMCode",
+#                 "as": "UserProfile",
+#             }
+#         },
+#         {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
+#         {
+#             "$project": {
+#                 "TradeCode": 1,
+#                 "TotalFee": 1,
+#                 "TotalPureVolume": 1,
+#                 "Refferer": "$FirmProfile.Referer",
+#                 "Referer": "$UserProfile.Referer",
+#                 "FirmTitle": "$FirmProfile.FirmTitle",
+#                 "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
+#                 "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
+#                 "FirstName": "$UserProfile.FirstName",
+#                 "LastName": "$UserProfile.LastName",
+#                 "Username": "$UserProfile.Username",
+#                 "Mobile": "$UserProfile.Mobile",
+#                 "RegisterDate": "$UserProfile.RegisterDate",
+#                 "BankAccountNumber": "$UserProfile.BankAccountNumber",
+#             }
+#         },
+#         {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
+#         {
+#             "$facet": {
+#                 "metadata": [{"$count": "totalCount"}],
+#                 "items": [{"$skip": (page - 1) * size}, {"$limit": size}],
+#             }
+#         },
+#         {"$unwind": "$metadata"},
+#         {
+#             "$project": {
+#                 "totalCount": "$metadata.totalCount",
+#                 "items": 1,
+#             }
+#         },
+#     ]
+#
+#     aggr_result = trades_coll.aggregate(pipeline=pipeline)
+#
+#     aggre_dict = next(aggr_result, None)
+#
+#     if aggre_dict is None:
+#         return {}
+#
+#     aggre_dict["page"] = page
+#     aggre_dict["size"] = size
+#     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
+#     return aggre_dict
 
-    Args:
-        trade_codes (_type_): _description_
-        from_date (_type_): _description_
-        to_date (_type_): _description_
-        page (int, optional): _description_. Defaults to 1.
-        size (int, optional): _description_. Defaults to 10.
 
-    Returns:
-        _type_: _description_
-    """
-    database = get_database()
-    trades_coll = database["trades"]
-    from_gregorian_date = to_gregorian_(from_date)
-    to_gregorian_date = to_gregorian_(to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-    pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "TradeCode": 1,
-                "Commission": {
-                    "$cond": {
-                        "if": {"$eq": ["$TradeType", 1]},
-                        "then": {
-                            "$add": [
-                                "$TotalCommission",
-                                {"$multiply": ["$Price", "$Volume"]},
-                            ]
-                        },
-                        "else": {
-                            "$subtract": [
-                                {"$multiply": ["$Price", "$Volume"]},
-                                "$TotalCommission",
-                            ]
-                        },
-                    }
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$TradeCode",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalPureVolume": {"$sum": "$Commission"},
-            }
-        },
-        {
-            "$project": {
-                "_id": 0,
-                "TradeCode": "$_id",
-                "TotalPureVolume": 1,
-                "TotalFee": 1,
-            }
-        },
-        {
-            "$lookup": {
-                "from": "firms",
-                "localField": "TradeCode",
-                "foreignField": "PAMCode",
-                "as": "FirmProfile",
-            },
-        },
-        {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
-        {
-            "$lookup": {
-                "from": "customers",
-                "localField": "TradeCode",
-                "foreignField": "PAMCode",
-                "as": "UserProfile",
-            }
-        },
-        {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
-        {
-            "$project": {
-                "TradeCode": 1,
-                "TotalFee": 1,
-                "TotalPureVolume": 1,
-                "Refferer": "$FirmProfile.Referer",
-                "Referer": "$UserProfile.Referer",
-                "FirmTitle": "$FirmProfile.FirmTitle",
-                "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
-                "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
-                "FirstName": "$UserProfile.FirstName",
-                "LastName": "$UserProfile.LastName",
-                "Username": "$UserProfile.Username",
-                "Mobile": "$UserProfile.Mobile",
-                "RegisterDate": "$UserProfile.RegisterDate",
-                "BankAccountNumber": "$UserProfile.BankAccountNumber",
-            }
-        },
-        {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
-        {
-            "$facet": {
-                "metadata": [{"$count": "totalCount"}],
-                "items": [{"$skip": (page - 1) * size}, {"$limit": size}],
-            }
-        },
-        {"$unwind": "$metadata"},
-        {
-            "$project": {
-                "totalCount": "$metadata.totalCount",
-                "items": 1,
-            }
-        },
-    ]
-
-    aggr_result = trades_coll.aggregate(pipeline=pipeline)
-
-    aggre_dict = next(aggr_result, None)
-
-    if aggre_dict is None:
-        return {}
-
-    aggre_dict["page"] = page
-    aggre_dict["size"] = size
-    aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
-    return aggre_dict
-
-
-def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
-    """_summary_
-
-    Args:
-        marketer_fullname (_type_): _description_
-        from_gregorian_date (_type_): _description_
-        to_gregorian_date (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    database = get_database()
-
-    customers_coll = database["customers"]
-    trades_coll = database["trades"]
-    # marketers_coll = database["marketers"]
-    firms_coll = database["firms"]
-
-    query = {"Referer": {"$regex": marketer_fullname}}
-
-    fields = {"PAMCode": 1}
-
-    customers_records = customers_coll.find(query, fields)
-    firms_records = firms_coll.find(query, fields)
-    trade_codes = [c.get("PAMCode") for c in customers_records] + [
-        c.get("PAMCode") for c in firms_records
-    ]
-
-    buy_pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                    {"TradeType": 1},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "Buy": {
-                    "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalBuy": {"$sum": "$Buy"},
-            }
-        },
-        {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
-    ]
-    sell_pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                    {"TradeType": 2},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "Sell": {
-                    "$subtract": [
-                        {"$multiply": ["$Price", "$Volume"]},
-                        "$TotalCommission",
-                    ]
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalSell": {"$sum": "$Sell"},
-            }
-        },
-        {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
-    ]
-    buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
-    sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
-
-    buy_dict = {"vol": 0, "fee": 0}
-
-    sell_dict = {"vol": 0, "fee": 0}
-
-    if buy_agg_result:
-        buy_dict["vol"] = buy_agg_result.get("TotalBuy")
-        buy_dict["fee"] = buy_agg_result.get("TotalFee")
-
-    if sell_agg_result:
-        sell_dict["vol"] = sell_agg_result.get("TotalSell")
-        sell_dict["fee"] = sell_agg_result.get("TotalFee")
-    response_dict = {}
-    response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
-    response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
-    return response_dict
+# def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
+#     """_summary_
+#
+#     Args:
+#         marketer_fullname (_type_): _description_
+#         from_gregorian_date (_type_): _description_
+#         to_gregorian_date (_type_): _description_
+#
+#     Returns:
+#         _type_: _description_
+#     """
+#     database = get_database()
+#
+#     customers_coll = database["customers"]
+#     trades_coll = database["trades"]
+#     # marketers_coll = database["marketers"]
+#     firms_coll = database["firms"]
+#
+#     query = {"Referer": {"$regex": marketer_fullname}}
+#
+#     fields = {"PAMCode": 1}
+#
+#     customers_records = customers_coll.find(query, fields)
+#     firms_records = firms_coll.find(query, fields)
+#     trade_codes = [c.get("PAMCode") for c in customers_records] + [
+#         c.get("PAMCode") for c in firms_records
+#     ]
+#
+#     buy_pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                     {"TradeType": 1},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "Buy": {
+#                     "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$id",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalBuy": {"$sum": "$Buy"},
+#             }
+#         },
+#         {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
+#     ]
+#     sell_pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                     {"TradeType": 2},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "Sell": {
+#                     "$subtract": [
+#                         {"$multiply": ["$Price", "$Volume"]},
+#                         "$TotalCommission",
+#                     ]
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$id",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalSell": {"$sum": "$Sell"},
+#             }
+#         },
+#         {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
+#     ]
+#     buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
+#     sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
+#
+#     buy_dict = {"vol": 0, "fee": 0}
+#
+#     sell_dict = {"vol": 0, "fee": 0}
+#
+#     if buy_agg_result:
+#         buy_dict["vol"] = buy_agg_result.get("TotalBuy")
+#         buy_dict["fee"] = buy_agg_result.get("TotalFee")
+#
+#     if sell_agg_result:
+#         sell_dict["vol"] = sell_agg_result.get("TotalSell")
+#         sell_dict["fee"] = sell_agg_result.get("TotalFee")
+#     response_dict = {}
+#     response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
+#     response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
+#     return response_dict
 
 
 def bs_calculator(trade_code, date, page=1, size=10):
