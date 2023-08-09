@@ -3,7 +3,7 @@ from functools import wraps
 from fastapi import HTTPException
 from src.auth.permission_enum import Service
 from src.tools.logger import logger
-from src.tools.tokens import get_role_permission
+# from src.tools.tokens import get_role_permission
 
 
 def authorize(permissions):

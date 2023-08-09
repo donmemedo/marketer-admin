@@ -1810,7 +1810,7 @@ async def users_list_by_volume(
         return JSONResponse(status_code=204, content=resp)
     marketer_fullname = get_marketer_name(query_result)
 
-    from_gregorian_date = (datetime.strptime(args.from_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    from_gregorian_date = args.from_date#(datetime.strptime(args.from_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
     # from_gregorian_date = to_gregorian_(args.from_date)
     to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
     # to_gregorian_date = to_gregorian_(args.to_date)
