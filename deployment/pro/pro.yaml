@@ -75,9 +75,9 @@ metadata:
 spec:
   ingressClassName: nginx
   tls:
-    - hosts:
-        - marketer-admin.tavanaco.ir
-      secretName: tavanaco-ir
+  - hosts:
+    - marketer-admin.tavanaco.ir
+    secretName: tavanaco-ir
   rules:
     - host: marketer-admin.tavanaco.ir
       http:
