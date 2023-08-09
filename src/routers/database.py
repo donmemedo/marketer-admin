@@ -7,7 +7,7 @@ from datetime import datetime, date
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
-
+from fastapi.exceptions import RequestValidationError
 # from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import check_permissions
 from src.auth.authentication import get_role_permission
@@ -84,24 +84,25 @@ async def get_customers(
         given_date = jd.strptime(coll_ress.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "تاریخ اشتباه وارد شده است.",
-                "code": "30090",
-            },
-        }
-        return JSONResponse(status_code=412, content=resp)
-
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "message": "تاریخ اشتباه وارد شده است.",
-                "code": "30090",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "تاریخ اشتباه وارد شده است.",
+        #         "code": "30090",
+        #     },
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "تاریخ اشتباه وارد شده است.",
+        #         "code": "30090",
+        #     },
+        # )
 
     cus_getter(date=given_date)
     logger.info(f"Updating Customers Database was requested by {user_id}")
@@ -178,15 +179,16 @@ async def get_firms(
         given_date = jd.strptime(coll_ress.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "تاریخ اشتباه وارد شده است.",
-                "code": "30090",
-            },
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "تاریخ اشتباه وارد شده است.",
+        #         "code": "30090",
+        #     },
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -266,15 +268,16 @@ async def get_trades(
         given_date = jd.strptime(coll_ress.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "تاریخ اشتباه وارد شده است.",
-                "code": "30090",
-            },
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "تاریخ اشتباه وارد شده است.",
+        #         "code": "30090",
+        #     },
+        # }
+        # return JSONResponse(status_code=412, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -352,15 +355,16 @@ async def delete_trades(
         given_date = jd.strptime(args.date, "%Y-%m-%d").todate()
     except:
         logger.error("Given Date was in Invalid Format.")
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "تاریخ اشتباه وارد شده است.",
-                "code": "30090",
-            },
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "تاریخ اشتباه وارد شده است.",
+        #         "code": "30090",
+        #     },
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],

@@ -10,7 +10,7 @@ from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
 from src.schemas.factor import *
 from src.tools.database import get_database
-
+from fastapi.exceptions import RequestValidationError
 # from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
 from src.tools.logger import logger
@@ -70,12 +70,13 @@ async def get_factors_consts(
     query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
     if not query_result:
         logger.error("No Record- Error 30001")
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "موردی یافت نشد.", "code": "30001"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "موردی یافت نشد.", "code": "30001"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -142,15 +143,16 @@ async def get_all_factors_consts(
     for i in range(len(consts)):
         results.append((consts[i]))
     if not results:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "موردی برای ثابتهای فاکتورها یافت نشد.",
-                "code": "30002",
-            },
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30002", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی برای ثابتهای فاکتورها یافت نشد.",
+        #         "code": "30002",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -220,12 +222,13 @@ async def modify_factor_consts(
 
     consts_coll = database["consts"]
     if mci.MarketerID is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -251,15 +254,16 @@ async def modify_factor_consts(
     consts_coll.update_one(filter, update)
     query_result = consts_coll.find_one({"MarketerID": mci.MarketerID}, {"_id": False})
     if not query_result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "موردی با IDP داده شده یافت نشد.",
-                "code": "30004",
-            },
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی با IDP داده شده یافت نشد.",
+        #         "code": "30004",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -329,12 +333,13 @@ async def modify_factor(
 
     factor_coll = database["factors"]
     if mfi.MarketerID is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -379,12 +384,13 @@ async def modify_factor(
     factor_coll.update_one(filter, update)
     query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
     if not query_result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -451,12 +457,13 @@ async def add_factor(
     factor_coll = database["factors"]
     marketers_coll = database["marketers"]
     if mfi.MarketerID is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -566,15 +573,16 @@ async def search_factor(
     if args.Period:
         pass
     else:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "IDP مارکتر و دوره را وارد کنید.",
-                "code": "30030",
-            },
-        }
-        return JSONResponse(status_code=400, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "IDP مارکتر و دوره را وارد کنید.",
+        #         "code": "30030",
+        #     },
+        # }
+        # return JSONResponse(status_code=400, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -592,12 +600,13 @@ async def search_factor(
     else:
         querry_result = factor_coll.find({}, {"_id": False})
     if not querry_result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -634,15 +643,16 @@ async def search_factor(
             results.append(result)
             # query_result.values()
         except:
-            resp = {
-                "result": [],
-                "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                "error": {
-                    "message": "موردی در دیتابیس یافت نشد.",
-                    "code": "30001",
-                },
-            }
-            return JSONResponse(status_code=204, content=resp)
+            raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "موردی در دیتابیس یافت نشد.",
+            #         "code": "30001",
+            #     },
+            # }
+            # return JSONResponse(status_code=204, content=resp)
 
             # return ResponseListOut(
             #     result=[],
@@ -719,15 +729,16 @@ async def delete_factor(
     if args.MarketerID and args.Period:
         pass
     else:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "IDP مارکتر و دوره را وارد کنید.",
-                "code": "30030",
-            },
-        }
-        return JSONResponse(status_code=400, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "IDP مارکتر و دوره را وارد کنید.",
+        #         "code": "30030",
+        #     },
+        # }
+        # return JSONResponse(status_code=400, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -743,12 +754,13 @@ async def delete_factor(
     per = args.Period
     query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
     if not query_result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
 
         # return ResponseListOut(
         #     result=[],
@@ -775,12 +787,13 @@ async def delete_factor(
         factor_coll.update_one({"IdpID": args.MarketerID}, update)
 
     except:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -798,251 +811,251 @@ async def delete_factor(
 add_pagination(factor)
 
 
-def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
-    """_summary_
+# def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
+#     """_summary_
+#
+#     Args:
+#         trade_codes (_type_): _description_
+#         from_date (_type_): _description_
+#         to_date (_type_): _description_
+#         page (int, optional): _description_. Defaults to 1.
+#         size (int, optional): _description_. Defaults to 10.
+#
+#     Returns:
+#         _type_: _description_
+#     """
+#     database = get_database()
+#     trades_coll = database["trades"]
+#     from_gregorian_date = to_gregorian_(from_date)
+#     to_gregorian_date = to_gregorian_(to_date)
+#     to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+#         days=1
+#     )
+#     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+#
+#     pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "TradeCode": 1,
+#                 "Commission": {
+#                     "$cond": {
+#                         "if": {"$eq": ["$TradeType", 1]},
+#                         "then": {
+#                             "$add": [
+#                                 "$TotalCommission",
+#                                 {"$multiply": ["$Price", "$Volume"]},
+#                             ]
+#                         },
+#                         "else": {
+#                             "$subtract": [
+#                                 {"$multiply": ["$Price", "$Volume"]},
+#                                 "$TotalCommission",
+#                             ]
+#                         },
+#                     }
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$TradeCode",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalPureVolume": {"$sum": "$Commission"},
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "_id": 0,
+#                 "TradeCode": "$_id",
+#                 "TotalPureVolume": 1,
+#                 "TotalFee": 1,
+#             }
+#         },
+#         {
+#             "$lookup": {
+#                 "from": "firms",
+#                 "localField": "TradeCode",
+#                 "foreignField": "PAMCode",
+#                 "as": "FirmProfile",
+#             },
+#         },
+#         {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
+#         {
+#             "$lookup": {
+#                 "from": "customers",
+#                 "localField": "TradeCode",
+#                 "foreignField": "PAMCode",
+#                 "as": "UserProfile",
+#             }
+#         },
+#         {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
+#         {
+#             "$project": {
+#                 "TradeCode": 1,
+#                 "TotalFee": 1,
+#                 "TotalPureVolume": 1,
+#                 "Refferer": "$FirmProfile.Referer",
+#                 "Referer": "$UserProfile.Referer",
+#                 "FirmTitle": "$FirmProfile.FirmTitle",
+#                 "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
+#                 "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
+#                 "FirstName": "$UserProfile.FirstName",
+#                 "LastName": "$UserProfile.LastName",
+#                 "Username": "$UserProfile.Username",
+#                 "Mobile": "$UserProfile.Mobile",
+#                 "RegisterDate": "$UserProfile.RegisterDate",
+#                 "BankAccountNumber": "$UserProfile.BankAccountNumber",
+#             }
+#         },
+#         {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
+#         {
+#             "$facet": {
+#                 "metadata": [{"$count": "totalCount"}],
+#                 "items": [{"$skip": (page - 1) * size}, {"$limit": size}],
+#             }
+#         },
+#         {"$unwind": "$metadata"},
+#         {
+#             "$project": {
+#                 "totalCount": "$metadata.totalCount",
+#                 "items": 1,
+#             }
+#         },
+#     ]
+#
+#     aggr_result = trades_coll.aggregate(pipeline=pipeline)
+#
+#     aggre_dict = next(aggr_result, None)
+#
+#     if aggre_dict is None:
+#         return {}
+#
+#     aggre_dict["page"] = page
+#     aggre_dict["size"] = size
+#     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
+#     return aggre_dict
 
-    Args:
-        trade_codes (_type_): _description_
-        from_date (_type_): _description_
-        to_date (_type_): _description_
-        page (int, optional): _description_. Defaults to 1.
-        size (int, optional): _description_. Defaults to 10.
 
-    Returns:
-        _type_: _description_
-    """
-    database = get_database()
-    trades_coll = database["trades"]
-    from_gregorian_date = to_gregorian_(from_date)
-    to_gregorian_date = to_gregorian_(to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-    pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "TradeCode": 1,
-                "Commission": {
-                    "$cond": {
-                        "if": {"$eq": ["$TradeType", 1]},
-                        "then": {
-                            "$add": [
-                                "$TotalCommission",
-                                {"$multiply": ["$Price", "$Volume"]},
-                            ]
-                        },
-                        "else": {
-                            "$subtract": [
-                                {"$multiply": ["$Price", "$Volume"]},
-                                "$TotalCommission",
-                            ]
-                        },
-                    }
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$TradeCode",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalPureVolume": {"$sum": "$Commission"},
-            }
-        },
-        {
-            "$project": {
-                "_id": 0,
-                "TradeCode": "$_id",
-                "TotalPureVolume": 1,
-                "TotalFee": 1,
-            }
-        },
-        {
-            "$lookup": {
-                "from": "firms",
-                "localField": "TradeCode",
-                "foreignField": "PAMCode",
-                "as": "FirmProfile",
-            },
-        },
-        {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
-        {
-            "$lookup": {
-                "from": "customers",
-                "localField": "TradeCode",
-                "foreignField": "PAMCode",
-                "as": "UserProfile",
-            }
-        },
-        {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
-        {
-            "$project": {
-                "TradeCode": 1,
-                "TotalFee": 1,
-                "TotalPureVolume": 1,
-                "Refferer": "$FirmProfile.Referer",
-                "Referer": "$UserProfile.Referer",
-                "FirmTitle": "$FirmProfile.FirmTitle",
-                "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
-                "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
-                "FirstName": "$UserProfile.FirstName",
-                "LastName": "$UserProfile.LastName",
-                "Username": "$UserProfile.Username",
-                "Mobile": "$UserProfile.Mobile",
-                "RegisterDate": "$UserProfile.RegisterDate",
-                "BankAccountNumber": "$UserProfile.BankAccountNumber",
-            }
-        },
-        {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
-        {
-            "$facet": {
-                "metadata": [{"$count": "totalCount"}],
-                "items": [{"$skip": (page - 1) * size}, {"$limit": size}],
-            }
-        },
-        {"$unwind": "$metadata"},
-        {
-            "$project": {
-                "totalCount": "$metadata.totalCount",
-                "items": 1,
-            }
-        },
-    ]
-
-    aggr_result = trades_coll.aggregate(pipeline=pipeline)
-
-    aggre_dict = next(aggr_result, None)
-
-    if aggre_dict is None:
-        return {}
-
-    aggre_dict["page"] = page
-    aggre_dict["size"] = size
-    aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
-    return aggre_dict
-
-
-def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
-    """_summary_
-
-    Args:
-        marketer_fullname (_type_): _description_
-        from_gregorian_date (_type_): _description_
-        to_gregorian_date (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    database = get_database()
-
-    customers_coll = database["customers"]
-    trades_coll = database["trades"]
-    firms_coll = database["firms"]
-    query = {"Referer": {"$regex": marketer_fullname}}
-    fields = {"PAMCode": 1}
-    customers_records = customers_coll.find(query, fields)
-    firms_records = firms_coll.find(query, fields)
-    trade_codes = [c.get("PAMCode") for c in customers_records] + [
-        c.get("PAMCode") for c in firms_records
-    ]
-
-    buy_pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                    {"TradeType": 1},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "Buy": {
-                    "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalBuy": {"$sum": "$Buy"},
-            }
-        },
-        {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
-    ]
-    sell_pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                    {"TradeType": 2},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "Sell": {
-                    "$subtract": [
-                        {"$multiply": ["$Price", "$Volume"]},
-                        "$TotalCommission",
-                    ]
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalSell": {"$sum": "$Sell"},
-            }
-        },
-        {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
-    ]
-    buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
-    sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
-
-    buy_dict = {"vol": 0, "fee": 0}
-
-    sell_dict = {"vol": 0, "fee": 0}
-
-    if buy_agg_result:
-        buy_dict["vol"] = buy_agg_result.get("TotalBuy")
-        buy_dict["fee"] = buy_agg_result.get("TotalFee")
-
-    if sell_agg_result:
-        sell_dict["vol"] = sell_agg_result.get("TotalSell")
-        sell_dict["fee"] = sell_agg_result.get("TotalFee")
-    response_dict = {}
-    response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
-    response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
-    return response_dict
+# def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
+#     """_summary_
+#
+#     Args:
+#         marketer_fullname (_type_): _description_
+#         from_gregorian_date (_type_): _description_
+#         to_gregorian_date (_type_): _description_
+#
+#     Returns:
+#         _type_: _description_
+#     """
+#     database = get_database()
+#
+#     customers_coll = database["customers"]
+#     trades_coll = database["trades"]
+#     firms_coll = database["firms"]
+#     query = {"Referer": {"$regex": marketer_fullname}}
+#     fields = {"PAMCode": 1}
+#     customers_records = customers_coll.find(query, fields)
+#     firms_records = firms_coll.find(query, fields)
+#     trade_codes = [c.get("PAMCode") for c in customers_records] + [
+#         c.get("PAMCode") for c in firms_records
+#     ]
+#
+#     buy_pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                     {"TradeType": 1},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "Buy": {
+#                     "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$id",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalBuy": {"$sum": "$Buy"},
+#             }
+#         },
+#         {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
+#     ]
+#     sell_pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                     {"TradeType": 2},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "Sell": {
+#                     "$subtract": [
+#                         {"$multiply": ["$Price", "$Volume"]},
+#                         "$TotalCommission",
+#                     ]
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$id",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalSell": {"$sum": "$Sell"},
+#             }
+#         },
+#         {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
+#     ]
+#     buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
+#     sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
+#
+#     buy_dict = {"vol": 0, "fee": 0}
+#
+#     sell_dict = {"vol": 0, "fee": 0}
+#
+#     if buy_agg_result:
+#         buy_dict["vol"] = buy_agg_result.get("TotalBuy")
+#         buy_dict["fee"] = buy_agg_result.get("TotalFee")
+#
+#     if sell_agg_result:
+#         sell_dict["vol"] = sell_agg_result.get("TotalSell")
+#         sell_dict["fee"] = sell_agg_result.get("TotalFee")
+#     response_dict = {}
+#     response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
+#     response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
+#     return response_dict

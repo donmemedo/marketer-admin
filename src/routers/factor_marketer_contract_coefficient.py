@@ -17,7 +17,7 @@ from src.tools.logger import logger
 from pymongo import MongoClient, errors
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
-
+from fastapi.exceptions import RequestValidationError
 
 marketer_contract_coefficient = APIRouter(prefix="/factor/marketer-contract-coefficient")
 
@@ -75,12 +75,13 @@ async def add_marketer_contract_coefficient(
     coll = database["MarketerContractCoefficient"]
     marketers_coll = database["MarketerTable"]
     if mmcci.MarketerID is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -115,12 +116,13 @@ async def add_marketer_contract_coefficient(
         coll.insert_one({"MarketerID": mmcci.MarketerID, "Title": marketer_name})
         coll.update_one(filter, update)
     except:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP وارد شده در دیتابیس موجود است.", "code": "30003"},
-        }
-        return JSONResponse(status_code=409, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP وارد شده در دیتابیس موجود است.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=409, content=resp)
 
         # coll.update_one(filter, update)
     query_result = coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})
@@ -185,12 +187,13 @@ async def modify_marketer_contract_coefficient(
     coll = database["MarketerContractCoefficient"]
 
     if mmcci.MarketerID is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
         #
         # return ResponseListOut(
         #     result=[],
@@ -219,12 +222,13 @@ async def modify_marketer_contract_coefficient(
     coll.update_one(filter, update)
     query_result = coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})
     if not query_result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
 
     return ResponseListOut(
         result=query_result,
@@ -307,21 +311,22 @@ async def search_marketer_contract_coefficient(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        result = {}
-        result["code"] = "Null"
-        result["message"] = "Null"
-        # result["totalCount"] = len(marketers)
-        # result["pagedData"] = results
-
-        resp = {
-            "result": result,
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "موردی برای متغیرهای داده شده یافت نشد.",
-                "code": "30003",
-            },
-        }
-        return JSONResponse(status_code=200, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 204})
+        # result = {}
+        # result["code"] = "Null"
+        # result["message"] = "Null"
+        # # result["totalCount"] = len(marketers)
+        # # result["pagedData"] = results
+        #
+        # resp = {
+        #     "result": result,
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی برای متغیرهای داده شده یافت نشد.",
+        #         "code": "30003",
+        #     },
+        # }
+        # return JSONResponse(status_code=200, content=resp)
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
@@ -391,23 +396,25 @@ async def delete_marketer_contract_coefficient(
     if args.MarketerID:
         pass
     else:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "IDP مارکتر را وارد کنید.",
-                "code": "30030",
-            },
-        }
-        return JSONResponse(status_code=400, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 400})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "IDP مارکتر را وارد کنید.",
+        #         "code": "30030",
+        #     },
+        # }
+        # return JSONResponse(status_code=400, content=resp)
     query_result = coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     if not query_result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
     result = [
         f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."
     ]
@@ -473,12 +480,13 @@ async def modify_marketer_contract_coefficient_status(
 
     coll = database["MarketerContractCoefficient"]
     if dmcci.MarketerID is None:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        }
-        return JSONResponse(status_code=412, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
 
     filter = {"MarketerID": dmcci.MarketerID}
     query_result = coll.find_one({"MarketerID": dmcci.MarketerID}, {"_id": False})
@@ -488,12 +496,13 @@ async def modify_marketer_contract_coefficient_status(
     coll.update_one(filter, update)
     query_result = coll.find_one({"MarketerID": dmcci.MarketerID}, {"_id": False})
     if not query_result:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
 
     return ResponseListOut(
         result=query_result,

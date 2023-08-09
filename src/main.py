@@ -23,6 +23,8 @@ from auth.registration import get_token, set_permissions
 # from routers.subuser import subuser
 from src.tools.logger import logger
 from src.tools.database import get_database
+from src.tools.errors import get_error
+
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
@@ -69,16 +71,20 @@ async def read_root(request: Request):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
+    status = 400
+    try:
+        err = get_error(exc.errors().__name__,exc.body['code'])
+        status = exc.body['status']
+    except:
+        for e in exc.errors():
+            err = get_error(e['type'], e['ctx']['error'])
+    # err=get_error(b)
     response = {
         "result": [],
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        "error": {
-            # "message": "کمیسیون را وارد کنید.",
-            "message": "ورودی‌ها را چک کرده و سپس به درستی وارد کنید.",
-            "code": "30010",
-        },
+        "error": err
     }
-    return JSONResponse(status_code=400, content=response)
+    return JSONResponse(status_code=status, content=response)
 
 
 # Add all routers

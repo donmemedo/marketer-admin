@@ -8,25 +8,14 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-
-# from src.tools.tokens import JWTBearer#, get_role_permission
+from fastapi.exceptions import RequestValidationError
 from src.auth.authentication import get_role_permission
-from src.tools.database import get_database
 from src.schemas.client_user import *
 from src.tools.utils import *
 from pymongo import MongoClient
-from src.auth.authorization import authorize
-
-
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException
 from pymongo import ASCENDING, MongoClient
-
-from src.auth.authentication import get_current_user
 from src.auth.authorization import authorize
-
-# from src.schemas.schemas import ResponseListOut, UserSearchIn
 from src.tools.database import get_database
 from src.tools.utils import get_marketer_name
 
@@ -36,7 +25,6 @@ client_user = APIRouter(prefix="/client/user")
 
 @client_user.get(
     "/search",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Client - User"],
     response_model=None,
 )
@@ -64,7 +52,6 @@ async def get_user_profile(
     Returns:
         _type_: _description_
     """
-    # print("Hello World!!!")
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -79,17 +66,9 @@ async def get_user_profile(
         pass
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
-
-    # brokerage = get_database()
     marketers_coll = brokerage["marketers"]
-    perPage = 10
-    page = 1
-    # total_count = 1
-    # db.collection.find({})
     if args.IdpID:
         query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
-        # query_result = brokerage.marketers.find_one({"IdpId": user.get("sub")})
-
         marketer_fullname = get_marketer_name(query_result)
         pipeline = [
             {"$match": {"$and": [{"Referer": marketer_fullname}]}},
@@ -139,7 +118,6 @@ async def get_user_profile(
         ]
     else:
         pipeline = [
-            # {"$match": {"$and": [{"Referer": marketer_fullname}]}},
             {
                 "$project": {
                     "Name": {"$concat": ["$FirstName", " ", "$LastName"]},
@@ -196,12 +174,8 @@ async def get_user_profile(
         result["totalCount"] = result_dict.get("total", 0)
         result["code"] = "Null"
         result["message"] = "Null"
-        # result["pagedData"] = results
-        # if not args.IdpID:
         result["PageSize"] = args.size
         result["PageNumber"] = args.page
-        # result["totalCount"] = total_count
-
         resp = {
             "result": result,
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -211,7 +185,6 @@ async def get_user_profile(
             },
         }
         return JSONResponse(status_code=200, content=resp)
-    # return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
     else:
         result = {}
         result["pagedData"] = []
@@ -220,12 +193,8 @@ async def get_user_profile(
         result["totalCount"] = 0
         result["code"] = "Null"
         result["message"] = "Null"
-        # result["pagedData"] = results
-        # if not args.IdpID:
         result["PageSize"] = args.size
         result["PageNumber"] = args.page
-        # result["totalCount"] = total_count
-
         resp = {
             "result": result,
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
