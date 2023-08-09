@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi_pagination import add_pagination
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
+from fastapi.exceptions import RequestValidationError
 
 # from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.database import get_database
@@ -72,11 +73,12 @@ async def get_user_trades(
         raise HTTPException(status_code=401, detail="Not authorized.")
 
     if args.TradeCode is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
+        # )
     # database = get_database()
     results = []
     from_gregorian_date = to_gregorian_(args.from_date)
@@ -99,14 +101,15 @@ async def get_user_trades(
         results.append(trades[i])
 
     if not results:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "message": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
-                "code": "30017",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "300", "status": 204})
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
+        #         "code": "30017",
+        #     },
+        # )
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -310,14 +313,15 @@ def users_list_by_volume(
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
-        return ResponseOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "message": "خروجی برای متغیرهای داده شده نداریم.",
-                "code": "30020",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30028", "status": 204})
+        # return ResponseOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "خروجی برای متغیرهای داده شده نداریم.",
+        #         "code": "30020",
+        #     },
+        # )
     return ResponseOut(
         result=aggre_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -538,14 +542,15 @@ def users_total(
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
-        return ResponseOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "message": "خروجی برای متغیرهای داده شده نداریم.",
-                "code": "30020",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30028", "status": 204})
+        # return ResponseOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "خروجی برای متغیرهای داده شده نداریم.",
+        #         "code": "30020",
+        #     },
+        # )
     return ResponseOut(
         result=aggre_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -601,11 +606,12 @@ async def users_diff_with_tbs(
     start_date = jd.strptime(args.from_date, "%Y-%m-%d")
     end_date = jd.strptime(args.to_date, "%Y-%m-%d")
     if args.TradeCode is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
+        # )
 
     delta = timedelta(days=1)
     dates = []
@@ -626,14 +632,15 @@ async def users_diff_with_tbs(
         else:
             result.append(q)
     if not result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-                "code": "30013",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30013", "status": 204})
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
+        #         "code": "30013",
+        #     },
+        # )
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),

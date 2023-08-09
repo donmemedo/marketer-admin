@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-
+from fastapi.exceptions import RequestValidationError
 from src.auth.authentication import get_role_permission
 from src.schemas.client_user import *
 from src.tools.utils import *

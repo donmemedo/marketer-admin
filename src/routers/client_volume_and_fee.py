@@ -6,7 +6,7 @@ Returns:
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
-
+from fastapi.exceptions import RequestValidationError
 from src.auth.authentication import get_role_permission
 from src.schemas.client_volume_and_fee import *
 from src.tools.utils import *
@@ -424,7 +424,7 @@ async def users_list_by_volume(
 
     query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
     if not query_result:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found.")
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
 
     marketer_fullname = get_marketer_name(query_result)
 

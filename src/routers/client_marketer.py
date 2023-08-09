@@ -15,7 +15,7 @@ from pymongo import MongoClient
 from khayyam import JalaliDatetime as jd
 from pymongo import MongoClient
 from src.auth.authorization import authorize
-
+from fastapi.exceptions import RequestValidationError
 from src.tools.database import get_database
 from src.tools.utils import peek, to_gregorian_
 
@@ -80,15 +80,16 @@ async def get_marketer_profile(
             results.append(marketer_entity(marketers[i]))
 
     if not results:
-        resp = {
-            "result": [],
-            "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "error": {
-                "message": "موردی با IDP داده شده یافت نشد.",
-                "code": "30004",
-            },
-        }
-        return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی با IDP داده شده یافت نشد.",
+        #         "code": "30004",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
