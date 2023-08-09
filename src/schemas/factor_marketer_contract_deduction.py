@@ -14,6 +14,35 @@ current_year = JalaliDatetime.today().year
 
 
 @dataclass
+class ModifyMarketerContractDeductionIn:
+    MarketerID: str
+    ID: str = None
+    CollateralCoefficient: float = None
+    ContractID: str = None
+    TaxCoefficient: float = None
+    InsuranceCoefficient: float = None
+    ReturnDuration: int = None
+    Title: str = None
+
+
+@dataclass
+class SearchMarketerContractDeductionIn:
+    MarketerID: str = Query("")
+    ID: str = None
+    CollateralCoefficient: float = None
+    ContractID: str = None
+    TaxCoefficient: float = None
+    InsuranceCoefficient: float = None
+    ReturnDuration: int = None
+    Title: str = Query("")
+
+
+
+@dataclass
+class DelMarketerContractDeductiontIn:
+    MarketerID: str
+
+@dataclass
 class MarketerIn:
     IdpID: str = None
 

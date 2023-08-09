@@ -4,27 +4,18 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, timedelta
-
-# import pymongo.errors
 from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.tools.tokens import JWTBearer, get_role_permission
+from fastapi.exceptions import RequestValidationError
+# from src.tools.tokens import JWTBearer#, get_role_permission
+from src.auth.authentication import get_role_permission
 from src.tools.database import get_database
-from src.schemas.marketer import (
-    ModifyMarketerIn,
-    AddMarketerIn,
-    UsersTotalPureIn,
-    MarketersProfileIn,
-    MarketerIn,
-    DiffTradesIn,
-    ResponseOut,
-    ResponseListOut,
-    MarketerRelations,
-    DelMarketerRelations,
-    SearchMarketerRelations,
-)
-from src.tools.utils import peek, to_gregorian_, marketer_entity, get_marketer_name, check_permissions
+from src.schemas.marketer import *
+from src.tools.utils import *
+from pymongo import MongoClient
+from src.auth.authorization import authorize
 
 
 marketer = APIRouter(prefix="/marketer")
@@ -32,12 +23,23 @@ marketer = APIRouter(prefix="/marketer")
 
 @marketer.get(
     "/get-marketer",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 async def get_marketer_profile(
-    request: Request, args: MarketerIn = Depends(MarketerIn)
+    request: Request,
+    args: MarketerIn = Depends(MarketerIn),
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -47,38 +49,58 @@ async def get_marketer_profile(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission#(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    brokerage = get_database()
+    # brokerage = get_database()
     marketers_coll = brokerage["marketers"]
-    # results = []
     if args.IdpID is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
+        raise RequestValidationError(TypeError, body={"code":"30003","status":412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
     query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
-    # marketers = dict(enumerate(query_result))
-    # for i in range(len(marketers)):
-    #     results.append(marketer_entity(marketers[i]))
     if not query_result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "موردی با IDP داده شده یافت نشد.",
-                "errorcode": "30004",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code":"30004","status":204})
+        #
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی با IDP داده شده یافت نشد.",
+        #         "code": "30004",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "موردی با IDP داده شده یافت نشد.",
+        #         "code": "30004",
+        #     },
+        # )
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -88,11 +110,23 @@ async def get_marketer_profile(
 
 @marketer.get(
     "/marketers",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
 )
-async def get_marketer(request: Request):
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
+async def get_marketer(
+    request: Request,
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
+):
     """_summary_
 
     Args:
@@ -104,17 +138,21 @@ async def get_marketer(request: Request):
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
     marketers_coll = database["marketers"]
     results = []
     query_result = marketers_coll.find({})
@@ -122,11 +160,22 @@ async def get_marketer(request: Request):
     for i in range(len(marketers)):
         results.append(marketer_entity(marketers[i]))
     if not results:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
-        )
+        raise RequestValidationError(TypeError, body={"code":"30001","status":204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی در دیتابیس یافت نشد.",
+        #         "code": "30001",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # )
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -136,11 +185,24 @@ async def get_marketer(request: Request):
 
 @marketer.put(
     "/modify-marketer",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],  # , response_model=None
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Write",
+        "MarketerAdmin.Marketer.Update",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 async def modify_marketer(
-    request: Request, args: ModifyMarketerIn = Depends(ModifyMarketerIn)
+    request: Request,
+    mmi: ModifyMarketerIn,
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -151,89 +213,123 @@ async def modify_marketer(
     Returns:
         _type_: _description_
     """
-
-    # user_id = get_role_permission(request)
-
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Write', 'MarketerAdmin.Marketer.Update', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Write",
+        "MarketerAdmin.Marketer.Update",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
     marketer_coll = database["marketers"]
     admins_coll = database["factors"]
-    if args.CurrentIdpId is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
-    filter = {"IdpId": args.CurrentIdpId}
-    idpid = args.CurrentIdpId
+    if mmi.CurrentIdpId is None:
+        raise RequestValidationError(TypeError, body={"code":"30003","status":412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
+    filter = {"IdpId": mmi.CurrentIdpId}
+    idpid = mmi.CurrentIdpId
     update = {"$set": {}}
 
-    if args.FirstName is not None:
-        update["$set"]["FirstName"] = args.FirstName
+    if mmi.FirstName is not None:
+        update["$set"]["FirstName"] = mmi.FirstName
 
-    if args.LastName is not None:
-        update["$set"]["LastName"] = args.LastName
+    if mmi.LastName is not None:
+        update["$set"]["LastName"] = mmi.LastName
 
-    if args.InvitationLink is not None:
-        update["$set"]["InvitationLink"] = args.InvitationLink
+    if mmi.InvitationLink is not None:
+        update["$set"]["InvitationLink"] = mmi.InvitationLink
 
-    if args.RefererType is not None:
-        update["$set"]["RefererType"] = args.RefererType
+    if mmi.RefererType is not None:
+        update["$set"]["RefererType"] = mmi.RefererType
 
-    #Let Super Admin can change CreatedDate
-    if check_permissions(role_perm['MarketerAdmin'], ['MarketerAdmin.All.All', 'MarketerAdmin.Marketer.All']):
-        if args.CreateDate is not None:
-            update["$set"]["CreateDate"] = args.CreateDate
+    # Let Super Admin can change CreatedDate
+    if check_permissions(
+        role_perm["roles"],
+        ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
+    ):
+        if mmi.CreateDate is not None:
+            update["$set"]["CreateDate"] = mmi.CreateDate
 
-    if args.ModifiedBy is not None:
+    if mmi.ModifiedBy is not None:
         update["$set"]["ModifiedBy"] = admins_coll.find_one(
             {"IdpId": user_id}, {"_id": False}
         ).get("FullName")
 
-    #Let Super Admin can change CreatedBy
-    if check_permissions(role_perm['MarketerAdmin'], ['MarketerAdmin.All.All', 'MarketerAdmin.Marketer.All']):
-        if args.CreatedBy is not None:
-            update["$set"]["CreatedBy"] = args.CreatedBy
+    # Let Super Admin can change CreatedBy
+    if check_permissions(
+        role_perm["roles"],
+        ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
+    ):
+        if mmi.CreatedBy is not None:
+            update["$set"]["CreatedBy"] = mmi.CreatedBy
 
     update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
-    if args.NewIdpId is not None:
-        update["$set"]["IdpId"] = args.NewIdpId
-        idpid = args.NewIdpId
+    if mmi.NewIdpId is not None:
+        update["$set"]["IdpId"] = mmi.NewIdpId
+        idpid = mmi.NewIdpId
 
-    if args.NationalID is not None:
+    if mmi.NationalID is not None:
         try:
-            ddd = int(args.NationalID)
-            update["$set"]["Id"] = args.NationalID
+            ddd = int(mmi.NationalID)
+            update["$set"]["Id"] = mmi.NationalID
         except:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "کد ملی را درست وارد کنید.",
-                    "errorcode": "30066",
-                },
-            )
+            raise RequestValidationError(TypeError, body={"code": "30066", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "کد ملی را درست وارد کنید.",
+            #         "code": "30066",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
+
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "کد ملی را درست وارد کنید.",
+            #         "code": "30066",
+            #     },
+            # )
 
     marketer_coll.update_one(filter, update)
     query_result = marketer_coll.find_one({"IdpId": idpid}, {"_id": False})
     if not query_result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "موردی در دیتابیس یافت نشد.", "errorcode": "30001"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
+        # )
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -243,10 +339,23 @@ async def modify_marketer(
 
 @marketer.post(
     "/add-marketer",
-    dependencies=[Depends(JWTBearer())],
-    tags=["Marketer"],  # , response_model=None
+    # dependencies=[Depends(JWTBearer())],
+    tags=["Marketer"],
 )
-async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarketerIn)):
+@authorize(
+    [
+        "MarketerAdmin.All.Create",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Create",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
+async def add_marketer(
+    request: Request,
+    ami: AddMarketerIn,
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
+):
     """_summary_
 
     Args:
@@ -256,45 +365,52 @@ async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarket
     Returns:
         _type_: _description_
     """
-
-    # user_id = get_role_permission(request)
-
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Create', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Create', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Create",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Create",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
     admins_coll = database["factors"]
     marketer_coll = database["marketers"]
-    if args.CurrentIdpId is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
+    if ami.CurrentIdpId is None:
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
 
-    filter = {"IdpId": args.CurrentIdpId}
+    filter = {"IdpId": ami.CurrentIdpId}
     update = {"$set": {}}
 
-    if args.FirstName is not None:
-        update["$set"]["FirstName"] = args.FirstName
+    if ami.FirstName is not None:
+        update["$set"]["FirstName"] = ami.FirstName
 
-    if args.LastName is not None:
-        update["$set"]["LastName"] = args.LastName
+    if ami.LastName is not None:
+        update["$set"]["LastName"] = ami.LastName
 
-    if args.InvitationLink is not None:
-        update["$set"]["InvitationLink"] = args.InvitationLink
+    if ami.InvitationLink is not None:
+        update["$set"]["InvitationLink"] = ami.InvitationLink
 
-    if args.RefererType is not None:
-        update["$set"]["RefererType"] = args.RefererType
+    if ami.RefererType is not None:
+        update["$set"]["RefererType"] = ami.RefererType
 
     update["$set"]["CreateDate"] = jd.today().strftime("%Y-%m-%d")
     update["$set"]["ModifiedBy"] = admins_coll.find_one(
@@ -305,40 +421,70 @@ async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarket
     ).get("FullName")
     update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
-    if args.NationalID is not None:
+    if ami.NationalID is not None:
         try:
-            ddd = int(args.NationalID)
-            update["$set"]["Id"] = args.NationalID
+            ddd = int(ami.NationalID)
+            update["$set"]["Id"] = ami.NationalID
         except:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "کد ملی را درست وارد کنید.",
-                    "errorcode": "30066",
-                },
-            )
+            raise RequestValidationError(TypeError, body={"code": "30066", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "کد ملی را درست وارد کنید.",
+            #         "code": "30066",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
+            #
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "کد ملی را درست وارد کنید.",
+            #         "code": "30066",
+            #     },
+            # )
 
-    update["$set"]["IdpId"] = args.CurrentIdpId
+    update["$set"]["IdpId"] = ami.CurrentIdpId
     try:
         marketer_coll.insert_one(update["$set"])
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "مارکتر در دیتابیس وجود دارد.",
-                "errorcode": "30006",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30066", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "مارکتر در دیتابیس وجود دارد.",
+        #         "code": "30006",
+        #     },
+        # }
+        # return JSONResponse(status_code=409, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "مارکتر در دیتابیس وجود دارد.",
+        #         "code": "30006",
+        #     },
+        # )
 
     query_result = marketer_coll.find_one(filter, {"_id": False})
     if not query_result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "ورودی ها را دوباره چک کنید.", "errorcode": "30051"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30051", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "ورودی ها را دوباره چک کنید.", "code": "30051"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "ورودی ها را دوباره چک کنید.", "code": "30051"},
+        # )
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -348,12 +494,23 @@ async def add_marketer(request: Request, args: AddMarketerIn = Depends(AddMarket
 
 @marketer.get(
     "/marketer-total",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 def get_marketer_total_trades(
-    request: Request, args: UsersTotalPureIn = Depends(UsersTotalPureIn)
+    request: Request,
+    args: UsersTotalPureIn = Depends(UsersTotalPureIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -365,17 +522,21 @@ def get_marketer_total_trades(
         _type_: _description_
     """
     # get all current marketers
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     customers_coll = database["customers"]
     trades_coll = database["trades"]
@@ -394,14 +555,15 @@ def get_marketer_total_trades(
     results = []
     for marketer in marketers_list:
         response_dict = {}
-        if marketer.get("FirstName") == "":
-            marketer_fullname = marketer.get("LastName")
-        elif marketer.get("LastName") == "":
-            marketer_fullname = marketer.get("FirstName")
-        else:
-            marketer_fullname = (
-                marketer.get("FirstName") + " " + marketer.get("LastName")
-            )
+        marketer_fullname = get_marketer_name(marketer)
+        # if marketer.get("FirstName") == "":
+        #     marketer_fullname = marketer.get("LastName")
+        # elif marketer.get("LastName") == "":
+        #     marketer_fullname = marketer.get("FirstName")
+        # else:
+        #     marketer_fullname = (
+        #         marketer.get("FirstName") + " " + marketer.get("LastName")
+        #     )
 
         # Check if customer exist
         query = {"Referer": {"$regex": marketer_fullname}}
@@ -563,13 +725,24 @@ def get_marketer_total_trades(
 
 @marketer.get(
     "/search",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     # response_model=Page[MarketerOut],
     response_model=None,
     tags=["Marketer"],
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 async def search_user_profile(
-    request: Request, args: MarketersProfileIn = Depends(MarketersProfileIn)
+    request: Request,
+    args: MarketersProfileIn = Depends(MarketersProfileIn),
+    brokerage: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -580,17 +753,21 @@ async def search_user_profile(
     Returns:
         _type_: _description_
     """
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    brokerage = get_database()
+    # brokerage = get_database()
     marketer_coll = brokerage["marketers"]
     query = {
         "$and": [
@@ -610,25 +787,44 @@ async def search_user_profile(
     try:
         query_result = marketer_coll.find_one(query, {"_id": False})
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "ورودی نام غیرقابل قبول است.", "errorcode": "30050"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
+        # )
 
     query_result = marketer_coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
         results.append(marketer_entity(marketers[i]))
     if not results:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "موردی با متغیرهای داده شده یافت نشد.",
-                "errorcode": "30008",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی با متغیرهای داده شده یافت نشد.",
+        #         "code": "30008",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "موردی با متغیرهای داده شده یافت نشد.",
+        #         "code": "30008",
+        #     },
+        # )
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -638,12 +834,23 @@ async def search_user_profile(
 
 @marketer.post(
     "/add-marketers-relations",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Create",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Create",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 async def add_marketers_relations(
-    request: Request, args: MarketerRelations = Depends(MarketerRelations)
+    request: Request,
+    mrel: MarketerRelations,
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -654,128 +861,226 @@ async def add_marketers_relations(
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Create', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Create', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Create",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Create",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
-    if args.LeaderMarketerID and args.FollowerMarketerID:
+    if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
     else:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکترها را وارد کنید.", "errorcode": "30009"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30009", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # )
     try:
-        d= int(args.CommissionCoefficient)
+        d = float(mrel.CommissionCoefficient)
     except:
-    # if args.CommissionCoefficient is None:
-    # if d is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "کمیسیون را وارد کنید.", "errorcode": "30010"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30010", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "کمیسیون را وارد کنید.", "code": "30010"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+
+        # if args.CommissionCoefficient is None:
+        # if d is None:
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "کمیسیون را وارد کنید.", "code": "30010"},
+        # )
     update = {"$set": {}}
 
-    update["$set"]["LeaderMarketerID"] = args.LeaderMarketerID
-    update["$set"]["FollowerMarketerID"] = args.FollowerMarketerID
-    if args.LeaderMarketerID == args.FollowerMarketerID:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "مارکترها نباید یکسان باشند.", "errorcode": "30011"},
-        )
+    update["$set"]["LeaderMarketerID"] = mrel.LeaderMarketerID
+    update["$set"]["FollowerMarketerID"] = mrel.FollowerMarketerID
+    if mrel.LeaderMarketerID == mrel.FollowerMarketerID:
+        raise RequestValidationError(TypeError, body={"code": "30011", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # }
+        # return JSONResponse(status_code=409, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # )
     if marketers_relations_coll.find_one(
-        {"FollowerMarketerID": args.FollowerMarketerID}
+        {"FollowerMarketerID": mrel.FollowerMarketerID}
     ):
         if marketers_relations_coll.find_one(
-                {"LeaderMarketerID": args.LeaderMarketerID}
+            {"LeaderMarketerID": mrel.LeaderMarketerID}
         ):
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "این ارتباط وجود دارد.",
-                    "errorcode": "30072",
-                },
-            )
-        
-        else:    
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={
-                    "errormessage": "این مارکتر زیرمجموعه نفر دیگری است.",
-                    "errorcode": "30012",
-                },
-            )
-    try:
-        d= int(args.CommissionCoefficient)
-        if 0<args.CommissionCoefficient<1:
-            update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
+            raise RequestValidationError(TypeError, body={"code": "30072", "status": 409})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "این ارتباط وجود دارد.",
+            #         "code": "30072",
+            #     },
+            # }
+            # return JSONResponse(status_code=409, content=resp)
+
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "این ارتباط وجود دارد.",
+            #         "code": "30072",
+            #     },
+            # )
+
         else:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={"errormessage": "کمیسیون را به درستی وارد کنید.", "errorcode": "30010"},
-            )
+            raise RequestValidationError(TypeError, body={"code": "30012", "status": 406})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "این مارکتر زیرمجموعه نفر دیگری است.",
+            #         "code": "30012",
+            #     },
+            # }
+            # return JSONResponse(status_code=406, content=resp)
+            #
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "این مارکتر زیرمجموعه نفر دیگری است.",
+            #         "code": "30012",
+            #     },
+            # )
+    try:
+        d = int(mrel.CommissionCoefficient)
+        if 0 < mrel.CommissionCoefficient < 1:
+            update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
+        else:
+            raise RequestValidationError(TypeError, body={"code": "30016", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "کمیسیون را به درستی وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
+
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "کمیسیون را به درستی وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # )
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "کمیسیون را به درستی وارد کنید.", "errorcode": "30010"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30015", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "کمیسیون را به درستی وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # }
+        # return JSONResponse(status_code=412, content=resp)
 
-
-
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "کمیسیون را به درستی وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # )
 
     update["$set"]["CreateDate"] = str(jd.now())
     update["$set"]["UpdateDate"] = update["$set"]["CreateDate"]
     update["$set"]["StartDate"] = str(jd.today().date())
 
-    if args.StartDate is not None:
-        update["$set"]["StartDate"] = args.StartDate
-    if args.EndDate is not None:
-        update["$set"]["EndDate"] = args.EndDate
+    if mrel.StartDate is not None:
+        update["$set"]["StartDate"] = mrel.StartDate
+    if mrel.EndDate is not None:
+        update["$set"]["EndDate"] = mrel.EndDate
         try:
             update["$set"]["GEndDate"] = jd.strptime(
-            update["$set"]["EndDate"], "%Y-%m-%d"
+                update["$set"]["EndDate"], "%Y-%m-%d"
             ).todatetime()
         except:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={"errormessage": "تاریخ انتها را درست وارد کنید.", "errorcode": "30010"},
-            )
+            raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "تاریخ انتها را درست وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
+
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "تاریخ انتها را درست وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # )
 
     else:
         update["$set"]["GEndDate"] = jd.strptime("1500-12-29", "%Y-%m-%d").todatetime()
     try:
         update["$set"]["GStartDate"] = jd.strptime(
-        update["$set"]["StartDate"], "%Y-%m-%d"
+            update["$set"]["StartDate"], "%Y-%m-%d"
         ).todatetime()
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "تاریخ ابتدا را درست وارد کنید.", "errorcode": "30010"},
-        )
-
+        raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "تاریخ ابتدا را درست وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "تاریخ ابتدا را درست وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # )
 
     update["$set"]["GCreateDate"] = jd.strptime(
         update["$set"]["CreateDate"], "%Y-%m-%d %H:%M:%S.%f"
@@ -783,30 +1088,43 @@ async def add_marketers_relations(
     update["$set"]["GUpdateDate"] = jd.strptime(
         update["$set"]["UpdateDate"], "%Y-%m-%d %H:%M:%S.%f"
     ).todatetime()
-    if marketers_coll.find_one({"IdpId": args.FollowerMarketerID}) and marketers_coll.find_one({"IdpId": args.LeaderMarketerID}):
+    if marketers_coll.find_one(
+        {"IdpId": mrel.FollowerMarketerID}
+    ) and marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID}):
         pass
     else:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "مارکتری با ID داده شده وجود ندارد.", "errorcode": "30010"},
-        )
-
-
-
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "مارکتری با ID داده شده وجود ندارد.",
+        #         "code": "30010",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "مارکتری با ID داده شده وجود ندارد.",
+        #         "code": "30010",
+        #     },
+        # )
 
     update["$set"]["FollowerMarketerName"] = get_marketer_name(
-        marketers_coll.find_one({"IdpId": args.FollowerMarketerID})
+        marketers_coll.find_one({"IdpId": mrel.FollowerMarketerID})
     )
     update["$set"]["LeaderMarketerName"] = get_marketer_name(
-        marketers_coll.find_one({"IdpId": args.LeaderMarketerID})
+        marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID})
     )
 
     marketers_relations_coll.insert_one(update["$set"])
 
     return ResponseListOut(
         result=marketers_relations_coll.find_one(
-            {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
+            {"FollowerMarketerID": mrel.FollowerMarketerID}, {"_id": False}
         ),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
@@ -815,12 +1133,25 @@ async def add_marketers_relations(
 
 @marketer.put(
     "/modify-marketers-relations",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Write",
+        "MarketerAdmin.Marketer.Update",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 async def modify_marketers_relations(
-    request: Request, args: MarketerRelations = Depends(MarketerRelations)
+    request: Request,
+    mrel: MarketerRelations,
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -831,96 +1162,200 @@ async def modify_marketers_relations(
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Write', 'MarketerAdmin.All.Update', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Write', 'MarketerAdmin.Marketer.Update', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Write",
+        "MarketerAdmin.Marketer.Update",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     marketers_relations_coll = database["mrelations"]
-    if args.LeaderMarketerID and args.FollowerMarketerID:
+    if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
     else:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکترها را وارد کنید.", "errorcode": "30009"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30009", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # )
+    query = {
+        "$and": [
+            {"LeaderMarketerID": mrel.LeaderMarketerID},
+            {"FollowerMarketerID": mrel.FollowerMarketerID},
+        ]
+    }
+    if marketers_relations_coll.find_one(query) is None:
+        raise RequestValidationError(TypeError, body={"code": "30019", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "این رابطه وجود ندارد.", "code": "30011"},
+        # }
+        # return JSONResponse(status_code=204, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "این رابطه وجود ندارد.", "code": "30011"},
+        # )
 
-    if args.CommissionCoefficient is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "کمیسیون را وارد کنید.", "errorcode": "30010"},
-        )
-
-
-
+    if mrel.CommissionCoefficient is None:
+        raise RequestValidationError(TypeError, body={"code": "30010", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "کمیسیون را وارد کنید.", "code": "30010"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "کمیسیون را وارد کنید.", "code": "30010"},
+        # )
 
     update = {"$set": {}}
-
-
     try:
-        d= int(args.CommissionCoefficient)
-        if 0<args.CommissionCoefficient<1:
-            update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
+        d = int(mrel.CommissionCoefficient)
+        if 0 < mrel.CommissionCoefficient < 1:
+            update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
         else:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={"errormessage": "کمیسیون را به درستی وارد کنید.", "errorcode": "30010"},
-            )
+            raise RequestValidationError(TypeError, body={"code": "30016", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "کمیسیون را به درستی وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
+            #
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "کمیسیون را به درستی وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # )
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "کمیسیون را به درستی وارد کنید.", "errorcode": "30010"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30015", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "کمیسیون را به درستی وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "کمیسیون را به درستی وارد کنید.",
+        #         "code": "30010",
+        #     },
+        # )
 
+    update["$set"]["LeaderMarketerID"] = mrel.LeaderMarketerID
+    update["$set"]["FollowerMarketerID"] = mrel.FollowerMarketerID
+    if mrel.LeaderMarketerID == mrel.FollowerMarketerID:
+        raise RequestValidationError(TypeError, body={"code": "30011", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # }
+        # return JSONResponse(status_code=409, content=resp)
 
-
-
-    update["$set"]["LeaderMarketerID"] = args.LeaderMarketerID
-    update["$set"]["FollowerMarketerID"] = args.FollowerMarketerID
-    if args.LeaderMarketerID == args.FollowerMarketerID:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "مارکترها نباید یکسان باشند.", "errorcode": "30011"},
-        )
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # )
     # if marketers_relations_coll.find_one({"FollowerMarketerID": args.FollowerMarketerID}):
-    update["$set"]["CommissionCoefficient"] = args.CommissionCoefficient
+    update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
     update["$set"]["UpdateDate"] = str(jd.now())
     update["$set"]["StartDate"] = str(jd.today().date())
 
-    if args.StartDate is not None:
-        update["$set"]["StartDate"] = args.StartDate
+    if mrel.StartDate is not None:
+        update["$set"]["StartDate"] = mrel.StartDate
+        try:
+            update["$set"]["GStartDate"] = jd.strptime(
+                update["$set"]["StartDate"], "%Y-%m-%d"
+            ).todatetime()
+        except:
+            raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "تاریخ ابتدا را درست وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
 
-    update["$set"]["GStartDate"] = jd.strptime(
-        update["$set"]["StartDate"], "%Y-%m-%d"
-    ).todatetime()
-    if args.EndDate is not None:
-        update["$set"]["EndDate"] = args.EndDate
+    if mrel.EndDate is not None:
+        update["$set"]["EndDate"] = mrel.EndDate
+        try:
+            update["$set"]["GEndDate"] = jd.strptime(
+                update["$set"]["EndDate"], "%Y-%m-%d"
+            ).todatetime()
+        except:
+            raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "تاریخ انتها را درست وارد کنید.",
+            #         "code": "30010",
+            #     },
+            # }
+            # return JSONResponse(status_code=412, content=resp)
 
-        update["$set"]["GEndDate"] = jd.strptime(
-            update["$set"]["EndDate"], "%Y-%m-%d"
-        ).todatetime()
         if update["$set"]["GEndDate"] < update["$set"]["GStartDate"]:
-            return ResponseListOut(
-                result=[],
-                timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-                error={"errormessage": "تاریخ پایان قبل از شروع است.", "errorcode": "30071"},
-            )
+            raise RequestValidationError(TypeError, body={"code": "30071", "status": 400})
+            # resp = {
+            #     "result": [],
+            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     "error": {
+            #         "message": "تاریخ پایان قبل از شروع است.",
+            #         "code": "30071",
+            #     },
+            # }
+            # return JSONResponse(status_code=400, content=resp)
+            #
+            # return ResponseListOut(
+            #     result=[],
+            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            #     error={
+            #         "message": "تاریخ پایان قبل از شروع است.",
+            #         "code": "30071",
+            #     },
+            # )
 
     update["$set"]["GUpdateDate"] = jd.strptime(
         update["$set"]["UpdateDate"], "%Y-%m-%d %H:%M:%S.%f"
@@ -928,14 +1363,14 @@ async def modify_marketers_relations(
 
     query = {
         "$and": [
-            {"LeaderMarketerID": args.LeaderMarketerID},
-            {"FollowerMarketerID": args.FollowerMarketerID},
+            {"LeaderMarketerID": mrel.LeaderMarketerID},
+            {"FollowerMarketerID": mrel.FollowerMarketerID},
         ]
     }
     marketers_relations_coll.update_one(query, update)
     return ResponseListOut(
         result=marketers_relations_coll.find_one(
-            {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
+            {"FollowerMarketerID": mrel.FollowerMarketerID}, {"_id": False}
         ),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
@@ -944,12 +1379,23 @@ async def modify_marketers_relations(
 
 @marketer.get(
     "/search-marketers-relations",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 async def search_marketers_relations(
-    request: Request, args: SearchMarketerRelations = Depends(SearchMarketerRelations)
+    request: Request,
+    args: SearchMarketerRelations = Depends(SearchMarketerRelations),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -961,25 +1407,31 @@ async def search_marketers_relations(
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
-    from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
-    to_gregorian_date = jd.strptime(args.EndDate, "%Y-%m-%d").todatetime() + timedelta(
-        days=1
-    )
+    # database = get_database()
+    try:
+        from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
+    try:
+        to_gregorian_date = jd.strptime(args.EndDate, "%Y-%m-%d").todatetime() + timedelta(
+        days=1)
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
+
 
     marketers_relations_coll = database["mrelations"]
     # marketers_coll = database["marketers"]
@@ -991,20 +1443,8 @@ async def search_marketers_relations(
             args.LeaderMarketerName = ""
         if args.LeaderMarketerID is None:
             args.LeaderMarketerID = ""
-
-        # name_query = {
-        #     "$or": [
-        #         {"FirstName": {"$regex": args.FollowerMarketerName}},
-        #         {"LastName": {"$regex": args.FollowerMarketerName}},
-        #         {"FollowerMarketerID": args.FollowerMarketerID},
-        #     ]
-        # }
-        # fields = {"IdpId": 1}
-        # idps = marketers_coll.find(name_query, fields)
-        # codes = [c.get("IdpId") for c in idps]
         query = {
             "$and": [
-                # {"FollowerMarketerID": {"$in": codes}},
                 {"LeaderMarketerID": {"$regex": args.LeaderMarketerID}},
                 {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
                 {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
@@ -1030,17 +1470,6 @@ async def search_marketers_relations(
             args.FollowerMarketerName = ""
         if args.FollowerMarketerID is None:
             args.FollowerMarketerID = ""
-
-        # name_query = {
-        #     "$or": [
-        #         {"FirstName": {"$regex": args.LeaderMarketerName}},
-        #         {"LastName": {"$regex": args.LeaderMarketerName}},
-        #         {"LeaderMarketerID": args.LeaderMarketerID},
-        #     ]
-        # }
-        # fields = {"IdpId": 1}
-        # idps = marketers_coll.find(name_query, fields)
-        # codes = [c.get("IdpId") for c in idps]
         query = {
             "$and": [
                 {"FollowerMarketerID": {"$regex": args.FollowerMarketerID}},
@@ -1061,93 +1490,57 @@ async def search_marketers_relations(
                     {"GEndDate": {"$lte": to_gregorian_date}},
                 ]
             }
-
-    # if args.CreateDate:
-    #     if args.FollowerMarketerName is None:
-    #         args.FollowerMarketerName = ""
-    #     if args.LeaderMarketerName is None:
-    #         args.LeaderMarketerName = ""
-    #     gregorian_create_date = jd.strptime(args.CreateDate, "%Y-%m-%d").todatetime()
-    #     le_name_query = {
-    #         "$or": [
-    #             {"FirstName": {"$regex": args.LeaderMarketerName}},
-    #             {"LastName": {"$regex": args.LeaderMarketerName}},
-    #             {"LeaderMarketerID": args.LeaderMarketerID},
-    #         ]
-    #     }
-    #     fields = {"IdpId": 1}
-    #     le_idps = marketers_coll.find(le_name_query, fields)
-    #     le_codes = [c.get("IdpId") for c in le_idps]
-    #     fo_name_query = {
-    #         "$or": [
-    #             {"FirstName": {"$regex": args.FollowerMarketerName}},
-    #             {"LastName": {"$regex": args.FollowerMarketerName}},
-    #         ]
-    #     }
-    #     fo_idps = marketers_coll.find(fo_name_query, fields)
-    #     fo_codes = [c.get("IdpId") for c in fo_idps]
-    #     query = {
-    #         "$and": [
-    #             # {"LeaderMarketerID": {"$in": le_codes}},
-    #             # {"FollowerMarketerID": {"$in": fo_codes}},
-    #             {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-    #             {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-    #             {"GCreateDate": {"$gte": gregorian_create_date}},
-    #             {"GStartDate": {"$gte": from_gregorian_date}},
-    #             {"GEndDate": {"$lte": to_gregorian_date}},
-    #         ]
-    #     }
-    #     if args.FollowerMarketerID:
-    #         query = {
-    #             "$and": [
-    #                 # {"LeaderMarketerID": {"$in": le_codes}},
-    #                 {"FollowerMarketerID": args.FollowerMarketerID},
-    #                 {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-    #                 {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-    #                 {"GCreateDate": {"$gte": gregorian_create_date}},
-    #                 {"GStartDate": {"$gte": from_gregorian_date}},
-    #                 {"GEndDate": {"$lte": to_gregorian_date}},
-    #             ]
-    #         }
-    #     elif args.LeaderMarketerID:
-    #         query = {
-    #             "$and": [
-    #                 # {"LeaderMarketerID": {"$in": le_codes}},
-    #                 {"LeaderMarketerID": args.LeaderMarketerID},
-    #                 {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-    #                 {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-    #                 {"GCreateDate": {"$gte": gregorian_create_date}},
-    #                 {"GStartDate": {"$gte": from_gregorian_date}},
-    #                 {"GEndDate": {"$lte": to_gregorian_date}},
-    #             ]
-    #         }
-
     results = []
     try:
         query_result = marketers_relations_coll.find_one(query, {"_id": False})
     except:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "ورودی نام غیرقابل قبول است.", "errorcode": "30050"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "ورودی نام غیرقابل قبول است.", "code": "30050"},
+        # )
 
     query_result = marketers_relations_coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "موردی برای متغیرهای داده شده یافت نشد.",
-                "errorcode": "30003",
-            },
-        )
-    result={}
-    result["errorCode"] = 'Null'
-    result["errorMessage"] = 'Null'
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 204})
+        # result = {}
+        # result["code"] = "Null"
+        # result["message"] = "Null"
+        # result["totalCount"] = len(marketers)
+        # result["pagedData"] = results
+        #
+        # resp = {
+        #     "result": result,
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "موردی برای متغیرهای داده شده یافت نشد.",
+        #         "code": "30003",
+        #     },
+        # }
+        # return JSONResponse(status_code=200, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "موردی برای متغیرهای داده شده یافت نشد.",
+        #         "code": "30003",
+        #     },
+        # )
+    result = {}
+    result["code"] = "Null"
+    result["message"] = "Null"
     result["totalCount"] = len(marketers)
     result["pagedData"] = results
     return ResponseListOut(
@@ -1159,12 +1552,23 @@ async def search_marketers_relations(
 
 @marketer.delete(
     "/delete-marketers-relations",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Delete",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Delete",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 async def delete_marketers_relations(
-    request: Request, args: DelMarketerRelations = Depends(DelMarketerRelations)
+    request: Request,
+    args: DelMarketerRelations = Depends(DelMarketerRelations),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -1176,60 +1580,98 @@ async def delete_marketers_relations(
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Delete', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Delete', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Delete",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Delete",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
     if args.LeaderMarketerID and args.FollowerMarketerID:
         pass
     else:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکترها را وارد کنید.", "errorcode": "30009"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30009", "status": 400})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # }
+        # return JSONResponse(status_code=400, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکترها را وارد کنید.", "code": "30009"},
+        # )
     if args.LeaderMarketerID == args.FollowerMarketerID:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "مارکترها نباید یکسان باشند.", "errorcode": "30011"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30011", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # }
+        # return JSONResponse(status_code=409, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "مارکترها نباید یکسان باشند.", "code": "30011"},
+        # )
     q = marketers_relations_coll.find_one(
         {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
     )
 
     if not q:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "این مارکتر زیرمجموعه کسی نیست.",
-                "errorcode": "30052",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30052", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "این مارکتر زیرمجموعه کسی نیست.",
+        #         "code": "30052",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "این مارکتر زیرمجموعه کسی نیست.",
+        #         "code": "30052",
+        #     },
+        # )
     if not q.get("LeaderMarketerID") == args.LeaderMarketerID:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "این مارکتر زیرمجموعه نفر دیگری است.",
-                "errorcode": "30012",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30012", "status": 409})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "این مارکتر زیرمجموعه نفر دیگری است.",
+        #         "code": "30012",
+        #     },
+        # }
+        # return JSONResponse(status_code=409, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "این مارکتر زیرمجموعه نفر دیگری است.",
+        #         "code": "30012",
+        #     },
+        # )
 
     results = []
     FollowerMarketerName = get_marketer_name(
@@ -1246,7 +1688,7 @@ async def delete_marketers_relations(
     results.append(
         {"MSG": f"ارتباط بین {LeaderMarketerName} و{FollowerMarketerName} برداشته شد."}
     )
-
+    marketers_relations_coll.delete_one({"FollowerMarketerID": args.FollowerMarketerID})
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -1256,12 +1698,23 @@ async def delete_marketers_relations(
 
 @marketer.get(
     "/users-diff-marketer",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["Marketer"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+)
 async def users_diff_with_tbs(
-    request: Request, args: DiffTradesIn = Depends(DiffTradesIn)
+    request: Request,
+    args: DiffTradesIn = Depends(DiffTradesIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -1272,31 +1725,40 @@ async def users_diff_with_tbs(
     Returns:
         _type_: _description_
     """
-
-    # get user id
-    # marketer_id = get_role_permission(request)
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.Marketer.Read', 'MarketerAdmin.Marketer.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
-        raise HTTPException(status_code=401, detail="Not authorized.")
+        raise HTTPException(status_code=403, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     customers_coll = database["customers"]
     firms_coll = database["firms"]
     # trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     if args.IdpID is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "IDP مارکتر را وارد کنید.", "errorcode": "30003"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # }
+        # return JSONResponse(status_code=412, content=resp)
+
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
+        # )
 
     # check if marketer exists and return his name
     query_result = marketers_coll.find({"IdpId": args.IdpID})
@@ -1337,14 +1799,25 @@ async def users_diff_with_tbs(
             else:
                 result.append(q)
     if not result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-                "errorcode": "30013",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30013", "status": 204})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
+        #         "code": "30013",
+        #     },
+        # }
+        # return JSONResponse(status_code=204, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
+        #         "code": "30013",
+        #     },
+        # )
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -1352,261 +1825,497 @@ async def users_diff_with_tbs(
     )
 
 
-add_pagination(marketer)
-
-
-def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
-    """_summary_
-
-    Args:
-        trade_codes (_type_): _description_
-        from_date (_type_): _description_
-        to_date (_type_): _description_
-        page (int, optional): _description_. Defaults to 1.
-        size (int, optional): _description_. Defaults to 10.
-
-    Returns:
-        _type_: _description_
-    """
-    database = get_database()
-    trades_coll = database["trades"]
-    from_gregorian_date = to_gregorian_(from_date)
-    to_gregorian_date = to_gregorian_(to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-    pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "TradeCode": 1,
-                "Commission": {
-                    "$cond": {
-                        "if": {"$eq": ["$TradeType", 1]},
-                        "then": {
-                            "$add": [
-                                "$TotalCommission",
-                                {"$multiply": ["$Price", "$Volume"]},
-                            ]
-                        },
-                        "else": {
-                            "$subtract": [
-                                {"$multiply": ["$Price", "$Volume"]},
-                                "$TotalCommission",
-                            ]
-                        },
-                    }
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$TradeCode",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalPureVolume": {"$sum": "$Commission"},
-            }
-        },
-        {
-            "$project": {
-                "_id": 0,
-                "TradeCode": "$_id",
-                "TotalPureVolume": 1,
-                "TotalFee": 1,
-            }
-        },
-        {
-            "$lookup": {
-                "from": "firms",
-                "localField": "TradeCode",
-                "foreignField": "PAMCode",
-                "as": "FirmProfile",
-            },
-        },
-        {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
-        {
-            "$lookup": {
-                "from": "customers",
-                "localField": "TradeCode",
-                "foreignField": "PAMCode",
-                "as": "UserProfile",
-            }
-        },
-        {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
-        {
-            "$project": {
-                "TradeCode": 1,
-                "TotalFee": 1,
-                "TotalPureVolume": 1,
-                "Refferer": "$FirmProfile.Referer",
-                "Referer": "$UserProfile.Referer",
-                "FirmTitle": "$FirmProfile.FirmTitle",
-                "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
-                "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
-                "FirstName": "$UserProfile.FirstName",
-                "LastName": "$UserProfile.LastName",
-                "Username": "$UserProfile.Username",
-                "Mobile": "$UserProfile.Mobile",
-                "RegisterDate": "$UserProfile.RegisterDate",
-                "BankAccountNumber": "$UserProfile.BankAccountNumber",
-            }
-        },
-        {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
-        {
-            "$facet": {
-                "metadata": [{"$count": "totalCount"}],
-                "items": [{"$skip": (page - 1) * size}, {"$limit": size}],
-            }
-        },
-        {"$unwind": "$metadata"},
-        {
-            "$project": {
-                "totalCount": "$metadata.totalCount",
-                "items": 1,
-            }
-        },
+@marketer.get("/all-users-total", tags=["Marketer"], response_model=None)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.All",
     ]
+)
+async def users_list_by_volume(
+    role_perm: dict = Depends(get_role_permission),
+    args: UsersListIn = Depends(UsersListIn),
+    brokerage: MongoClient = Depends(get_database),
+):
+    # check if marketer exists and return his name
+    query_result = brokerage.marketers.find_one({"IdpId": args.IdpID})
 
-    aggr_result = trades_coll.aggregate(pipeline=pipeline)
+    if not query_result:
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
+        # resp = {
+        #     "result": {
+        #         "totalCount": 0,
+        #         "pagedData": [],
+        #         "errorCode": 0,
+        #         "errorMessage": "null"
+        #     },
+        #     "error": "null",
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        # }
+        # return JSONResponse(status_code=204, content=resp)
+    marketer_fullname = get_marketer_name(query_result)
 
-    aggre_dict = next(aggr_result, None)
-
-    if aggre_dict is None:
-        return {}
-
-    aggre_dict["page"] = page
-    aggre_dict["size"] = size
-    aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
-    return aggre_dict
-
-
-def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
-    """_summary_
-
-    Args:
-        marketer_fullname (_type_): _description_
-        from_gregorian_date (_type_): _description_
-        to_gregorian_date (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    database = get_database()
-
-    customers_coll = database["customers"]
-    trades_coll = database["trades"]
-    # marketers_coll = database["marketers"]
-    firms_coll = database["firms"]
+    from_gregorian_date = args.from_date#(datetime.strptime(args.from_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
     query = {"Referer": {"$regex": marketer_fullname}}
 
-    fields = {"PAMCode": 1}
+    trade_codes = brokerage.customers.distinct(
+        "PAMCode", query
+    )  # + brokerage.firms.distinct("PAMCode", query)
 
-    customers_records = customers_coll.find(query, fields)
-    firms_records = firms_coll.find(query, fields)
-    trade_codes = [c.get("PAMCode") for c in customers_records] + [
-        c.get("PAMCode") for c in firms_records
-    ]
-
-    buy_pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                    {"TradeType": 1},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "Buy": {
-                    "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalBuy": {"$sum": "$Buy"},
-            }
-        },
-        {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
-    ]
-    sell_pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                    {"TradeType": 2},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "Sell": {
-                    "$subtract": [
-                        {"$multiply": ["$Price", "$Volume"]},
-                        "$TotalCommission",
+    if args.user_type.value == "active":
+        pipeline = [
+            {
+                "$match": {
+                    "$and": [
+                        {"TradeCode": {"$in": trade_codes}},
+                        {"TradeDate": {"$gte": from_gregorian_date}},
+                        {"TradeDate": {"$lte": to_gregorian_date}},
                     ]
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalSell": {"$sum": "$Sell"},
-            }
-        },
-        {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
-    ]
-    buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
-    sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
+                }
+            },
+            {
+                "$project": {
+                    "Price": 1,
+                    "Volume": 1,
+                    "Total": {"$multiply": ["$Price", "$Volume"]},
+                    "PriorityAcceptance": 1,
+                    "TotalCommission": 1,
+                    "TradeItemBroker": 1,
+                    "TradeCode": 1,
+                    "Commission": {
+                        "$cond": {
+                            "if": {"$eq": ["$TradeType", 1]},
+                            "then": {
+                                "$add": [
+                                    "$TotalCommission",
+                                    {"$multiply": ["$Price", "$Volume"]},
+                                ]
+                            },
+                            "else": {
+                                "$subtract": [
+                                    {"$multiply": ["$Price", "$Volume"]},
+                                    "$TotalCommission",
+                                ]
+                            },
+                        }
+                    },
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$TradeCode",
+                    "TotalFee": {"$sum": "$TradeItemBroker"},
+                    "TotalPureVolume": {"$sum": "$Commission"},
+                    "TotalPriorityAcceptance": {"$sum": "$PriorityAcceptance"},
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "TradeCode": "$_id",
+                    "TotalPureVolume": {
+                        "$add": ["$TotalPriorityAcceptance", "$TotalPureVolume"]
+                    },
+                    "TotalFee": 1,
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "customers",
+                    "localField": "TradeCode",
+                    "foreignField": "PAMCode",
+                    "as": "UserProfile",
+                }
+            },
+            {"$unwind": "$UserProfile"},
+            {
+                "$project": {
+                    "TradeCode": 1,
+                    "TotalFee": 1,
+                    "TotalPureVolume": 1,
+                    "FirstName": "$UserProfile.FirstName",
+                    "LastName": "$UserProfile.LastName",
+                    "Username": "$UserProfile.Username",
+                    "Mobile": "$UserProfile.Mobile",
+                    "RegisterDate": "$UserProfile.RegisterDate",
+                    "BankAccountNumber": "$UserProfile.BankAccountNumber",
+                    "FirmTitle": "$UserProfile.FirmTitle",
+                    "Telephone": "$UserProfile.Telephone",
+                    "FirmRegisterLocation": "$UserProfile.FirmRegisterLocation",
+                    "Email": "$UserProfile.Email",
+                    "ActivityField": "$UserProfile.ActivityField",
+                }
+            },
+            {"$sort": {args.sort_by.value: args.sort_order.value}},
+            {
+                "$facet": {
+                    "metadata": [{"$count": "total"}],
+                    "items": [
+                        {"$skip": (args.page - 1) * args.size},
+                        {"$limit": args.size},
+                    ],
+                }
+            },
+            {"$unwind": "$metadata"},
+            {
+                "$project": {
+                    "total": "$metadata.total",
+                    "items": 1,
+                }
+            },
+        ]
 
-    buy_dict = {"vol": 0, "fee": 0}
+        active_dict = next(brokerage.trades.aggregate(pipeline=pipeline), {})
 
-    sell_dict = {"vol": 0, "fee": 0}
+        result = {
+            "pagedData": active_dict.get("items", []),
+            "errorCode": None,
+            "errorMessage": None,
+            "totalCount": active_dict.get("total", 0),
+        }
 
-    if buy_agg_result:
-        buy_dict["vol"] = buy_agg_result.get("TotalBuy")
-        buy_dict["fee"] = buy_agg_result.get("TotalFee")
+        return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
 
-    if sell_agg_result:
-        sell_dict["vol"] = sell_agg_result.get("TotalSell")
-        sell_dict["fee"] = sell_agg_result.get("TotalFee")
-    response_dict = {}
-    response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
-    response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
-    return response_dict
+    elif args.user_type.value == "inactive":
+        active_users_pipeline = [
+            {
+                "$match": {
+                    "$and": [
+                        {"TradeCode": {"$in": trade_codes}},
+                        {"TradeDate": {"$gte": from_gregorian_date}},
+                        {"TradeDate": {"$lte": to_gregorian_date}},
+                    ]
+                }
+            },
+            {"$group": {"_id": "$TradeCode"}},
+            {"$project": {"_id": 0, "TradeCode": "$_id"}},
+        ]
+
+        active_users_res = brokerage.trades.aggregate(pipeline=active_users_pipeline)
+        active_users_set = set(i.get("TradeCode") for i in active_users_res)
+
+        # check wether it is empty or not
+        inactive_uesrs_set = set(trade_codes) - active_users_set
+
+        inactive_users_pipline = [
+            {"$match": {"PAMCode": {"$in": list(inactive_uesrs_set)}}},
+            {
+                "$project": {
+                    "_id": 0,
+                    "TradeCode": 1,
+                    "FirstName": 1,
+                    "LastName": 1,
+                    "Username": 1,
+                    "Mobile": 1,
+                    "RegisterDate": 1,
+                    "BankAccountNumber": 1,
+                    "FirmTitle": 1,
+                    "Telephone": 1,
+                    "FirmRegisterDate": 1,
+                    "Email": 1,
+                    "ActivityField": 1,
+                }
+            },
+            {"$sort": {args.sort_by.value: args.sort_order.value}},
+            {
+                "$facet": {
+                    "metadata": [{"$count": "total"}],
+                    "items": [
+                        {"$skip": (args.page - 1) * args.size},
+                        {"$limit": args.size},
+                    ],
+                }
+            },
+            {"$unwind": "$metadata"},
+            {
+                "$project": {
+                    "total": "$metadata.total",
+                    "items": 1,
+                }
+            },
+        ]
+
+        inactive_dict = next(
+            brokerage.customers.aggregate(pipeline=inactive_users_pipline), {}
+        )
+
+        result = {
+            "pagedData": inactive_dict.get("items", []),
+            "errorCode": None,
+            "errorMessage": None,
+            "totalCount": inactive_dict.get("total", 0),
+        }
+
+        return ResponseListOut(timeGenerated=datetime.now(), result=result, error="")
+    else:
+        return ResponseListOut(timeGenerated=datetime.now(), result=[], error="")
+
+
+add_pagination(marketer)
+
+
+# def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
+#     """_summary_
+#
+#     Args:
+#         trade_codes (_type_): _description_
+#         from_date (_type_): _description_
+#         to_date (_type_): _description_
+#         page (int, optional): _description_. Defaults to 1.
+#         size (int, optional): _description_. Defaults to 10.
+#
+#     Returns:
+#         _type_: _description_
+#     """
+#     database = get_database()
+#     trades_coll = database["trades"]
+#     from_gregorian_date = to_gregorian_(from_date)
+#     to_gregorian_date = to_gregorian_(to_date)
+#     to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+#         days=1
+#     )
+#     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+#
+#     pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "TradeCode": 1,
+#                 "Commission": {
+#                     "$cond": {
+#                         "if": {"$eq": ["$TradeType", 1]},
+#                         "then": {
+#                             "$add": [
+#                                 "$TotalCommission",
+#                                 {"$multiply": ["$Price", "$Volume"]},
+#                             ]
+#                         },
+#                         "else": {
+#                             "$subtract": [
+#                                 {"$multiply": ["$Price", "$Volume"]},
+#                                 "$TotalCommission",
+#                             ]
+#                         },
+#                     }
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$TradeCode",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalPureVolume": {"$sum": "$Commission"},
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "_id": 0,
+#                 "TradeCode": "$_id",
+#                 "TotalPureVolume": 1,
+#                 "TotalFee": 1,
+#             }
+#         },
+#         {
+#             "$lookup": {
+#                 "from": "firms",
+#                 "localField": "TradeCode",
+#                 "foreignField": "PAMCode",
+#                 "as": "FirmProfile",
+#             },
+#         },
+#         {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
+#         {
+#             "$lookup": {
+#                 "from": "customers",
+#                 "localField": "TradeCode",
+#                 "foreignField": "PAMCode",
+#                 "as": "UserProfile",
+#             }
+#         },
+#         {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
+#         {
+#             "$project": {
+#                 "TradeCode": 1,
+#                 "TotalFee": 1,
+#                 "TotalPureVolume": 1,
+#                 "Refferer": "$FirmProfile.Referer",
+#                 "Referer": "$UserProfile.Referer",
+#                 "FirmTitle": "$FirmProfile.FirmTitle",
+#                 "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
+#                 "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
+#                 "FirstName": "$UserProfile.FirstName",
+#                 "LastName": "$UserProfile.LastName",
+#                 "Username": "$UserProfile.Username",
+#                 "Mobile": "$UserProfile.Mobile",
+#                 "RegisterDate": "$UserProfile.RegisterDate",
+#                 "BankAccountNumber": "$UserProfile.BankAccountNumber",
+#             }
+#         },
+#         {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
+#         {
+#             "$facet": {
+#                 "metadata": [{"$count": "totalCount"}],
+#                 "items": [{"$skip": (page - 1) * size}, {"$limit": size}],
+#             }
+#         },
+#         {"$unwind": "$metadata"},
+#         {
+#             "$project": {
+#                 "totalCount": "$metadata.totalCount",
+#                 "items": 1,
+#             }
+#         },
+#     ]
+#
+#     aggr_result = trades_coll.aggregate(pipeline=pipeline)
+#
+#     aggre_dict = next(aggr_result, None)
+#
+#     if aggre_dict is None:
+#         return {}
+#
+#     aggre_dict["page"] = page
+#     aggre_dict["size"] = size
+#     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
+#     return aggre_dict
+
+
+# def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
+#     """_summary_
+#
+#     Args:
+#         marketer_fullname (_type_): _description_
+#         from_gregorian_date (_type_): _description_
+#         to_gregorian_date (_type_): _description_
+#
+#     Returns:
+#         _type_: _description_
+#     """
+#     database = get_database()
+#
+#     customers_coll = database["customers"]
+#     trades_coll = database["trades"]
+#     # marketers_coll = database["marketers"]
+#     firms_coll = database["firms"]
+#
+#     query = {"Referer": {"$regex": marketer_fullname}}
+#
+#     fields = {"PAMCode": 1}
+#
+#     customers_records = customers_coll.find(query, fields)
+#     firms_records = firms_coll.find(query, fields)
+#     trade_codes = [c.get("PAMCode") for c in customers_records] + [
+#         c.get("PAMCode") for c in firms_records
+#     ]
+#
+#     buy_pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                     {"TradeType": 1},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "Buy": {
+#                     "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$id",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalBuy": {"$sum": "$Buy"},
+#             }
+#         },
+#         {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
+#     ]
+#     sell_pipeline = [
+#         {
+#             "$match": {
+#                 "$and": [
+#                     {"TradeCode": {"$in": trade_codes}},
+#                     {"TradeDate": {"$gte": from_gregorian_date}},
+#                     {"TradeDate": {"$lte": to_gregorian_date}},
+#                     {"TradeType": 2},
+#                 ]
+#             }
+#         },
+#         {
+#             "$project": {
+#                 "Price": 1,
+#                 "Volume": 1,
+#                 "Total": {"$multiply": ["$Price", "$Volume"]},
+#                 "TotalCommission": 1,
+#                 "TradeItemBroker": 1,
+#                 "Sell": {
+#                     "$subtract": [
+#                         {"$multiply": ["$Price", "$Volume"]},
+#                         "$TotalCommission",
+#                     ]
+#                 },
+#             }
+#         },
+#         {
+#             "$group": {
+#                 "_id": "$id",
+#                 "TotalFee": {"$sum": "$TradeItemBroker"},
+#                 "TotalSell": {"$sum": "$Sell"},
+#             }
+#         },
+#         {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
+#     ]
+#     buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
+#     sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
+#
+#     buy_dict = {"vol": 0, "fee": 0}
+#
+#     sell_dict = {"vol": 0, "fee": 0}
+#
+#     if buy_agg_result:
+#         buy_dict["vol"] = buy_agg_result.get("TotalBuy")
+#         buy_dict["fee"] = buy_agg_result.get("TotalFee")
+#
+#     if sell_agg_result:
+#         sell_dict["vol"] = sell_agg_result.get("TotalSell")
+#         sell_dict["fee"] = sell_agg_result.get("TotalFee")
+#     response_dict = {}
+#     response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
+#     response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
+#     return response_dict
 
 
 def bs_calculator(trade_code, date, page=1, size=10):

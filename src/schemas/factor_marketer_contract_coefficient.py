@@ -14,6 +14,37 @@ current_year = JalaliDatetime.today().year
 
 
 @dataclass
+class ModifyMarketerContractCoefficientIn:
+    MarketerID: str
+    ID: str = None
+    CoefficientPercentage: float = None
+    ContractID: str = None
+    HighThreshold: int = None
+    LowThreshold: int = None
+    StepNumber: int = None
+    Title: str = None
+
+
+
+@dataclass
+class SearchMarketerContractCoefficientIn:
+    MarketerID: str = Query("")
+    ID: str = None
+    CoefficientPercentage: float = None
+    ContractID: str = None
+    HighThreshold: int = None
+    LowThreshold: int = None
+    StepNumber: int = None
+    Title: str = Query("")
+
+
+
+@dataclass
+class DelMarketerMarketerContractCoefficientIn:
+    MarketerID: str
+
+
+@dataclass
 class MarketerIn:
     IdpID: str = None
 

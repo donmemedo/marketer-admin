@@ -14,33 +14,16 @@ current_year = JalaliDatetime.today().year
 
 
 @dataclass
-class MarketerIn:
-    IdpID: str = None
-
-
-@dataclass
-class ModifyConstIn:
-    MarketerID: str = None
-    FixIncome: Optional[int] = 0
-    Insurance: Optional[float] = 0
-    Collateral: Optional[float] = 0.05
-    Tax: Optional[float] = 0.1
-
-
-@dataclass
-class ModifyFactorIn:
+class ModifyMarketerRefCodeIn:
     MarketerID: str
-    TotalPureVolume: int = None
-    TotalFee: int = None
-    PureFee: int = None
-    MarketerFee: int = None
-    Plan: str = None
-    Tax: int = None
-    Collateral: int = None
-    FinalFee: int = None
-    Payment: int = None
-    FactorStatus: int = None
-    Period: Optional[str] = str(current_year) + f"{current_month:02}"
+    ID: str = None
+    SubsidiaryCode: str = None
+    SubsidiaryTitle: str = None
+    BranchCode: str = None
+    BranchTitle: str = None
+    RefCode: str = None
+    Type: str = None
+    Title: str = None
 
 
 @dataclass
@@ -64,11 +47,22 @@ class ResponseListOut:
 
 
 @dataclass
-class SearchFactorIn:
-
+class SearchMarketerRefCodeIn:
     MarketerID: str = Query("")
-    Period: Optional[str] = str(current_year) + f"{current_month:02}"
+    ID: str = None
+    SubsidiaryCode: str = None
+    SubsidiaryTitle: str = None
+    BranchCode: str = None
+    BranchTitle: str = None
+    RefCode: str = None
+    Type: str = None
+    Title: str = Query("")
 
+
+
+@dataclass
+class DelMarketerRefCodeIn:
+    MarketerID: str
 
 @dataclass
 class Pages:
@@ -84,9 +78,3 @@ class SortField(str, Enum):
 class SortOrder(IntEnum):
     ASCENDING = 1
     DESCENDING = -1
-
-
-@dataclass
-class FactorsListIn(Pages):
-    from_date: str = Query(default=current_date, alias="StartDate")
-    to_date: str = Query(default=current_date, alias="EndDate")

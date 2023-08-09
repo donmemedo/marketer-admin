@@ -6,16 +6,17 @@ Returns:
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi_pagination import add_pagination
+from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
-from src.tools.tokens import JWTBearer, get_role_permission
+from fastapi.exceptions import RequestValidationError
+
+# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.database import get_database
 from src.tools.utils import to_gregorian_, peek, check_permissions
-from src.schemas.user import (
-    UserTradesIn,
-    UsersListIn,
-    ResponseOut,
-    ResponseListOut,
-)
+from src.schemas.user import *
+from pymongo import MongoClient, errors
+from src.auth.authentication import get_role_permission
+from src.auth.authorization import authorize
 
 
 user = APIRouter(prefix="/user")
@@ -23,11 +24,24 @@ user = APIRouter(prefix="/user")
 
 @user.get(
     "/user-trades",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
-async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTradesIn)):
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+)
+async def get_user_trades(
+    request: Request,
+    args: UserTradesIn = Depends(UserTradesIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
+):
     """_summary_
 
     Args:
@@ -44,23 +58,28 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
 
     # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
     #     raise HTTPException(status_code=401, detail="Not authorized.")
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
 
     if args.TradeCode is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "PAMCode  را وارد کنید.", "errorcode": "30015"},
-        )
-    database = get_database()
+        raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
+        # )
+    # database = get_database()
     results = []
     from_gregorian_date = to_gregorian_(args.from_date)
     to_gregorian_date = to_gregorian_(args.to_date)
@@ -82,14 +101,15 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
         results.append(trades[i])
 
     if not results:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
-                "errorcode": "30017",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "300", "status": 204})
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
+        #         "code": "30017",
+        #     },
+        # )
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -99,11 +119,24 @@ async def get_user_trades(request: Request, args: UserTradesIn = Depends(UserTra
 
 @user.get(
     "/users-list-by-volume",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
-def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersListIn)):
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+)
+def users_list_by_volume(
+    request: Request,
+    args: UsersListIn = Depends(UsersListIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
+):
     """_summary_
 
     Args:
@@ -115,17 +148,21 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     """
     # get user id
     # marketer_id = get_role_permission(request)
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     customers_coll = database["customers"]
     firms_coll = database["firms"]
@@ -153,7 +190,7 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         days=1
     )
     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-    query = {"$and": [{"Referer": ''}]}
+    query = {"$and": [{"Referer": ""}]}
     if args.marketername:
         query = {"Referer": {"$regex": args.marketername}}
     fields = {"PAMCode": 1}
@@ -276,14 +313,15 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
-        return ResponseOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "خروجی برای متغیرهای داده شده نداریم.",
-                "errorcode": "30020",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30028", "status": 204})
+        # return ResponseOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "خروجی برای متغیرهای داده شده نداریم.",
+        #         "code": "30020",
+        #     },
+        # )
     return ResponseOut(
         result=aggre_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -293,11 +331,24 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
 
 @user.get(
     "/users-total",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
-def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+)
+def users_total(
+    request: Request,
+    args: UsersListIn = Depends(UsersListIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
+):
     """_summary_
 
     Args:
@@ -309,17 +360,21 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     """
     # get user id
     # marketer_id = get_role_permission(request)
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
 
-    database = get_database()
+    # database = get_database()
 
     customers_coll = database["customers"]
     firms_coll = database["firms"]
@@ -348,7 +403,7 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
     # get all customers' TradeCodes
-    query = {"$and": [{"Referer": ''}]}
+    query = {"$and": [{"Referer": ""}]}
 
     fields = {"PAMCode": 1}
 
@@ -487,14 +542,15 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
-        return ResponseOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "خروجی برای متغیرهای داده شده نداریم.",
-                "errorcode": "30020",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30028", "status": 204})
+        # return ResponseOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "خروجی برای متغیرهای داده شده نداریم.",
+        #         "code": "30020",
+        #     },
+        # )
     return ResponseOut(
         result=aggre_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -504,12 +560,23 @@ def users_total(request: Request, args: UsersListIn = Depends(UsersListIn)):
 
 @user.get(
     "/users-diff",
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+)
 async def users_diff_with_tbs(
-    request: Request, args: UserTradesIn = Depends(UserTradesIn)
+    request: Request,
+    args: UserTradesIn = Depends(UserTradesIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
 ):
     """_summary_
 
@@ -522,11 +589,15 @@ async def users_diff_with_tbs(
     """
     # get user id
     # marketer_id = get_role_permission(request)
-    role_perm = get_role_permission(request)
-    user_id = role_perm['sub']
-    permissions = ['MarketerAdmin.All.Read', 'MarketerAdmin.All.All',
-                   'MarketerAdmin.User.Read', 'MarketerAdmin.User.All']
-    allowed = check_permissions(role_perm['MarketerAdmin'], permissions)
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.User.Read",
+        "MarketerAdmin.User.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
     if allowed:
         pass
     else:
@@ -535,11 +606,12 @@ async def users_diff_with_tbs(
     start_date = jd.strptime(args.from_date, "%Y-%m-%d")
     end_date = jd.strptime(args.to_date, "%Y-%m-%d")
     if args.TradeCode is None:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={"errormessage": "PAMCode  را وارد کنید.", "errorcode": "30015"},
-        )
+        raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
+        # )
 
     delta = timedelta(days=1)
     dates = []
@@ -560,14 +632,15 @@ async def users_diff_with_tbs(
         else:
             result.append(q)
     if not result:
-        return ResponseListOut(
-            result=[],
-            timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            error={
-                "errormessage": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-                "errorcode": "30013",
-            },
-        )
+        raise RequestValidationError(TypeError, body={"code": "30013", "status": 204})
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
+        #         "code": "30013",
+        #     },
+        # )
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
