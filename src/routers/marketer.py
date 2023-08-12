@@ -588,6 +588,12 @@ def get_marketer_total_trades(
         to_gregorian_date = datetime.strptime(
             to_gregorian_date, "%Y-%m-%d"
         ) + timedelta(days=1)
+
+        # #######
+        # from_gregorian_date = args.from_date
+        # to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        # ######
+
         last_month = jd.strptime(args.to_date, "%Y-%m-%d").month - 1
         if last_month < 1:
             last_month = last_month + 12

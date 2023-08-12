@@ -190,6 +190,12 @@ def users_list_by_volume(
         days=1
     )
     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    # #######
+    # from_gregorian_date = args.from_date
+    # to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    # ######
+
     query = {"$and": [{"Referer": ""}]}
     if args.marketername:
         query = {"Referer": {"$regex": args.marketername}}
@@ -402,6 +408,11 @@ def users_total(
     )
     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
+    # #######
+    # from_gregorian_date = args.from_date
+    # to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    # ######
+
     # get all customers' TradeCodes
     query = {"$and": [{"Referer": ""}]}
 
@@ -605,6 +616,12 @@ async def users_diff_with_tbs(
 
     start_date = jd.strptime(args.from_date, "%Y-%m-%d")
     end_date = jd.strptime(args.to_date, "%Y-%m-%d")
+
+    # #######
+    # from_gregorian_date = args.from_date
+    # to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    # ######
+
     if args.TradeCode is None:
         raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
         # return ResponseListOut(
@@ -672,6 +689,11 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
         days=1
     )
     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    # #######
+    # from_gregorian_date = args.from_date
+    # to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    # ######
 
     pipeline = [
         {

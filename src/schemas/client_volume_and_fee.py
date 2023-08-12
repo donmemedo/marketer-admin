@@ -6,9 +6,11 @@ from enum import Enum, IntEnum
 from fastapi import Query
 from pydantic import BaseModel
 from khayyam import JalaliDatetime
+from datetime import date
 
 
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+# current_date = date.today().isoformat()
 current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 
