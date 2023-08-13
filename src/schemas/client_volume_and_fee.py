@@ -31,7 +31,8 @@ from typing import Any, Dict, List
 from fastapi import Query
 from khayyam import JalaliDatetime
 
-current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+from datetime import date
+current_date = date.today().isoformat()#JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 
 
 @dataclass
@@ -137,12 +138,9 @@ class FactorIn:
 
 @dataclass
 class GetUserTotalIn:
-    # IdpID: Optional[str] = Query("")
     trade_code: str = Query(alias="TradeCode")
     from_date: str = Query(default=current_date, alias="StartDate")
     to_date: str = Query(default=current_date, alias="EndDate")
-    # size: int = Query(10, alias="PageSize")
-    # page: int = Query(1, alias="PageNumber")
 
 
 @dataclass

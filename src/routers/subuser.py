@@ -3,7 +3,7 @@
 Returns:
     _type_: _description_
 """
-from datetime import datetime, timedelta  # , date
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
@@ -20,7 +20,6 @@ from src.schemas.subuser import (
     ResponseListOut,
 )
 from src.tools.database import get_database
-# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import peek, to_gregorian_
 from pymongo import MongoClient
 
@@ -29,9 +28,8 @@ subuser = APIRouter(prefix="/subuser")
 
 @subuser.get(
     "/list",
-    dependencies=[Depends(JWTBearer())],
     tags=["SubUser"],
-    response_model=None,  # , response_model=Page[SubUserOut]
+    response_model=None,
 )
 async def search_marketer_user(
     request: Request, args: MarketerIdpIdIn = Depends(MarketerIdpIdIn)
@@ -44,14 +42,11 @@ async def search_marketer_user(
     Returns:
         _type_: MarketerOut
     """
-    # get user id
     marketer_id = args.idpid
     brokerage = get_database()
     customer_coll = brokerage["customers"]
     firms_coll = brokerage["firms"]
     marketers_coll = brokerage["marketers"]
-
-    # check if marketer exists and return his name
     query_result = marketers_coll.find({"IdpId": marketer_id})
     marketer_dict = peek(query_result)
     marketer_fullname = (
@@ -75,9 +70,8 @@ async def search_marketer_user(
 
 @subuser.get(
     "/profile",
-    dependencies=[Depends(JWTBearer())],
     tags=["SubUser"],
-    response_model=None,  # , response_model=Page[SubUserOut]
+    response_model=None,
 )
 async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn)):
     """Gets List of Users of a Marketer and can search them
@@ -89,15 +83,11 @@ async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn
     Returns:
         _type_: _description_
     """
-    # get user id
-    marketer_id = get_role_permission(request)
     brokerage = get_database()
 
     customer_coll = brokerage["customers"]
     firms_coll = brokerage["firms"]
     marketers_coll = brokerage["marketers"]
-
-    # check if marketer exists and return his name
     query_result = marketers_coll.find({"IdpId": marketer_id})
 
     marketer_dict = peek(query_result)
@@ -126,9 +116,8 @@ async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn
 
 @subuser.get(
     "/search",
-    dependencies=[Depends(JWTBearer())],
     tags=["SubUser"],
-    response_model=None,  # , response_model=Page[SubUserOut]
+    response_model=None,
 )
 async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn)):
     """_summary_
@@ -140,14 +129,11 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
     Returns:
         _type_: _description_
     """
-    # get user id
-    marketer_id = get_role_permission(request)
     brokerage = get_database()
 
     customer_coll = brokerage["customers"]
     marketers_coll = brokerage["marketers"]
 
-    # check if marketer exists and return his name
     query_result = marketers_coll.find({"IdpId": marketer_id})
 
     marketer_dict = peek(query_result)
@@ -155,13 +141,6 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
     marketer_fullname = (
         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
     )
-
-    # query = {"$and": [
-    #     {"Referer": marketer_fullname},
-    #     {"FirstName": {"$regex": args.first_name}},
-    #     {"LastName": {"$regex": args.last_name}}
-    #     ]
-    # }
     if args.username:
         filter = {
             "Referer": {"$regex": marketer_fullname},
@@ -181,15 +160,11 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
             "Phone": {"$regex": args.phone},
             "Mobile": {"$regex": args.mobile},
         }
-    # print(query)
-    # sort = list({
-    #                 'BirthDate': -1
-    #             }.items())
     return paginate(customer_coll, filter, sort=[("RegisterDate", -1)])
 
 
 @subuser.get(
-    "/cost", dependencies=[Depends(JWTBearer())], tags=["SubUser"], response_model=None
+    "/cost", tags=["SubUser"], response_model=None
 )
 async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostIn)):
     """_summary_
@@ -202,8 +177,6 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
         _type_: _description_
     """
 
-    # get user id
-    marketer_id = get_role_permission(request)
     brokerage = get_database()
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
@@ -213,8 +186,6 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
     marketer_fullname = (
         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
     )
-
-    # ToDo:Because of having username isn't optional so it will have been changed to IDP or username
     query = {
         "Referer": marketer_fullname,
         "FirstName": {"$regex": args.first_name},
@@ -227,12 +198,16 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
 
     customers_records = customers_coll.find(query, fields)
     trade_codes = [c.get("PAMCode") for c in customers_records]
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
 
     buy_pipeline = [
         {
@@ -318,7 +293,6 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
         total_sell = 0
     subuser_total["TotalPureVolume"] = total_sell + total_buy
 
-    # tpv = subuser_total.get("TotalPureVolume")
     return {
         "TotalBuy": total_buy,
         "TotalSell": total_sell,
@@ -329,7 +303,6 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
 
 @subuser.get(
     "/costlist",
-    dependencies=[Depends(JWTBearer())],
     tags=["SubUser"],
     response_model=None,
 )
@@ -345,22 +318,16 @@ async def marketer_subuser_lists(
     Returns:
         _type_: _description_
     """
-    # get all current marketers
     database = get_database()
-    marketer_id = get_role_permission(request)
     customers_coll = database["customers"]
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     firms_coll = database["firms"]
-    # totals_coll = database["totals"]
     query_result = marketers_coll.find({"IdpId": marketer_id})
     marketer_dict = peek(query_result)
     marketer_fullname = (
         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
     )
-
-    # get all marketers IdpId
-
     subusers_query = customers_coll.find(
         {"Referer": marketer_fullname},
         {
@@ -379,21 +346,7 @@ async def marketer_subuser_lists(
     results = []
     for subuser in subusers_list:
         response_dict = {}
-        # if subuser.get("FirstName") == "":
-        #     subuser_fullname = subuser.get("LastName")
-        # elif subuser.get("LastName") == "":
-        #     subuser_fullname = subuser.get("FirstName")
-        # else:
-        #     subuser_fullname = subuser.get("FirstName") + " " + subuser.get("LastName")
-
-        # Check if customer exist
-        # query = {"Referer": {"$regex": marketer_fullname}}
         query = {"PAMCode": subuser["PAMCode"]}
-
-        # fields = {"PAMCode": 1}
-
-        # customers_records = customers_coll.find(query, fields)
-        # firms_records = firms_coll.find(query, fields)
         customers_records = customers_coll.find(query, {})
         firms_records = firms_coll.find(query, {})
         trade_codes = [c.get("PAMCode") for c in customers_records] + [
@@ -405,11 +358,8 @@ async def marketer_subuser_lists(
         from_gregorian_date = to_gregorian_(args.from_date)
         lmd_from_gregorian_date = to_gregorian_(str(lm_from_gregorian_date))
 
-        #####################
         if not args.to_date:
             args.to_date = jd.today().date().isoformat()
-        #####################
-
         to_gregorian_date = to_gregorian_(args.to_date)
         lmd_to_gregorian_date = to_gregorian_(str(lm_to_gregorian_date))
 
@@ -424,14 +374,6 @@ async def marketer_subuser_lists(
             last_month = last_month + 12
         if last_month < 10:
             last_month = "0" + str(last_month)
-            # last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year) + str(
-            #     last_month
-            # )
-        # if last_month == 12:
-        # last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year - 1) + str(
-        #     last_month
-        # )
-        # print(last_month_str)
         to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
         lmd_to_gregorian_date = lmd_to_gregorian_date.strftime("%Y-%m-%d")
 
@@ -521,7 +463,6 @@ async def marketer_subuser_lists(
         if sell_agg_result:
             sell_dict["vol"] = sell_agg_result.get("TotalSell")
             sell_dict["fee"] = sell_agg_result.get("TotalFee")
-        ######################
         lm_buy_pipeline = [
             {
                 "$match": {
@@ -609,20 +550,15 @@ async def marketer_subuser_lists(
             lm_sell_dict["vol"] = lm_sell_agg_result.get("TotalSell")
             lm_sell_dict["fee"] = lm_sell_agg_result.get("TotalFee")
 
-        ######################
         response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
         response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
         response_dict["FirstName"] = subuser.get("FirstName")
         response_dict["LastName"] = subuser.get("LastName")
-        ###########
-        # lmtpv = last_month_str + "TPV"
-        # lmtf = last_month_str + "TF"
         response_dict["LMTPV"] = lm_buy_dict.get("vol") + lm_sell_dict.get("vol")
         response_dict["LMTF"] = lm_buy_dict.get("fee") + lm_sell_dict.get("fee")
         response_dict["TradesCount"] = trades_coll.count_documents(
             {"PAMCode": subuser.get("PAMCode")}
         )
-        ###########
         results.append(response_dict)
     if args.sorted:
         results.sort(key=lambda x: x["TotalFee"], reverse=args.asc_desc_TF)
@@ -642,7 +578,6 @@ async def marketer_subuser_lists(
 
 @subuser.get(
     "/users-total",
-    dependencies=[Depends(JWTBearer())],
     tags=["SubUser"],
     response_model=None,
 )
@@ -656,29 +591,20 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     Returns:
         _type_: _description_
     """
-    # get user id
-    # marketer_id = get_role_permission(request)
     database = get_database()
 
     customers_coll = database["customers"]
     trades_coll = database["trades"]
     firms_coll = database["firms"]
     marketers_coll = database["marketers"]
-
-    # check if marketer exists and return his name
-    # query_result = marketers_coll.find({"IdpId": marketer_id})
-
     marketers_query = marketers_coll.find(
         {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
         {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
     )
     marketers_list = list(marketers_query)
 
-    # marketer_dict = peek(query_result)
-
     results = []
     for marketer in marketers_list:
-        # response_dict = {}
         if marketer.get("FirstName") == "":
             marketer_fullname = marketer.get("LastName")
         elif marketer.get("LastName") == "":
@@ -687,59 +613,26 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
             marketer_fullname = (
                 marketer.get("FirstName") + " " + marketer.get("LastName")
             )
-        """
-        customers_query = customers_coll.find(
-            {"Referer": {"$regex": marketer_fullname}},
-            {"FirstName": 1, "LastName": 1, "_id": 0, "PAMCode": 1},
-        )
-        customers_list = list(customers_query)
-
-        firms_query = firms_coll.find(
-            {"Referer": {"$regex": marketer_fullname}},
-            {"FirstName": 1, "LastName": 1, "_id": 0, "PAMCode": 1},
-        )
-        firms_list = list(firms_query)
-
-        for customer in customers_list:
-            vv
-
-
-        for firm in firms_list:
-            vv
-        # Check if customer exist
-        query = {"Referer": {"$regex": marketer_fullname}}
-
-        fields = {"PAMCode": 1}
-
-        customers_records = customers_coll.find(query, fields)
-        firms_records = firms_coll.find(query, fields)
-        trade_codes = [c.get("PAMCode") for c in customers_records] + [
-            c.get("PAMCode") for c in firms_records
-        ]
-
-        """
-        from_gregorian_date = to_gregorian_(args.from_date)
-        to_gregorian_date = to_gregorian_(args.to_date)
-        to_gregorian_date = datetime.strptime(
-            to_gregorian_date, "%Y-%m-%d"
-        ) + timedelta(days=1)
-        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-        # get all customers' TradeCodes
+        # from_gregorian_date = to_gregorian_(args.from_date)
+        # to_gregorian_date = to_gregorian_(args.to_date)
+        # to_gregorian_date = datetime.strptime(
+        #     to_gregorian_date, "%Y-%m-%d"
+        # ) + timedelta(days=1)
+        # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
         query = {"$and": [{"Referer": marketer_fullname}]}
-
         fields = {"PAMCode": 1}
-
         customers_records = customers_coll.find(query, fields)
         firms_records = firms_coll.find(query, fields)
         trade_codes = [c.get("PAMCode") for c in customers_records] + [
             c.get("PAMCode") for c in firms_records
         ]
+
+        from_gregorian_date = args.from_date
+        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
         pipeline = [
             {
                 "$match": {
-                    # "TradeCode": {"$in": trade_codes}
                     "$and": [
                         {"TradeCode": {"$in": trade_codes}},
                         {"TradeDate": {"$gte": from_gregorian_date}},
@@ -789,40 +682,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
                     "TotalFee": 1,
                 }
             },
-            #########Danial's Code########
-            # {
-            #     "$lookup": {
-            #         "from": "customers",
-            #         "localField": "TradeCode",
-            #         "foreignField": "PAMCode",
-            #         "as": "UserProfile"
-            #     }
-            # },
-            # {
-            #     "$unwind": "$UserProfile"
-            # },
-            # {
-            #     "$project": {
-            #         "TradeCode": 1,
-            #         "TotalFee": 1,
-            #         "TotalPureVolume": 1,
-            #         "FirstName": "$UserProfile.FirstName",
-            #         "LastName": "$UserProfile.LastName",
-            #         "Username": "$UserProfile.Username",
-            #         "Mobile": "$UserProfile.Mobile",
-            #         "RegisterDate": "$UserProfile.RegisterDate",
-            #         "BankAccountNumber": "$UserProfile.BankAccountNumber",
-            #     }
-            # },
-            # {
-            #     "$sort": {
-            #         "TotalPureVolume": 1,
-            #         "RegisterDate": 1,
-            #         "TradeCode": 1
-            #     }
-            # },
-            ##############END of Danial's Code#########
-            ##############Refactored Code#########
             {
                 "$lookup": {
                     "from": "firms",
@@ -849,8 +708,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
                     "Refferer": "$FirmProfile.Referer",
                     "Referer": "$UserProfile.Referer",
                     "FirmTitle": "$FirmProfile.FirmTitle",
-                    # "FirmRegisterDate": "$FirmTitle.RegisterDate",
-                    # "FirmBankAccountNumber": "$FirmTitle.BankAccountNumber",
                     "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
                     "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
                     "FirstName": "$UserProfile.FirstName",
@@ -862,7 +719,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
                 }
             },
             {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
-            ###########END of Refactor############
             {
                 "$facet": {
                     "metadata": [{"$count": "totalCount"}],
@@ -885,14 +741,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         aggre_dict = next(aggr_result, None)
         if aggre_dict is not None:
             results.append(aggre_dict)
-        # results.append(aggre_dict)
-    # aggre_dict = next(aggr_result, None)
-
-    # if aggre_dict is None:
-    #     return {}
-
-    # return aggre_dict
-
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -902,7 +750,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
 
 @subuser.get(
     "/total-users",
-    dependencies=[Depends(JWTBearer())],
     tags=["SubUser"],
     response_model=None,
 )
@@ -918,30 +765,19 @@ def total_users_cost(
     Returns:
         _type_: _description_
     """
-    # get user id
-    # marketer_id = get_role_permission(request)
     database = get_database()
-
     customers_coll = database["customers"]
     trades_coll = database["trades"]
     firms_coll = database["firms"]
     marketers_coll = database["marketers"]
-
-    # check if marketer exists and return his name
-    # query_result = marketers_coll.find({"IdpId": marketer_id})
-
     marketers_query = marketers_coll.find(
         {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
         {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
     )
     marketers_list = list(marketers_query)
-
-    # marketer_dict = peek(query_result)
-
     results = []
     total_codes = []
     for marketer in marketers_list:
-        # response_dict = {}
         if marketer.get("FirstName") == "":
             marketer_fullname = marketer.get("LastName")
         elif marketer.get("LastName") == "":
@@ -950,49 +786,18 @@ def total_users_cost(
             marketer_fullname = (
                 marketer.get("FirstName") + " " + marketer.get("LastName")
             )
-        """
-        customers_query = customers_coll.find(
-            {"Referer": {"$regex": marketer_fullname}},
-            {"FirstName": 1, "LastName": 1, "_id": 0, "PAMCode": 1},
-        )
-        customers_list = list(customers_query)
+        # from_gregorian_date = to_gregorian_(args.from_date)
+        # to_gregorian_date = to_gregorian_(args.to_date)
+        # to_gregorian_date = datetime.strptime(
+        #     to_gregorian_date, "%Y-%m-%d"
+        # ) + timedelta(days=1)
+        # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
-        firms_query = firms_coll.find(
-            {"Referer": {"$regex": marketer_fullname}},
-            {"FirstName": 1, "LastName": 1, "_id": 0, "PAMCode": 1},
-        )
-        firms_list = list(firms_query)
+        from_gregorian_date = args.from_date
+        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
-        for customer in customers_list:
-            vv
-
-
-        for firm in firms_list:
-            vv
-        # Check if customer exist
-        query = {"Referer": {"$regex": marketer_fullname}}
-
-        fields = {"PAMCode": 1}
-
-        customers_records = customers_coll.find(query, fields)
-        firms_records = firms_coll.find(query, fields)
-        trade_codes = [c.get("PAMCode") for c in customers_records] + [
-            c.get("PAMCode") for c in firms_records
-        ]
-
-        """
-        from_gregorian_date = to_gregorian_(args.from_date)
-        to_gregorian_date = to_gregorian_(args.to_date)
-        to_gregorian_date = datetime.strptime(
-            to_gregorian_date, "%Y-%m-%d"
-        ) + timedelta(days=1)
-        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-        # get all customers' TradeCodes
         query = {"$and": [{"Referer": marketer_fullname}]}
-
         fields = {"PAMCode": 1}
-
         customers_records = customers_coll.find(query, fields)
         firms_records = firms_coll.find(query, fields)
         total_codes = (
@@ -1006,9 +811,7 @@ def total_users_cost(
         pipeline = [
             {
                 "$match": {
-                    # "TradeCode": {"$in": trade_codes}
                     "$and": [
-                        # {"TradeCode": {"$in": trade_codes}},
                         {"TradeCode": trade_codes},
                         {"TradeDate": {"$gte": from_gregorian_date}},
                         {"TradeDate": {"$lte": to_gregorian_date}},
@@ -1057,40 +860,6 @@ def total_users_cost(
                     "TotalFee": 1,
                 }
             },
-            #########Danial's Code########
-            # {
-            #     "$lookup": {
-            #         "from": "customers",
-            #         "localField": "TradeCode",
-            #         "foreignField": "PAMCode",
-            #         "as": "UserProfile"
-            #     }
-            # },
-            # {
-            #     "$unwind": "$UserProfile"
-            # },
-            # {
-            #     "$project": {
-            #         "TradeCode": 1,
-            #         "TotalFee": 1,
-            #         "TotalPureVolume": 1,
-            #         "FirstName": "$UserProfile.FirstName",
-            #         "LastName": "$UserProfile.LastName",
-            #         "Username": "$UserProfile.Username",
-            #         "Mobile": "$UserProfile.Mobile",
-            #         "RegisterDate": "$UserProfile.RegisterDate",
-            #         "BankAccountNumber": "$UserProfile.BankAccountNumber",
-            #     }
-            # },
-            # {
-            #     "$sort": {
-            #         "TotalPureVolume": 1,
-            #         "RegisterDate": 1,
-            #         "TradeCode": 1
-            #     }
-            # },
-            ##############END of Danial's Code#########
-            ##############Refactored Code#########
             {
                 "$lookup": {
                     "from": "firms",
@@ -1117,8 +886,6 @@ def total_users_cost(
                     "Refferer": "$FirmProfile.Referer",
                     "Referer": "$UserProfile.Referer",
                     "FirmTitle": "$FirmProfile.FirmTitle",
-                    # "FirmRegisterDate": "$FirmTitle.RegisterDate",
-                    # "FirmBankAccountNumber": "$FirmTitle.BankAccountNumber",
                     "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
                     "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
                     "FirstName": "$UserProfile.FirstName",
@@ -1130,7 +897,6 @@ def total_users_cost(
                 }
             },
             {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
-            ###########END of Refactor############
             {
                 "$facet": {
                     "metadata": [{"$count": "totalCount"}],
@@ -1143,37 +909,18 @@ def total_users_cost(
             {"$unwind": "$metadata"},
             {
                 "$project": {
-                    # "totalCount": "$metadata.totalCount",
                     "items": 1,
                 }
             },
         ]
-
-        # aggr_result = trades_coll.aggregate(pipeline=pipeline)
         aggr_result = peek(trades_coll.aggregate(pipeline=pipeline))
-        # aggre_dict = next(aggr_result, None)
-        # if aggre_dict is not None:
-        #     results.append(aggre_dict)
         if aggr_result is not None:
             results.append(aggr_result)
-        # results.append(aggre_dict)
-    # aggre_dict = next(aggr_result, None)
-
-    # if aggre_dict is None:
-    #     return {}
-    # aggre_dict["page"] = 1#args.page
-    # aggre_dict["size"] = 1000000#args.size
-    # aggre_dict["pages"] = - (aggre_dict.get("total") // - args.size)
-
-    # return aggre_dict
     dicter = []
-    # dicter['itemss']= {}
     for i in range(len(results)):
-        # dicter['itemss'][i]=results[i]['items'][0]
         dicter.append(results[i]["items"][0])
 
     if args.sorted:
-        # if 1==1:
         dicter.sort(key=lambda x: x["TotalFee"], reverse=args.asc_desc_TF)
         dicter.sort(key=lambda x: x["TotalPureVolume"], reverse=args.asc_desc_TPV)
 
@@ -1200,12 +947,16 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     """
     database = get_database()
     trades_coll = database["trades"]
-    from_gregorian_date = to_gregorian_(from_date)
-    to_gregorian_date = to_gregorian_(to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(from_date)
+    # to_gregorian_date = to_gregorian_(to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    from_gregorian_date = from_date
+    to_gregorian_date = (datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
 
     pipeline = [
         {
@@ -1322,86 +1073,3 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     aggre_dict["size"] = size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
     return aggre_dict
-
-    # return ResponseOut(
-    #     result=aggre_dict,
-    #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-    #     error=""
-    #     )
-
-
-# def buy_pipe(customers_records, from_gregorian_date, to_gregorian_date):
-#     trade_codes = [c.get("PAMCode") for c in customers_records]
-#     buy_pipeline = [
-#         {
-#             "$match": {
-#                 "$and": [
-#                     {"TradeCode": {"$in": trade_codes}},
-#                     {"TradeDate": {"$gte": from_gregorian_date}},
-#                     {"TradeDate": {"$lte": to_gregorian_date}},
-#                     {"TradeType": 1},
-#                 ]
-#             }
-#         },
-#         {
-#             "$project": {
-#                 "Price": 1,
-#                 "Volume": 1,
-#                 "Total": {"$multiply": ["$Price", "$Volume"]},
-#                 "TotalCommission": 1,
-#                 "TradeItemBroker": 1,
-#                 "Buy": {
-#                     "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
-#                 },
-#             }
-#         },
-#         {
-#             "$group": {
-#                 "_id": "$id",
-#                 "TotalFee": {"$sum": "$TradeItemBroker"},
-#                 "TotalBuy": {"$sum": "$Buy"},
-#             }
-#         },
-#         {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
-#     ]
-#     return buy_pipeline
-#
-#
-# def sell_pipe(customers_records, from_gregorian_date, to_gregorian_date):
-#     trade_codes = [c.get("PAMCode") for c in customers_records]
-#     sell_pipeline = [
-#         {
-#             "$match": {
-#                 "$and": [
-#                     {"TradeCode": {"$in": trade_codes}},
-#                     {"TradeDate": {"$gte": from_gregorian_date}},
-#                     {"TradeDate": {"$lte": to_gregorian_date}},
-#                     {"TradeType": 2},
-#                 ]
-#             }
-#         },
-#         {
-#             "$project": {
-#                 "Price": 1,
-#                 "Volume": 1,
-#                 "Total": {"$multiply": ["$Price", "$Volume"]},
-#                 "TotalCommission": 1,
-#                 "TradeItemBroker": 1,
-#                 "Sell": {
-#                     "$subtract": [
-#                         {"$multiply": ["$Price", "$Volume"]},
-#                         "$TotalCommission",
-#                     ]
-#                 },
-#             }
-#         },
-#         {
-#             "$group": {
-#                 "_id": "$id",
-#                 "TotalFee": {"$sum": "$TradeItemBroker"},
-#                 "TotalSell": {"$sum": "$Sell"},
-#             }
-#         },
-#         {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
-#     ]
-#     return sell_pipeline

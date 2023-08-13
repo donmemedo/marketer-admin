@@ -9,8 +9,6 @@ from fastapi_pagination import add_pagination
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
 from fastapi.exceptions import RequestValidationError
-
-# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.database import get_database
 from src.tools.utils import to_gregorian_, peek, check_permissions
 from src.schemas.user import *
@@ -24,7 +22,6 @@ user = APIRouter(prefix="/user")
 
 @user.get(
     "/user-trades",
-    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
@@ -54,11 +51,6 @@ async def get_user_trades(
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -74,19 +66,18 @@ async def get_user_trades(
 
     if args.TradeCode is None:
         raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
-        # )
-    # database = get_database()
     results = []
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
+
     trades_coll = database["trades"]
     query = {
         "$and": [
@@ -102,14 +93,6 @@ async def get_user_trades(
 
     if not results:
         raise RequestValidationError(TypeError, body={"code": "300", "status": 204})
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
-        #         "code": "30017",
-        #     },
-        # )
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -119,7 +102,6 @@ async def get_user_trades(
 
 @user.get(
     "/users-list-by-volume",
-    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
@@ -146,9 +128,6 @@ def users_list_by_volume(
     Returns:
         _type_: _description_
     """
-    # get user id
-    # marketer_id = get_role_permission(request)
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -161,35 +140,22 @@ def users_list_by_volume(
         pass
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
-
-    # database = get_database()
-
     customers_coll = database["customers"]
     firms_coll = database["firms"]
 
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
-    # check if marketer exists and return his name
-    # query_result = marketers_coll.find({"IdpId": marketer_id})
-    #
-    # marketer_dict = peek(query_result)
-    #
-    # if marketer_dict.get("FirstName") == "":
-    #     marketer_fullname = marketer_dict.get("LastName")
-    # elif marketer_dict.get("LastName") == "":
-    #     marketer_fullname = marketer_dict.get("FirstName")
-    # else:
-    #     marketer_fullname = (
-    #         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
-    #     )
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
     query = {"$and": [{"Referer": ""}]}
     if args.marketername:
         query = {"Referer": {"$regex": args.marketername}}
@@ -314,14 +280,6 @@ def users_list_by_volume(
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
         raise RequestValidationError(TypeError, body={"code": "30028", "status": 204})
-        # return ResponseOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "خروجی برای متغیرهای داده شده نداریم.",
-        #         "code": "30020",
-        #     },
-        # )
     return ResponseOut(
         result=aggre_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -331,7 +289,6 @@ def users_list_by_volume(
 
 @user.get(
     "/users-total",
-    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
@@ -358,9 +315,6 @@ def users_total(
     Returns:
         _type_: _description_
     """
-    # get user id
-    # marketer_id = get_role_permission(request)
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -373,36 +327,21 @@ def users_total(
         pass
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
-
-    # database = get_database()
-
     customers_coll = database["customers"]
     firms_coll = database["firms"]
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
-    # check if marketer exists and return his name
-    # query_result = marketers_coll.find({"IdpId": marketer_id})
-    #
-    # marketer_dict = peek(query_result)
-    #
-    # if marketer_dict.get("FirstName") == "":
-    #     marketer_fullname = marketer_dict.get("LastName")
-    # elif marketer_dict.get("LastName") == "":
-    #     marketer_fullname = marketer_dict.get("FirstName")
-    # else:
-    #     marketer_fullname = (
-    #         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
-    #     )
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
-    # get all customers' TradeCodes
     query = {"$and": [{"Referer": ""}]}
 
     fields = {"PAMCode": 1}
@@ -499,19 +438,6 @@ def users_total(
                 "BankAccountNumber": "$UserProfile.BankAccountNumber",
             }
         },
-        # {
-        #     "$project": {
-        #         "TradeCode": 1,
-        #         "TotalFee": 1,
-        #         "TotalPureVolume": 1,
-        #         "FirstName": "$UserProfile.FirstName",
-        #         "LastName": "$UserProfile.LastName",
-        #         "Username": "$UserProfile.Username",
-        #         "Mobile": "$UserProfile.Mobile",
-        #         "RegisterDate": "$UserProfile.RegisterDate",
-        #         "BankAccountNumber": "$UserProfile.BankAccountNumber",
-        #     }
-        # },
         {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
         {
             "$facet": {
@@ -543,14 +469,6 @@ def users_total(
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
         raise RequestValidationError(TypeError, body={"code": "30028", "status": 204})
-        # return ResponseOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "خروجی برای متغیرهای داده شده نداریم.",
-        #         "code": "30020",
-        #     },
-        # )
     return ResponseOut(
         result=aggre_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -560,7 +478,6 @@ def users_total(
 
 @user.get(
     "/users-diff",
-    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
@@ -587,9 +504,6 @@ async def users_diff_with_tbs(
     Returns:
         _type_: _description_
     """
-    # get user id
-    # marketer_id = get_role_permission(request)
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -607,21 +521,11 @@ async def users_diff_with_tbs(
     end_date = jd.strptime(args.to_date, "%Y-%m-%d")
     if args.TradeCode is None:
         raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
-        # )
-
     delta = timedelta(days=1)
     dates = []
     while start_date < end_date:
-        # add current date to list by converting  it to iso format
         dates.append(str(start_date.date()))
-        # increment start date by timedelta
         start_date += delta
-
-    ###############
     result = []
     for date in dates:
         print(date)
@@ -633,14 +537,6 @@ async def users_diff_with_tbs(
             result.append(q)
     if not result:
         raise RequestValidationError(TypeError, body={"code": "30013", "status": 204})
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-        #         "code": "30013",
-        #     },
-        # )
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -666,12 +562,16 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     """
     database = get_database()
     trades_coll = database["trades"]
-    from_gregorian_date = to_gregorian_(from_date)
-    to_gregorian_date = to_gregorian_(to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(from_date)
+    # to_gregorian_date = to_gregorian_(to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    from_gregorian_date = from_date
+    to_gregorian_date = (datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
 
     pipeline = [
         {

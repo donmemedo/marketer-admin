@@ -3,7 +3,7 @@ Returns:
     _type_: _description_
 """
 from pymongo import MongoClient
-from config import settings
+from src.config import settings
 
 
 def get_database():

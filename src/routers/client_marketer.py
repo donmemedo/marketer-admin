@@ -81,15 +81,6 @@ async def get_marketer_profile(
 
     if not results:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "موردی با IDP داده شده یافت نشد.",
-        #         "code": "30004",
-        #     },
-        # }
-        # return JSONResponse(status_code=204, content=resp)
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
@@ -181,14 +172,18 @@ async def cal_marketer_cost(
 
         trade_codes = [
             c.get("PAMCode") for c in customers_records
-        ]  # + [c.get("PAMCode") for c in firms_records]
+        ]
 
-        from_gregorian_date = to_gregorian_(args.from_date)
-        to_gregorian_date = to_gregorian_(args.to_date)
-        to_gregorian_date = datetime.strptime(
-            to_gregorian_date, "%Y-%m-%d"
-        ) + timedelta(days=1)
-        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+        # from_gregorian_date = to_gregorian_(args.from_date)
+        # to_gregorian_date = to_gregorian_(args.to_date)
+        # to_gregorian_date = datetime.strptime(
+        #     to_gregorian_date, "%Y-%m-%d"
+        # ) + timedelta(days=1)
+        # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+        from_gregorian_date = args.from_date
+        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
         buy_pipeline = [
             {
                 "$match": {
