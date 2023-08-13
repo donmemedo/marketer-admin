@@ -246,7 +246,7 @@ async def get_marketer_total_trades(
 
         trade_codes = [
             c.get("PAMCode") for c in customers_records
-        ]  # + [c.get("PAMCode") for c in firms_records]
+        ]
 
         from_gregorian_date = to_gregorian_(args.from_date)
         to_gregorian_date = to_gregorian_(args.to_date)
@@ -578,8 +578,6 @@ async def users_list_by_volume(
 
         active_users_res = brokerage.trades.aggregate(pipeline=active_users_pipeline)
         active_users_set = set(i.get("TradeCode") for i in active_users_res)
-
-        # check wether it is empty or not
         inactive_uesrs_set = set(trade_codes) - active_users_set
 
         inactive_users_pipline = [

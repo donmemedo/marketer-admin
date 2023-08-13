@@ -69,8 +69,6 @@ class SortOrder(IntEnum):
 
 @dataclass
 class UsersTotalPureIn:
-    # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
-    # to_date: str = Query("1401-12-01")
     to_date: str = Query(default=None, alias="EndDate")
     from_date: str = Query(default=current_date, alias="StartDate")
     asc_desc_TPV: Optional[bool] = False

@@ -137,12 +137,9 @@ class FactorIn:
 
 @dataclass
 class GetUserTotalIn:
-    # IdpID: Optional[str] = Query("")
     trade_code: str = Query(alias="TradeCode")
     from_date: str = Query(default=current_date, alias="StartDate")
     to_date: str = Query(default=current_date, alias="EndDate")
-    # size: int = Query(10, alias="PageSize")
-    # page: int = Query(1, alias="PageNumber")
 
 
 @dataclass

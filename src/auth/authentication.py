@@ -59,7 +59,7 @@ async def get_current_user(
 
 def get_role_permission(
     token: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-):  # req: Request):
+):
     """_summary_
 
     Args:
@@ -68,14 +68,13 @@ def get_role_permission(
     Returns:
         _type_: _description_
     """
-    # token = req.headers.get("authorization").split()[1]
     public_key = get_public_key()
 
     try:
         decoded = jwt.decode(
             token.credentials,
             public_key,
-            algorithms=["RS256"],  # issuer=issuer, verify=True
+            algorithms=["RS256"],
             options={"verify_signature": False, "verify_aud": False},
         )
     except ExpiredSignatureError as err:
@@ -91,18 +90,8 @@ def get_role_permission(
     except:
         role_perm["roles"] = []
     role_perm["scopes"] = decoded["role"]
-    # if decoded['CustomerManagement']:
-    #     role_perm['CustomerManagement'] = decoded['CustomerManagement']
-    # else:
-    #     role_perm['CustomerManagement'] = ''
     try:
         role_perm["Marketer"] = decoded["Marketer"]
     except:
         role_perm["Marketer"] = []
-    # try:
-    #     role_perm["roles"] = decoded["MarketerAdmin"]
-    # except:
-    #     role_perm["roles"] = []
-
-    return role_perm  # e892eae7-cf2e-48d8-a024-a7c9eb0f8668
-    # return "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156"
+    return role_perm

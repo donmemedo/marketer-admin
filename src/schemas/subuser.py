@@ -10,7 +10,6 @@ from pydantic import BaseModel
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
-# print(current_date)
 
 
 @dataclass
@@ -19,7 +18,6 @@ class SubUserIn:
 
     first_name: str = Query("")
     last_name: str = Query("")
-    # marketer_name: str = Query("")
     register_date: str = Query("")
     phone: str = Query("")
     mobile: str = Query("")
@@ -46,8 +44,6 @@ class SubCostIn:
 
 @dataclass
 class UsersTotalPureIn:
-    # HACK: because Pydantic do not support Jalali Date, I had to use the universal calendar.
-    # to_date: str = Query("1401-12-01")
     to_date: str = Query(default=None, alias="EndDate")
     from_date: str = Query(default=current_date, alias="StartDate")
     asc_desc_TPV: Optional[bool] = False
@@ -85,7 +81,6 @@ class TotalUsersListIn(Pages):
 class MarketerIdpIdIn:
     """_summary_"""
 
-    # id: int
     idpid: str
 
 

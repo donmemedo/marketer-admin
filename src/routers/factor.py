@@ -11,7 +11,6 @@ from khayyam import JalaliDatetime as jd
 from src.schemas.factor import *
 from src.tools.database import get_database
 from fastapi.exceptions import RequestValidationError
-# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
 from src.tools.logger import logger
 from src.tools.stages import plans
@@ -25,7 +24,6 @@ factor = APIRouter(prefix="/factor")
 
 @factor.get(
     "/get-factor-consts",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
     response_model=None,
 )
@@ -51,7 +49,6 @@ async def get_factors_consts(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -66,24 +63,11 @@ async def get_factors_consts(
         raise HTTPException(status_code=403, detail="Not authorized.")
 
     marketer_id = args.IdpID
-    # brokerage = get_database()
     consts_coll = brokerage["consts"]
     query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
     if not query_result:
         logger.error("No Record- Error 30001")
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "موردی یافت نشد.", "code": "30001"},
-        # }
-        # return JSONResponse(status_code=204, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "موردی یافت نشد.", "code": "30001"},
-        # )
     logger.info("Factor Constants were gotten Successfully.")
     return ResponseListOut(
         result=query_result,
@@ -94,7 +78,6 @@ async def get_factors_consts(
 
 @factor.get(
     "/get-all-factor-consts",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
     response_model=None,
 )
@@ -122,7 +105,6 @@ async def get_all_factors_consts(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -136,7 +118,6 @@ async def get_all_factors_consts(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    # database = get_database()
     results = []
     consts_coll = database["consts"]
     query_result = consts_coll.find({}, {"_id": False})
@@ -145,24 +126,6 @@ async def get_all_factors_consts(
         results.append((consts[i]))
     if not results:
         raise RequestValidationError(TypeError, body={"code": "30002", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "موردی برای ثابتهای فاکتورها یافت نشد.",
-        #         "code": "30002",
-        #     },
-        # }
-        # return JSONResponse(status_code=204, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "موردی برای ثابتهای فاکتورها یافت نشد.",
-        #         "code": "30002",
-        #     },
-        # )
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -172,7 +135,6 @@ async def get_all_factors_consts(
 
 @factor.put(
     "/modify-factor-consts",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
 )
 @authorize(
@@ -203,7 +165,6 @@ async def modify_factor_consts(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Write",
@@ -218,24 +179,9 @@ async def modify_factor_consts(
         pass
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
-
-    # database = get_database()
-
     consts_coll = database["consts"]
     if mci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # }
-        # return JSONResponse(status_code=412, content=resp)
-
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # )
 
     filter = {"MarketerID": mci.MarketerID}
     update = {"$set": {}}
@@ -256,24 +202,6 @@ async def modify_factor_consts(
     query_result = consts_coll.find_one({"MarketerID": mci.MarketerID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "موردی با IDP داده شده یافت نشد.",
-        #         "code": "30004",
-        #     },
-        # }
-        # return JSONResponse(status_code=204, content=resp)
-
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "موردی با IDP داده شده یافت نشد.",
-        #         "code": "30004",
-        #     },
-        # )
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -283,7 +211,6 @@ async def modify_factor_consts(
 
 @factor.put(
     "/modify-factor",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
 )
 @authorize(
@@ -314,7 +241,6 @@ async def modify_factor(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Write",
@@ -329,24 +255,9 @@ async def modify_factor(
         pass
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
-
-    # database = get_database()
-
     factor_coll = database["factors"]
     if mfi.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # }
-        # return JSONResponse(status_code=412, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # )
 
     filter = {"IdpID": mfi.MarketerID}
     update = {"$set": {}}
@@ -386,18 +297,6 @@ async def modify_factor(
     query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # }
-        # return JSONResponse(status_code=204, content=resp)
-
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # )
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -407,7 +306,6 @@ async def modify_factor(
 
 @factor.post(
     "/add-factor",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
 )
 @authorize(
@@ -438,7 +336,6 @@ async def add_factor(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Write",
@@ -454,23 +351,10 @@ async def add_factor(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    # database = get_database()
     factor_coll = database["factors"]
     marketers_coll = database["marketers"]
     if mfi.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # }
-        # return JSONResponse(status_code=412, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # )
 
     filter = {"IdpID": mfi.MarketerID}
     update = {"$set": {}}
@@ -524,7 +408,6 @@ async def add_factor(
 
 @factor.get(
     "/search-factor",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
 )
 @authorize(
@@ -553,7 +436,6 @@ async def search_factor(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -566,35 +448,11 @@ async def search_factor(
         pass
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
-
-    # database = get_database()
-
     factor_coll = database["factors"]
-    # if args.MarketerID and args.Period:
     if args.Period:
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "IDP مارکتر و دوره را وارد کنید.",
-        #         "code": "30030",
-        #     },
-        # }
-        # return JSONResponse(status_code=400, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "IDP مارکتر و دوره را وارد کنید.",
-        #         "code": "30030",
-        #     },
-        # )
-
-    # filter = {"IdpID": args.MarketerID}
     per = args.Period
     if args.MarketerID:
         querry_result = factor_coll.find({"IdpID": args.MarketerID}, {"_id": False})
@@ -602,19 +460,6 @@ async def search_factor(
         querry_result = factor_coll.find({}, {"_id": False})
     if not querry_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # }
-        # return JSONResponse(status_code=204, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # )
-
     results = []
     tma = per
     if int(per[4:6]) < 3:
@@ -642,27 +487,8 @@ async def search_factor(
             result["FactStatus"] = query_result.get(per + "FactStatus")
             result["IdpID"] = query_result.get("IdpID")
             results.append(result)
-            # query_result.values()
         except:
             raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
-            # resp = {
-            #     "result": [],
-            #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            #     "error": {
-            #         "message": "موردی در دیتابیس یافت نشد.",
-            #         "code": "30001",
-            #     },
-            # }
-            # return JSONResponse(status_code=204, content=resp)
-
-            # return ResponseListOut(
-            #     result=[],
-            #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            #     error={
-            #         "message": "موردی در دیتابیس یافت نشد.",
-            #         "code": "30001",
-            #     },
-            # )
     if args.MarketerID:
         last_result = results
     else:
@@ -681,7 +507,6 @@ async def search_factor(
 
 @factor.delete(
     "/delete-factor",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
 )
 @authorize(
@@ -710,7 +535,6 @@ async def delete_factor(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Delete",
@@ -723,51 +547,17 @@ async def delete_factor(
         pass
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
-
-    # database = get_database()
-
     factor_coll = database["factors"]
     if args.MarketerID and args.Period:
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "IDP مارکتر و دوره را وارد کنید.",
-        #         "code": "30030",
-        #     },
-        # }
-        # return JSONResponse(status_code=400, content=resp)
-
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "IDP مارکتر و دوره را وارد کنید.",
-        #         "code": "30030",
-        #     },
-        # )
-
     filter = {"IdpID": args.MarketerID}
     update = {"$set": {}}
     per = args.Period
     query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # }
-        # return JSONResponse(status_code=204, content=resp)
-
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # )
     result = [
         f"از ماکتر {query_result.get('FullName')}فاکتور مربوط به دوره {args.Period} پاک شد."
     ]
@@ -789,21 +579,9 @@ async def delete_factor(
 
     except:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # }
-        # return JSONResponse(status_code=204, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # )
     result.append(factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False}))
     return ResponseListOut(
-        result=result,  # factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False}),
+        result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
@@ -811,7 +589,6 @@ async def delete_factor(
 
 @factor.get(
     "/calculate-factor",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor"],
 )
 @authorize(
@@ -840,7 +617,6 @@ async def calculate_factor(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -853,46 +629,19 @@ async def calculate_factor(
         pass
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
-
-    # database = get_database()
-
     factor_coll = database["newfactors"]#database["MarketerFactor"]
     marketer_coll = database["MarketerTable"]
     customer_coll = database["customersbackup"]
     contract_coll = database["MarketerContract"]
     contded_coll = database["MarketerContractDeduction"]
-
-    # if args.MarketerID and args.Period:
     if args.Period and args.MarketerID:
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "IDP مارکتر و دوره را وارد کنید.",
-        #         "code": "30030",
-        #     },
-        # }
-        # return JSONResponse(status_code=400, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "IDP مارکتر و دوره را وارد کنید.",
-        #         "code": "30030",
-        #     },
-        # )
-
     per = args.Period
     marketer = marketer_coll.find_one({"IdpId": args.MarketerID}, {"_id": False})
-
     query = {"RefererTitle": marketer['Title']}
-
     fields = {"TradeCodes": 1}
-
     customers_records = customer_coll.find(query, fields)
     trade_codes = [c.get("TradeCodes") for c in customers_records]
     gdate = jd.strptime(per,"%Y%m")
@@ -986,8 +735,6 @@ async def calculate_factor(
 
     marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
     marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
-
-    # find marketer's plan
     pure_fee = marketer_total.get("TotalFee") * 0.65
     marketer_fee = 0
     tpv = marketer_total.get("TotalPureVolume")
@@ -1002,9 +749,6 @@ async def calculate_factor(
                 next_plan = 0
             else:
                 next_plan = plans[cbt][plan]['end'] - tpv
-
-    print("yaya")
-
     final_fee = marketer_fee
     try:
         salary = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["Salary"] * marketer_fee
@@ -1045,253 +789,3 @@ async def calculate_factor(
 
 
 add_pagination(factor)
-
-
-# def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
-#     """_summary_
-#
-#     Args:
-#         trade_codes (_type_): _description_
-#         from_date (_type_): _description_
-#         to_date (_type_): _description_
-#         page (int, optional): _description_. Defaults to 1.
-#         size (int, optional): _description_. Defaults to 10.
-#
-#     Returns:
-#         _type_: _description_
-#     """
-#     database = get_database()
-#     trades_coll = database["trades"]
-#     from_gregorian_date = to_gregorian_(from_date)
-#     to_gregorian_date = to_gregorian_(to_date)
-#     to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-#         days=1
-#     )
-#     to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-#
-#     pipeline = [
-#         {
-#             "$match": {
-#                 "$and": [
-#                     {"TradeCode": {"$in": trade_codes}},
-#                     {"TradeDate": {"$gte": from_gregorian_date}},
-#                     {"TradeDate": {"$lte": to_gregorian_date}},
-#                 ]
-#             }
-#         },
-#         {
-#             "$project": {
-#                 "Price": 1,
-#                 "Volume": 1,
-#                 "Total": {"$multiply": ["$Price", "$Volume"]},
-#                 "TotalCommission": 1,
-#                 "TradeItemBroker": 1,
-#                 "TradeCode": 1,
-#                 "Commission": {
-#                     "$cond": {
-#                         "if": {"$eq": ["$TradeType", 1]},
-#                         "then": {
-#                             "$add": [
-#                                 "$TotalCommission",
-#                                 {"$multiply": ["$Price", "$Volume"]},
-#                             ]
-#                         },
-#                         "else": {
-#                             "$subtract": [
-#                                 {"$multiply": ["$Price", "$Volume"]},
-#                                 "$TotalCommission",
-#                             ]
-#                         },
-#                     }
-#                 },
-#             }
-#         },
-#         {
-#             "$group": {
-#                 "_id": "$TradeCode",
-#                 "TotalFee": {"$sum": "$TradeItemBroker"},
-#                 "TotalPureVolume": {"$sum": "$Commission"},
-#             }
-#         },
-#         {
-#             "$project": {
-#                 "_id": 0,
-#                 "TradeCode": "$_id",
-#                 "TotalPureVolume": 1,
-#                 "TotalFee": 1,
-#             }
-#         },
-#         {
-#             "$lookup": {
-#                 "from": "firms",
-#                 "localField": "TradeCode",
-#                 "foreignField": "PAMCode",
-#                 "as": "FirmProfile",
-#             },
-#         },
-#         {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
-#         {
-#             "$lookup": {
-#                 "from": "customers",
-#                 "localField": "TradeCode",
-#                 "foreignField": "PAMCode",
-#                 "as": "UserProfile",
-#             }
-#         },
-#         {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
-#         {
-#             "$project": {
-#                 "TradeCode": 1,
-#                 "TotalFee": 1,
-#                 "TotalPureVolume": 1,
-#                 "Refferer": "$FirmProfile.Referer",
-#                 "Referer": "$UserProfile.Referer",
-#                 "FirmTitle": "$FirmProfile.FirmTitle",
-#                 "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
-#                 "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
-#                 "FirstName": "$UserProfile.FirstName",
-#                 "LastName": "$UserProfile.LastName",
-#                 "Username": "$UserProfile.Username",
-#                 "Mobile": "$UserProfile.Mobile",
-#                 "RegisterDate": "$UserProfile.RegisterDate",
-#                 "BankAccountNumber": "$UserProfile.BankAccountNumber",
-#             }
-#         },
-#         {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
-#         {
-#             "$facet": {
-#                 "metadata": [{"$count": "totalCount"}],
-#                 "items": [{"$skip": (page - 1) * size}, {"$limit": size}],
-#             }
-#         },
-#         {"$unwind": "$metadata"},
-#         {
-#             "$project": {
-#                 "totalCount": "$metadata.totalCount",
-#                 "items": 1,
-#             }
-#         },
-#     ]
-#
-#     aggr_result = trades_coll.aggregate(pipeline=pipeline)
-#
-#     aggre_dict = next(aggr_result, None)
-#
-#     if aggre_dict is None:
-#         return {}
-#
-#     aggre_dict["page"] = page
-#     aggre_dict["size"] = size
-#     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -size)
-#     return aggre_dict
-
-
-# def totaliter(marketer_fullname, from_gregorian_date, to_gregorian_date):
-#     """_summary_
-#
-#     Args:
-#         marketer_fullname (_type_): _description_
-#         from_gregorian_date (_type_): _description_
-#         to_gregorian_date (_type_): _description_
-#
-#     Returns:
-#         _type_: _description_
-#     """
-#     database = get_database()
-#
-#     customers_coll = database["customers"]
-#     trades_coll = database["trades"]
-#     firms_coll = database["firms"]
-#     query = {"Referer": {"$regex": marketer_fullname}}
-#     fields = {"PAMCode": 1}
-#     customers_records = customers_coll.find(query, fields)
-#     firms_records = firms_coll.find(query, fields)
-#     trade_codes = [c.get("PAMCode") for c in customers_records] + [
-#         c.get("PAMCode") for c in firms_records
-#     ]
-#
-#     buy_pipeline = [
-#         {
-#             "$match": {
-#                 "$and": [
-#                     {"TradeCode": {"$in": trade_codes}},
-#                     {"TradeDate": {"$gte": from_gregorian_date}},
-#                     {"TradeDate": {"$lte": to_gregorian_date}},
-#                     {"TradeType": 1},
-#                 ]
-#             }
-#         },
-#         {
-#             "$project": {
-#                 "Price": 1,
-#                 "Volume": 1,
-#                 "Total": {"$multiply": ["$Price", "$Volume"]},
-#                 "TotalCommission": 1,
-#                 "TradeItemBroker": 1,
-#                 "Buy": {
-#                     "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
-#                 },
-#             }
-#         },
-#         {
-#             "$group": {
-#                 "_id": "$id",
-#                 "TotalFee": {"$sum": "$TradeItemBroker"},
-#                 "TotalBuy": {"$sum": "$Buy"},
-#             }
-#         },
-#         {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
-#     ]
-#     sell_pipeline = [
-#         {
-#             "$match": {
-#                 "$and": [
-#                     {"TradeCode": {"$in": trade_codes}},
-#                     {"TradeDate": {"$gte": from_gregorian_date}},
-#                     {"TradeDate": {"$lte": to_gregorian_date}},
-#                     {"TradeType": 2},
-#                 ]
-#             }
-#         },
-#         {
-#             "$project": {
-#                 "Price": 1,
-#                 "Volume": 1,
-#                 "Total": {"$multiply": ["$Price", "$Volume"]},
-#                 "TotalCommission": 1,
-#                 "TradeItemBroker": 1,
-#                 "Sell": {
-#                     "$subtract": [
-#                         {"$multiply": ["$Price", "$Volume"]},
-#                         "$TotalCommission",
-#                     ]
-#                 },
-#             }
-#         },
-#         {
-#             "$group": {
-#                 "_id": "$id",
-#                 "TotalFee": {"$sum": "$TradeItemBroker"},
-#                 "TotalSell": {"$sum": "$Sell"},
-#             }
-#         },
-#         {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
-#     ]
-#     buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
-#     sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
-#
-#     buy_dict = {"vol": 0, "fee": 0}
-#
-#     sell_dict = {"vol": 0, "fee": 0}
-#
-#     if buy_agg_result:
-#         buy_dict["vol"] = buy_agg_result.get("TotalBuy")
-#         buy_dict["fee"] = buy_agg_result.get("TotalFee")
-#
-#     if sell_agg_result:
-#         sell_dict["vol"] = sell_agg_result.get("TotalSell")
-#         sell_dict["fee"] = sell_agg_result.get("TotalFee")
-#     response_dict = {}
-#     response_dict["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
-#     response_dict["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
-#     return response_dict

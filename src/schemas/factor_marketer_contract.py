@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Optional, Any, List, Dict
 from enum import Enum, IntEnum
-from pydantic import BaseModel  # , Field
+from pydantic import BaseModel
 from fastapi import Query
 from khayyam import JalaliDatetime
 
