@@ -198,12 +198,16 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
 
     customers_records = customers_coll.find(query, fields)
     trade_codes = [c.get("PAMCode") for c in customers_records]
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
 
     buy_pipeline = [
         {
@@ -609,12 +613,12 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
             marketer_fullname = (
                 marketer.get("FirstName") + " " + marketer.get("LastName")
             )
-        from_gregorian_date = to_gregorian_(args.from_date)
-        to_gregorian_date = to_gregorian_(args.to_date)
-        to_gregorian_date = datetime.strptime(
-            to_gregorian_date, "%Y-%m-%d"
-        ) + timedelta(days=1)
-        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+        # from_gregorian_date = to_gregorian_(args.from_date)
+        # to_gregorian_date = to_gregorian_(args.to_date)
+        # to_gregorian_date = datetime.strptime(
+        #     to_gregorian_date, "%Y-%m-%d"
+        # ) + timedelta(days=1)
+        # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
         query = {"$and": [{"Referer": marketer_fullname}]}
         fields = {"PAMCode": 1}
         customers_records = customers_coll.find(query, fields)
@@ -622,6 +626,10 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         trade_codes = [c.get("PAMCode") for c in customers_records] + [
             c.get("PAMCode") for c in firms_records
         ]
+
+        from_gregorian_date = args.from_date
+        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
         pipeline = [
             {
                 "$match": {
@@ -778,12 +786,16 @@ def total_users_cost(
             marketer_fullname = (
                 marketer.get("FirstName") + " " + marketer.get("LastName")
             )
-        from_gregorian_date = to_gregorian_(args.from_date)
-        to_gregorian_date = to_gregorian_(args.to_date)
-        to_gregorian_date = datetime.strptime(
-            to_gregorian_date, "%Y-%m-%d"
-        ) + timedelta(days=1)
-        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+        # from_gregorian_date = to_gregorian_(args.from_date)
+        # to_gregorian_date = to_gregorian_(args.to_date)
+        # to_gregorian_date = datetime.strptime(
+        #     to_gregorian_date, "%Y-%m-%d"
+        # ) + timedelta(days=1)
+        # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+        from_gregorian_date = args.from_date
+        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
         query = {"$and": [{"Referer": marketer_fullname}]}
         fields = {"PAMCode": 1}
         customers_records = customers_coll.find(query, fields)
@@ -935,12 +947,16 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     """
     database = get_database()
     trades_coll = database["trades"]
-    from_gregorian_date = to_gregorian_(from_date)
-    to_gregorian_date = to_gregorian_(to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(from_date)
+    # to_gregorian_date = to_gregorian_(to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    from_gregorian_date = from_date
+    to_gregorian_date = (datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
 
     pipeline = [
         {

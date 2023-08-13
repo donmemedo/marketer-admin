@@ -68,12 +68,16 @@ async def get_user_total_trades(
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
     factors_coll = brokerage["factors"]
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
 
     pipeline = [
         {
@@ -248,12 +252,16 @@ async def get_marketer_total_trades(
             c.get("PAMCode") for c in customers_records
         ]
 
-        from_gregorian_date = to_gregorian_(args.from_date)
-        to_gregorian_date = to_gregorian_(args.to_date)
-        to_gregorian_date = datetime.strptime(
-            to_gregorian_date, "%Y-%m-%d"
-        ) + timedelta(days=1)
-        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+        # from_gregorian_date = to_gregorian_(args.from_date)
+        # to_gregorian_date = to_gregorian_(args.to_date)
+        # to_gregorian_date = datetime.strptime(
+        #     to_gregorian_date, "%Y-%m-%d"
+        # ) + timedelta(days=1)
+        # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+        from_gregorian_date = args.from_date
+        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
         buy_pipeline = [
             {
                 "$match": {
@@ -428,12 +436,16 @@ async def users_list_by_volume(
 
     marketer_fullname = get_marketer_name(query_result)
 
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
 
     query = {"Referer": {"$regex": marketer_fullname}}
 
