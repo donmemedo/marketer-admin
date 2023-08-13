@@ -14,10 +14,11 @@ from fastapi.exceptions import RequestValidationError
 # from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
 from src.tools.logger import logger
+from src.tools.stages import plans
 from pymongo import MongoClient, errors
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
-
+from math import inf
 
 factor = APIRouter(prefix="/factor")
 
@@ -806,6 +807,241 @@ async def delete_factor(
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
+
+
+@factor.get(
+    "/calculate-factor",
+    # dependencies=[Depends(JWTBearer())],
+    tags=["Factor"],
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.All",
+    ]
+)
+async def calculate_factor(
+    request: Request,
+    args: CalFactorIn = Depends(CalFactorIn),
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
+):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (SearchFactorIn, optional): _description_. Defaults to Depends(SearchFactorIn).
+
+    Raises:
+        HTTPException: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    # role_perm = get_role_permission(request)
+    user_id = role_perm["sub"]
+    permissions = [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.All",
+    ]
+    allowed = check_permissions(role_perm["roles"], permissions)
+    if allowed:
+        pass
+    else:
+        raise HTTPException(status_code=403, detail="Not authorized.")
+
+    # database = get_database()
+
+    factor_coll = database["newfactors"]#database["MarketerFactor"]
+    marketer_coll = database["MarketerTable"]
+    customer_coll = database["customersbackup"]
+    contract_coll = database["MarketerContract"]
+    contded_coll = database["MarketerContractDeduction"]
+
+    # if args.MarketerID and args.Period:
+    if args.Period and args.MarketerID:
+        pass
+    else:
+        raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
+        # resp = {
+        #     "result": [],
+        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     "error": {
+        #         "message": "IDP مارکتر و دوره را وارد کنید.",
+        #         "code": "30030",
+        #     },
+        # }
+        # return JSONResponse(status_code=400, content=resp)
+        #
+        # return ResponseListOut(
+        #     result=[],
+        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        #     error={
+        #         "message": "IDP مارکتر و دوره را وارد کنید.",
+        #         "code": "30030",
+        #     },
+        # )
+
+    per = args.Period
+    marketer = marketer_coll.find_one({"IdpId": args.MarketerID}, {"_id": False})
+
+    query = {"RefererTitle": marketer['Title']}
+
+    fields = {"TradeCodes": 1}
+
+    customers_records = customer_coll.find(query, fields)
+    trade_codes = [c.get("TradeCodes") for c in customers_records]
+    gdate = jd.strptime(per,"%Y%m")
+    from_gregorian_date = gdate.todatetime().isoformat()
+    to_gregorian_date = (datetime.strptime(gdate.replace(day=gdate.daysinmonth).todate().isoformat(),"%Y-%m-%d")+timedelta(days=1)).isoformat()
+    buy_pipeline = [
+        {
+            "$match": {
+                "$and": [
+                    {"TradeCode": {"$in": trade_codes}},
+                    {"TradeDate": {"$gte": from_gregorian_date}},
+                    {"TradeDate": {"$lte": to_gregorian_date}},
+                    {"TradeType": 1},
+                ]
+            }
+        },
+        {
+            "$project": {
+                "Price": 1,
+                "Volume": 1,
+                "Total": {"$multiply": ["$Price", "$Volume"]},
+                "TotalCommission": 1,
+                "TradeItemBroker": 1,
+                "Buy": {
+                    "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
+                },
+            }
+        },
+        {
+            "$group": {
+                "_id": "$id",
+                "TotalFee": {"$sum": "$TradeItemBroker"},
+                "TotalBuy": {"$sum": "$Buy"},
+            }
+        },
+        {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
+    ]
+
+    sell_pipeline = [
+        {
+            "$match": {
+                "$and": [
+                    {"TradeCode": {"$in": trade_codes}},
+                    {"TradeDate": {"$gte": from_gregorian_date}},
+                    {"TradeDate": {"$lte": to_gregorian_date}},
+                    {"TradeType": 2},
+                ]
+            }
+        },
+        {
+            "$project": {
+                "Price": 1,
+                "Volume": 1,
+                "Total": {"$multiply": ["$Price", "$Volume"]},
+                "TotalCommission": 1,
+                "TradeItemBroker": 1,
+                "Sell": {
+                    "$subtract": [
+                        {"$multiply": ["$Price", "$Volume"]},
+                        "$TotalCommission",
+                    ]
+                },
+            }
+        },
+        {
+            "$group": {
+                "_id": "$id",
+                "TotalFee": {"$sum": "$TradeItemBroker"},
+                "TotalSell": {"$sum": "$Sell"},
+            }
+        },
+        {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
+    ]
+
+    buy_agg_result = peek(database.trades.aggregate(pipeline=buy_pipeline))
+    sell_agg_result = peek(database.trades.aggregate(pipeline=sell_pipeline))
+
+    marketer_total = {"TotalPureVolume": 0, "TotalFee": 0}
+
+    buy_dict = {"vol": 0, "fee": 0}
+
+    sell_dict = {"vol": 0, "fee": 0}
+
+    if buy_agg_result:
+        buy_dict["vol"] = buy_agg_result.get("TotalBuy")
+        buy_dict["fee"] = buy_agg_result.get("TotalFee")
+
+    if sell_agg_result:
+        sell_dict["vol"] = sell_agg_result.get("TotalSell")
+        sell_dict["fee"] = sell_agg_result.get("TotalFee")
+
+    marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
+    marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
+
+    # find marketer's plan
+    pure_fee = marketer_total.get("TotalFee") * 0.65
+    marketer_fee = 0
+    tpv = marketer_total.get("TotalPureVolume")
+    b=plans
+    cbt = contract_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["CalculationBaseType"]
+    for plan in plans[cbt]:
+        plans[cbt][plan]['start']
+        if plans[cbt][plan]['start'] <= tpv < plans[cbt][plan]['end']:
+            marketer_fee = pure_fee * plans[cbt][plan]['marketer_share']
+            plan_name = plan
+            if plans[cbt][plan]['end'] == inf:
+                next_plan = 0
+            else:
+                next_plan = plans[cbt][plan]['end'] - tpv
+
+    print("yaya")
+
+    final_fee = marketer_fee
+    try:
+        salary = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["Salary"] * marketer_fee
+    except:
+        salary = 0
+    try:
+        insurance = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["InsuranceCoefficient"] * marketer_fee
+    except:
+        insurance = 0
+    try:
+        tax = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["TaxCoefficient"] * marketer_fee
+    except:
+        tax = 0
+    try:
+        collateral = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["CollateralCoefficient"] * marketer_fee
+    except:
+        collateral = 0
+    deductions = salary + insurance + tax + collateral
+    additions = args.Collateral
+    payment = final_fee + additions - deductions
+    result = {
+        "TotalFee": marketer_total.get("TotalFee"),
+        "PureFee": int(pure_fee),
+        "MarketerFee": int(marketer_fee),
+        "Plan": plan,
+        "Next Plan": next_plan,
+        "Tax": int(tax),
+        "Collateral of This Month": int(collateral),
+        "Sum of Previous Collaterals": args.Collateral,
+        "Sum of Additions": int(additions),
+        "Sum of Deductions": int(deductions),
+        "FinalFee": int(final_fee),
+        "Payment": int(payment),
+
+    }
+
+    return ResponseOut(timeGenerated=datetime.now(), result=result, error="")
 
 
 add_pagination(factor)

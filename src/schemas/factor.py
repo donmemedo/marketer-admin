@@ -71,6 +71,14 @@ class SearchFactorIn:
 
 
 @dataclass
+class CalFactorIn:
+
+    MarketerID: str = Query("")
+    Period: Optional[str] = str(current_year) + f"{current_month:02}"
+    Collateral: int = 0
+
+
+@dataclass
 class Pages:
     size: int = Query(10, alias="PageSize")
     page: int = Query(1, alias="PageNumber")
