@@ -516,9 +516,14 @@ async def users_diff_with_tbs(
         pass
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
+    try:
+        to_date = jd(datetime.strptime(args.to_date,'%Y-%m-%d')).date().isoformat()
+        from_date = jd(datetime.strptime(args.from_date,'%Y-%m-%d')).date().isoformat()
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
 
-    start_date = jd.strptime(args.from_date, "%Y-%m-%d")
-    end_date = jd.strptime(args.to_date, "%Y-%m-%d")
+    start_date = jd.strptime(from_date, "%Y-%m-%d")
+    end_date = jd.strptime(to_date, "%Y-%m-%d")
     if args.TradeCode is None:
         raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
     delta = timedelta(days=1)

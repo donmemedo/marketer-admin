@@ -371,7 +371,8 @@ def get_marketer_total_trades(
         {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
     )
     marketers_list = list(marketers_query)
-
+    to_date = jd(datetime.strptime(args.to_date,'%Y-%m-%d')).date().isoformat()
+    from_date = jd(datetime.strptime(args.from_date,'%Y-%m-%d')).date().isoformat()
     results = []
     for marketer in marketers_list:
         response_dict = {}
@@ -383,23 +384,23 @@ def get_marketer_total_trades(
         trade_codes = [c.get("PAMCode") for c in customers_records] + [
             c.get("PAMCode") for c in firms_records
         ]
-        from_gregorian_date = to_gregorian_(args.from_date)
+        from_gregorian_date = to_gregorian_(from_date)
         if not args.to_date:
             args.to_date = jd.today().date().isoformat()
-        to_gregorian_date = to_gregorian_(args.to_date)
+        to_gregorian_date = to_gregorian_(to_date)
         to_gregorian_date = datetime.strptime(
             to_gregorian_date, "%Y-%m-%d"
         ) + timedelta(days=1)
-        last_month = jd.strptime(args.to_date, "%Y-%m-%d").month - 1
+        last_month = jd.strptime(to_date, "%Y-%m-%d").month - 1
         if last_month < 1:
             last_month = last_month + 12
         if last_month < 10:
             last_month = "0" + str(last_month)
-        last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year) + str(
+        last_month_str = str(jd.strptime(to_date, "%Y-%m-%d").year) + str(
             last_month
         )
         if last_month == 12:
-            last_month_str = str(jd.strptime(args.to_date, "%Y-%m-%d").year - 1) + str(
+            last_month_str = str(jd.strptime(to_date, "%Y-%m-%d").year - 1) + str(
                 last_month
             )
         to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
@@ -497,12 +498,16 @@ def get_marketer_total_trades(
         response_dict["LastName"] = marketer.get("LastName")
         lmtpv = last_month_str + "TPV"
         lmtf = last_month_str + "TF"
-        response_dict["LMTPV"] = totals_coll.find_one(
-            {"MarketerID": marketer.get("IdpId")}
-        )[lmtpv]
-        response_dict["LMTF"] = totals_coll.find_one(
-            {"MarketerID": marketer.get("IdpId")}
-        )[lmtf]
+        try:
+            response_dict["LMTPV"] = totals_coll.find_one(
+                {"MarketerID": marketer.get("IdpId")}
+            )[lmtpv]
+            response_dict["LMTF"] = totals_coll.find_one(
+                {"MarketerID": marketer.get("IdpId")}
+            )[lmtf]
+        except:
+            response_dict["LMTPV"] = 0
+            response_dict["LMTF"] = 0
         response_dict["UsersCount"] = customers_coll.count_documents(
             {"Referer": {"$regex": marketer_fullname}}
         )
@@ -515,12 +520,12 @@ def get_marketer_total_trades(
         results.sort(key=lambda x: x["FirstName"], reverse=args.asc_desc_FN)
         results.sort(key=lambda x: x["LastName"], reverse=args.asc_desc_LN)
         results.sort(key=lambda x: x["UsersCount"], reverse=args.asc_desc_UC)
-
-    return ResponseOut(
-        result=results,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    resp = {
+        "result": results,
+        "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        "error": {"message": "Null", "code": "Null"},
+    }
+    return JSONResponse(status_code=200, content=resp)
 
 
 @marketer.get(
@@ -876,11 +881,13 @@ async def search_marketers_relations(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
     try:
-        from_gregorian_date = jd.strptime(args.StartDate, "%Y-%m-%d").todatetime()
+        StartDate = jd(datetime.strptime(args.StartDate, '%Y-%m-%d')).date().isoformat()
+        from_gregorian_date = jd.strptime(StartDate, "%Y-%m-%d").todatetime()
     except:
         raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
     try:
-        to_gregorian_date = jd.strptime(args.EndDate, "%Y-%m-%d").todatetime() + timedelta(
+        EndDate = jd(datetime.strptime(args.EndDate, '%Y-%m-%d')).date().isoformat()
+        to_gregorian_date = jd.strptime(EndDate, "%Y-%m-%d").todatetime() + timedelta(
         days=1)
     except:
         raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
@@ -1100,8 +1107,13 @@ async def users_diff_with_tbs(
     trade_codes = [c.get("PAMCode") for c in customers_records] + [
         c.get("PAMCode") for c in firms_records
     ]
-    start_date = jd.strptime(args.from_date, "%Y-%m-%d")
-    end_date = jd.strptime(args.to_date, "%Y-%m-%d")
+    try:
+        to_date = jd(datetime.strptime(args.to_date,'%Y-%m-%d')).date().isoformat()
+        from_date = jd(datetime.strptime(args.from_date,'%Y-%m-%d')).date().isoformat()
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
+    start_date = jd.strptime(from_date, "%Y-%m-%d")
+    end_date = jd.strptime(to_date, "%Y-%m-%d")
 
     delta = timedelta(days=1)
     dates = []
