@@ -82,11 +82,13 @@ async def get_customers(
         logger.error("Given Date was in Invalid Format.")
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
 
-    cus_getter(date=given_date)
+    # cus_getter(date=given_date)
+    cus_getter(date=coll_ress.date)
     logger.info(f"Updating Customers Database was requested by {user_id}")
     logger.info(
         "Ending Time of getting List of Registered Customers in %s: %s",
-        coll_ress.date,
+        # coll_ress.date,
+        given_date,
         jd.now(),
     )
     return ResponseListOut(
@@ -156,11 +158,13 @@ async def get_firms(
         logger.error("Given Date was in Invalid Format.")
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
 
-    firm_getter(date=given_date)
+    firm_getter(date=coll_ress.date)
+    # firm_getter(date=given_date)
     logger.info(f"Updating Firms Database was requested by {user_id}")
     logger.info(
         "Ending Time of getting List of Registered Firms in %s: %s",
-        coll_ress.date,
+        # coll_ress.date,
+        given_date,
         jd.now(),
     )
     return ResponseListOut(
@@ -224,10 +228,14 @@ async def get_trades(
         logger.error("Given Date was in Invalid Format.")
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
 
-    trade_getter(date=given_date)
+    # trade_getter(date=given_date)
+    trade_getter(date=coll_ress.date)
     logger.info(f"Updating Trades Database was requested by {user_id}")
     logger.info(
-        "Ending Time of getting List of Trades in %s is: %s", coll_ress.date, jd.now()
+        "Ending Time of getting List of Trades in %s is: %s",
+        # coll_ress.date,
+        given_date,
+        jd.now()
     )
     return ResponseListOut(
         result=[],
@@ -291,10 +299,14 @@ async def delete_trades(
         logger.error("Given Date was in Invalid Format.")
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
 
-    trades_collection.delete_many({"TradeDate": {"$regex": str(given_date)}})
+    # trades_collection.delete_many({"TradeDate": {"$regex": str(given_date)}})
+    trades_collection.delete_many({"TradeDate": {"$regex": str(args.date)}})
     logger.info(f"Updating Trades Database was requested by {user_id}")
     logger.info(
-        "Ending Time of deleting List of Trades in %s is: %s", args.date, jd.now()
+        "Ending Time of deleting List of Trades in %s is: %s",
+        # args.date,
+        given_date,
+        jd.now()
     )
     return ResponseListOut(
         result=[],
