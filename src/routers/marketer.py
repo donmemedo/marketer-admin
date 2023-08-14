@@ -334,7 +334,7 @@ async def add_marketer(
         "MarketerAdmin.Marketer.All",
     ]
 )
-def get_marketer_total_trades(
+async def get_marketer_total_trades(
     request: Request,
     args: UsersTotalPureIn = Depends(UsersTotalPureIn),
     database: MongoClient = Depends(get_database),
