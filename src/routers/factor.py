@@ -14,6 +14,7 @@ from fastapi.exceptions import RequestValidationError
 from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
 from src.tools.logger import logger
 from src.tools.stages import plans
+from src.tools.queries import *
 from pymongo import MongoClient, errors
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
@@ -67,7 +68,7 @@ async def get_factors_consts(
     query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
     if not query_result:
         logger.error("No Record- Error 30001")
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     logger.info("Factor Constants were gotten Successfully.")
     return ResponseListOut(
         result=query_result,
@@ -125,7 +126,7 @@ async def get_all_factors_consts(
     for i in range(len(consts)):
         results.append((consts[i]))
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30002", "status": 204})
+        raise RequestValidationError(TypeError, body={"code": "30002", "status": 200})
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -201,7 +202,7 @@ async def modify_factor_consts(
     consts_coll.update_one(filter, update)
     query_result = consts_coll.find_one({"MarketerID": mci.MarketerID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -296,7 +297,7 @@ async def modify_factor(
     factor_coll.update_one(filter, update)
     query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -459,7 +460,7 @@ async def search_factor(
     else:
         querry_result = factor_coll.find({}, {"_id": False})
     if not querry_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     results = []
     tma = per
     if int(per[4:6]) < 3:
@@ -488,7 +489,7 @@ async def search_factor(
             result["IdpID"] = query_result.get("IdpID")
             results.append(result)
         except:
-            raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+            raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     if args.MarketerID:
         last_result = results
     else:
@@ -557,7 +558,7 @@ async def delete_factor(
     per = args.Period
     query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     result = [
         f"از ماکتر {query_result.get('FullName')}فاکتور مربوط به دوره {args.Period} پاک شد."
     ]
@@ -578,7 +579,7 @@ async def delete_factor(
         factor_coll.update_one({"IdpID": args.MarketerID}, update)
 
     except:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     result.append(factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False}))
     return ResponseListOut(
         result=result,
@@ -647,94 +648,104 @@ async def calculate_factor(
     gdate = jd.strptime(per,"%Y%m")
     from_gregorian_date = gdate.todatetime().isoformat()
     to_gregorian_date = (datetime.strptime(gdate.replace(day=gdate.daysinmonth).todate().isoformat(),"%Y-%m-%d")+timedelta(days=1)).isoformat()
-    buy_pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                    {"TradeType": 1},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "Buy": {
-                    "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalBuy": {"$sum": "$Buy"},
-            }
-        },
-        {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
+
+    pipeline = [
+        filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
+        project_commission_stage(),
+        group_by_total_stage("id"),
+        project_pure_stage()
     ]
 
-    sell_pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                    {"TradeType": 2},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "Sell": {
-                    "$subtract": [
-                        {"$multiply": ["$Price", "$Volume"]},
-                        "$TotalCommission",
-                    ]
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$id",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalSell": {"$sum": "$Sell"},
-            }
-        },
-        {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
-    ]
-
-    buy_agg_result = peek(database.trades.aggregate(pipeline=buy_pipeline))
-    sell_agg_result = peek(database.trades.aggregate(pipeline=sell_pipeline))
-
-    marketer_total = {"TotalPureVolume": 0, "TotalFee": 0}
-
-    buy_dict = {"vol": 0, "fee": 0}
-
-    sell_dict = {"vol": 0, "fee": 0}
-
-    if buy_agg_result:
-        buy_dict["vol"] = buy_agg_result.get("TotalBuy")
-        buy_dict["fee"] = buy_agg_result.get("TotalFee")
-
-    if sell_agg_result:
-        sell_dict["vol"] = sell_agg_result.get("TotalSell")
-        sell_dict["fee"] = sell_agg_result.get("TotalFee")
-
-    marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
-    marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
+    marketer_total = next(database.trades.aggregate(pipeline=pipeline), [])
+    #
+    # buy_pipeline = [
+    #     {
+    #         "$match": {
+    #             "$and": [
+    #                 {"TradeCode": {"$in": trade_codes}},
+    #                 {"TradeDate": {"$gte": from_gregorian_date}},
+    #                 {"TradeDate": {"$lte": to_gregorian_date}},
+    #                 {"TradeType": 1},
+    #             ]
+    #         }
+    #     },
+    #     {
+    #         "$project": {
+    #             "Price": 1,
+    #             "Volume": 1,
+    #             "Total": {"$multiply": ["$Price", "$Volume"]},
+    #             "TotalCommission": 1,
+    #             "TradeItemBroker": 1,
+    #             "Buy": {
+    #                 "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
+    #             },
+    #         }
+    #     },
+    #     {
+    #         "$group": {
+    #             "_id": "$id",
+    #             "TotalFee": {"$sum": "$TradeItemBroker"},
+    #             "TotalBuy": {"$sum": "$Buy"},
+    #         }
+    #     },
+    #     {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
+    # ]
+    #
+    # sell_pipeline = [
+    #     {
+    #         "$match": {
+    #             "$and": [
+    #                 {"TradeCode": {"$in": trade_codes}},
+    #                 {"TradeDate": {"$gte": from_gregorian_date}},
+    #                 {"TradeDate": {"$lte": to_gregorian_date}},
+    #                 {"TradeType": 2},
+    #             ]
+    #         }
+    #     },
+    #     {
+    #         "$project": {
+    #             "Price": 1,
+    #             "Volume": 1,
+    #             "Total": {"$multiply": ["$Price", "$Volume"]},
+    #             "TotalCommission": 1,
+    #             "TradeItemBroker": 1,
+    #             "Sell": {
+    #                 "$subtract": [
+    #                     {"$multiply": ["$Price", "$Volume"]},
+    #                     "$TotalCommission",
+    #                 ]
+    #             },
+    #         }
+    #     },
+    #     {
+    #         "$group": {
+    #             "_id": "$id",
+    #             "TotalFee": {"$sum": "$TradeItemBroker"},
+    #             "TotalSell": {"$sum": "$Sell"},
+    #         }
+    #     },
+    #     {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
+    # ]
+    #
+    # buy_agg_result = peek(database.trades.aggregate(pipeline=buy_pipeline))
+    # sell_agg_result = peek(database.trades.aggregate(pipeline=sell_pipeline))
+    #
+    # marketer_total = {"TotalPureVolume": 0, "TotalFee": 0}
+    #
+    # buy_dict = {"vol": 0, "fee": 0}
+    #
+    # sell_dict = {"vol": 0, "fee": 0}
+    #
+    # if buy_agg_result:
+    #     buy_dict["vol"] = buy_agg_result.get("TotalBuy")
+    #     buy_dict["fee"] = buy_agg_result.get("TotalFee")
+    #
+    # if sell_agg_result:
+    #     sell_dict["vol"] = sell_agg_result.get("TotalSell")
+    #     sell_dict["fee"] = sell_agg_result.get("TotalFee")
+    #
+    # marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
+    # marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
     pure_fee = marketer_total.get("TotalFee") * 0.65
     marketer_fee = 0
     tpv = marketer_total.get("TotalPureVolume")

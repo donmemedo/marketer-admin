@@ -11,6 +11,7 @@ from src.auth.authentication import get_role_permission
 from src.tools.database import get_database
 from src.schemas.client_marketer import *
 from src.tools.utils import *
+from src.tools.queries import *
 from pymongo import MongoClient
 from khayyam import JalaliDatetime as jd
 from pymongo import MongoClient
@@ -80,7 +81,7 @@ async def get_marketer_profile(
             results.append(marketer_entity(marketers[i]))
 
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
