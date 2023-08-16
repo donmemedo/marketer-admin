@@ -21,7 +21,7 @@ def authorize(permissions):
                 ):
                     logger.error("Unauthorized User")
                     logger.exception("Unauthorized User")
-                    raise HTTPException(status_code=401, detail="Unauthorized User")
+                    raise HTTPException(status_code=403, detail="Unauthorized User")
             return await func(*args, **kwargs)
         return wrapper
     return decorator
