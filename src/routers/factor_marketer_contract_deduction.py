@@ -11,8 +11,6 @@ from khayyam import JalaliDatetime as jd
 from src.schemas.factor_marketer_contract_deduction import *
 from src.tools.database import get_database
 from fastapi.exceptions import RequestValidationError
-
-# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
 from src.tools.logger import logger
 from pymongo import MongoClient, errors
@@ -25,7 +23,6 @@ marketer_contract_deduction = APIRouter(prefix="/factor/marketer-contract-deduct
 
 @marketer_contract_deduction.post(
     "/add-marketer-contract-deduction",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor - MarketerContractDeduction"],
 )
 @authorize(
@@ -56,7 +53,7 @@ async def add_marketer_contract_deduction(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
+
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Write",
@@ -76,13 +73,6 @@ async def add_marketer_contract_deduction(
     marketers_coll = database["MarketerTable"]
     if mmcd.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # }
-        # return JSONResponse(status_code=412, content=resp)
-
     filter = {"MarketerID": mmcd.MarketerID}
     update = {"$set": {}}
     if mmcd.ID is not None:
@@ -110,17 +100,9 @@ async def add_marketer_contract_deduction(
         coll.update_one(filter, update)
     except:
         raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "IDP وارد شده در دیتابیس موجود است.", "code": "30003"},
-        # }
-        # return JSONResponse(status_code=409, content=resp)
-
-        # coll.update_one(filter, update)
     query_result = coll.find_one({"MarketerID": mmcd.MarketerID}, {"_id": False})
     return ResponseListOut(
-        result=query_result,  # marketer_entity(marketer_dict),
+        result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
@@ -128,7 +110,6 @@ async def add_marketer_contract_deduction(
 
 @marketer_contract_deduction.put(
     "/modify-marketer-contract-deduction",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor - MarketerContractDeduction"],
 )
 @authorize(
@@ -159,7 +140,6 @@ async def modify_marketer_contract_deduction(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Write",
@@ -179,13 +159,6 @@ async def modify_marketer_contract_deduction(
     marketers_coll = database["MarketerTable"]
     if mmcd.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # }
-        # return JSONResponse(status_code=412, content=resp)
-
     filter = {"MarketerID": mmcd.MarketerID}
     update = {"$set": {}}
     if mmcd.ID is not None:
@@ -206,14 +179,7 @@ async def modify_marketer_contract_deduction(
     coll.update_one(filter, update)
     query_result = coll.find_one({"MarketerID": mmcd.MarketerID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # }
-        # return JSONResponse(status_code=204, content=resp)
-
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -223,7 +189,6 @@ async def modify_marketer_contract_deduction(
 
 @marketer_contract_deduction.get(
     "/search-marketer-contract-deduction",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor - MarketerContractDeduction"],
 )
 @authorize(
@@ -252,7 +217,6 @@ async def search_marketer_contract_deduction(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -292,22 +256,7 @@ async def search_marketer_contract_deduction(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30008", "status": 204})
-        # result = {}
-        # result["code"] = "Null"
-        # result["message"] = "Null"
-        # # result["totalCount"] = len(marketers)
-        # # result["pagedData"] = results
-        #
-        # resp = {
-        #     "result": result,
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "موردی برای متغیرهای داده شده یافت نشد.",
-        #         "code": "30003",
-        #     },
-        # }
-        # return JSONResponse(status_code=200, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 200})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
@@ -327,7 +276,6 @@ async def search_marketer_contract_deduction(
 
 @marketer_contract_deduction.delete(
     "/delete-marketer-contract-deduction",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor - MarketerContractDeduction"],
 )
 @authorize(
@@ -356,7 +304,6 @@ async def delete_marketer_contract_deduction(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Delete",
@@ -375,24 +322,9 @@ async def delete_marketer_contract_deduction(
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 400})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "IDP مارکتر را وارد کنید.",
-        #         "code": "30030",
-        #     },
-        # }
-        # return JSONResponse(status_code=400, content=resp)
     query_result = coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # }
-        # return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     result = [
         f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."
     ]

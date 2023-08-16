@@ -9,10 +9,9 @@ from fastapi_pagination import add_pagination
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
 from fastapi.exceptions import RequestValidationError
-
-# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.database import get_database
 from src.tools.utils import to_gregorian_, peek, check_permissions
+from src.tools.queries import *
 from src.schemas.user import *
 from pymongo import MongoClient, errors
 from src.auth.authentication import get_role_permission
@@ -24,7 +23,6 @@ user = APIRouter(prefix="/user")
 
 @user.get(
     "/user-trades",
-    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
@@ -54,11 +52,6 @@ async def get_user_trades(
     Returns:
         _type_: _description_
     """
-    # user_id = get_role_permission(request)
-
-    # if user_id != "4cb7ce6d-c1ae-41bf-af3c-453aabb3d156":
-    #     raise HTTPException(status_code=401, detail="Not authorized.")
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -74,19 +67,18 @@ async def get_user_trades(
 
     if args.TradeCode is None:
         raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
-        # )
-    # database = get_database()
     results = []
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
+
     trades_coll = database["trades"]
     query = {
         "$and": [
@@ -101,15 +93,7 @@ async def get_user_trades(
         results.append(trades[i])
 
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "300", "status": 204})
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "این کاربر در تاریخهای موردنظر معامله ای نداشته است.",
-        #         "code": "30017",
-        #     },
-        # )
+        raise RequestValidationError(TypeError, body={"code": "300", "status": 200})
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -119,7 +103,6 @@ async def get_user_trades(
 
 @user.get(
     "/users-list-by-volume",
-    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
@@ -146,9 +129,6 @@ def users_list_by_volume(
     Returns:
         _type_: _description_
     """
-    # get user id
-    # marketer_id = get_role_permission(request)
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -161,35 +141,22 @@ def users_list_by_volume(
         pass
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
-
-    # database = get_database()
-
     customers_coll = database["customers"]
     firms_coll = database["firms"]
 
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
-    # check if marketer exists and return his name
-    # query_result = marketers_coll.find({"IdpId": marketer_id})
-    #
-    # marketer_dict = peek(query_result)
-    #
-    # if marketer_dict.get("FirstName") == "":
-    #     marketer_fullname = marketer_dict.get("LastName")
-    # elif marketer_dict.get("LastName") == "":
-    #     marketer_fullname = marketer_dict.get("FirstName")
-    # else:
-    #     marketer_fullname = (
-    #         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
-    #     )
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
     query = {"$and": [{"Referer": ""}]}
     if args.marketername:
         query = {"Referer": {"$regex": args.marketername}}
@@ -200,138 +167,163 @@ def users_list_by_volume(
         c.get("PAMCode") for c in firms_records
     ]
     pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": {"$in": trade_codes}},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "TradeItemBroker": 1,
-                "TradeCode": 1,
-                "Commission": {
-                    "$cond": {
-                        "if": {"$eq": ["$TradeType", 1]},
-                        "then": {
-                            "$add": [
-                                "$TotalCommission",
-                                {"$multiply": ["$Price", "$Volume"]},
-                            ]
-                        },
-                        "else": {
-                            "$subtract": [
-                                {"$multiply": ["$Price", "$Volume"]},
-                                "$TotalCommission",
-                            ]
-                        },
-                    }
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$TradeCode",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalPureVolume": {"$sum": "$Commission"},
-            }
-        },
-        {
-            "$project": {
-                "_id": 0,
-                "TradeCode": "$_id",
-                "TotalPureVolume": 1,
-                "TotalFee": 1,
-            }
-        },
-        {
-            "$lookup": {
-                "from": "firms",
-                "localField": "TradeCode",
-                "foreignField": "PAMCode",
-                "as": "FirmProfile",
-            },
-        },
-        {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
-        {
-            "$lookup": {
-                "from": "customers",
-                "localField": "TradeCode",
-                "foreignField": "PAMCode",
-                "as": "UserProfile",
-            }
-        },
-        {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
-        {
-            "$project": {
-                "TradeCode": 1,
-                "TotalFee": 1,
-                "TotalPureVolume": 1,
-                "Refferer": "$FirmProfile.Referer",
-                "Referer": "$UserProfile.Referer",
-                "FirmTitle": "$FirmProfile.FirmTitle",
-                "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
-                "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
-                "FirstName": "$UserProfile.FirstName",
-                "LastName": "$UserProfile.LastName",
-                "Username": "$UserProfile.Username",
-                "Mobile": "$UserProfile.Mobile",
-                "RegisterDate": "$UserProfile.RegisterDate",
-                "BankAccountNumber": "$UserProfile.BankAccountNumber",
-            }
-        },
-        {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
-        {
-            "$facet": {
-                "metadata": [{"$count": "totalCount"}],
-                "items": [
-                    {"$skip": (args.page - 1) * args.size},
-                    {"$limit": args.size},
-                ],
-            }
-        },
-        {"$unwind": "$metadata"},
-        {
-            "$project": {
-                "totalCount": "$metadata.totalCount",
-                "items": 1,
-            }
-        },
+        filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
+        project_commission_stage(),
+        group_by_total_stage("$TradeCode"),
+        project_pure_stage(),
+        join_customers_stage(),
+        unwind_user_stage(),
+        project_fields_stage(),
+        sort_stage(args.sort_by.value, args.sort_order.value),
+        paginate_data(args.page, args.size),
+        unwind_metadata_stage(),
+        project_total_stage()
     ]
-    aggr_result = trades_coll.aggregate(pipeline=pipeline)
-    aggre_dict = next(aggr_result, None)
-    if aggre_dict is None:
-        return {}
-    aggre_dict["page"] = args.page
-    aggre_dict["size"] = args.size
-    aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
-    if not aggre_dict:
-        raise RequestValidationError(TypeError, body={"code": "30028", "status": 204})
-        # return ResponseOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "خروجی برای متغیرهای داده شده نداریم.",
-        #         "code": "30020",
-        #     },
-        # )
-    return ResponseOut(
-        result=aggre_dict,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+
+    active_dict = next(database.trades.aggregate(pipeline=pipeline), {})
+    result = {}
+    result["pagedData"] = active_dict.get("items", [])
+    result["errorCode"] = None
+    result["errorMessage"] = None
+    result["totalCount"] = active_dict.get("total", 0)
+    result["code"] = "Null"
+    result["message"] = "Null"
+    result["PageSize"] = args.size
+    result["PageNumber"] = args.page
+    resp = {
+        "result": result,
+        "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        "error": {
+            "message": "Null",
+            "code": "Null",
+        },
+    }
+    return JSONResponse(status_code=200, content=resp)
+    #
+    # pipeline = [
+    #     {
+    #         "$match": {
+    #             "$and": [
+    #                 {"TradeCode": {"$in": trade_codes}},
+    #                 {"TradeDate": {"$gte": from_gregorian_date}},
+    #                 {"TradeDate": {"$lte": to_gregorian_date}},
+    #             ]
+    #         }
+    #     },
+    #     {
+    #         "$project": {
+    #             "Price": 1,
+    #             "Volume": 1,
+    #             "Total": {"$multiply": ["$Price", "$Volume"]},
+    #             "TotalCommission": 1,
+    #             "TradeItemBroker": 1,
+    #             "TradeCode": 1,
+    #             "Commission": {
+    #                 "$cond": {
+    #                     "if": {"$eq": ["$TradeType", 1]},
+    #                     "then": {
+    #                         "$add": [
+    #                             "$TotalCommission",
+    #                             {"$multiply": ["$Price", "$Volume"]},
+    #                         ]
+    #                     },
+    #                     "else": {
+    #                         "$subtract": [
+    #                             {"$multiply": ["$Price", "$Volume"]},
+    #                             "$TotalCommission",
+    #                         ]
+    #                     },
+    #                 }
+    #             },
+    #         }
+    #     },
+    #     {
+    #         "$group": {
+    #             "_id": "$TradeCode",
+    #             "TotalFee": {"$sum": "$TradeItemBroker"},
+    #             "TotalPureVolume": {"$sum": "$Commission"},
+    #         }
+    #     },
+    #     {
+    #         "$project": {
+    #             "_id": 0,
+    #             "TradeCode": "$_id",
+    #             "TotalPureVolume": 1,
+    #             "TotalFee": 1,
+    #         }
+    #     },
+    #     {
+    #         "$lookup": {
+    #             "from": "firms",
+    #             "localField": "TradeCode",
+    #             "foreignField": "PAMCode",
+    #             "as": "FirmProfile",
+    #         },
+    #     },
+    #     {"$unwind": {"path": "$FirmProfile", "preserveNullAndEmptyArrays": True}},
+    #     {
+    #         "$lookup": {
+    #             "from": "customers",
+    #             "localField": "TradeCode",
+    #             "foreignField": "PAMCode",
+    #             "as": "UserProfile",
+    #         }
+    #     },
+    #     {"$unwind": {"path": "$UserProfile", "preserveNullAndEmptyArrays": True}},
+    #     {
+    #         "$project": {
+    #             "TradeCode": 1,
+    #             "TotalFee": 1,
+    #             "TotalPureVolume": 1,
+    #             "Refferer": "$FirmProfile.Referer",
+    #             "Referer": "$UserProfile.Referer",
+    #             "FirmTitle": "$FirmProfile.FirmTitle",
+    #             "FirmRegisterDate": "$FirmProfile.FirmRegisterDate",
+    #             "FirmBankAccountNumber": "$FirmProfile.BankAccountNumber",
+    #             "FirstName": "$UserProfile.FirstName",
+    #             "LastName": "$UserProfile.LastName",
+    #             "Username": "$UserProfile.Username",
+    #             "Mobile": "$UserProfile.Mobile",
+    #             "RegisterDate": "$UserProfile.RegisterDate",
+    #             "BankAccountNumber": "$UserProfile.BankAccountNumber",
+    #         }
+    #     },
+    #     {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
+    #     {
+    #         "$facet": {
+    #             "metadata": [{"$count": "totalCount"}],
+    #             "items": [
+    #                 {"$skip": (args.page - 1) * args.size},
+    #                 {"$limit": args.size},
+    #             ],
+    #         }
+    #     },
+    #     {"$unwind": "$metadata"},
+    #     {
+    #         "$project": {
+    #             "totalCount": "$metadata.totalCount",
+    #             "items": 1,
+    #         }
+    #     },
+    # ]
+    # aggr_result = trades_coll.aggregate(pipeline=pipeline)
+    # aggre_dict = next(aggr_result, None)
+    # if aggre_dict is None:
+    #     return {}
+    # aggre_dict["page"] = args.page
+    # aggre_dict["size"] = args.size
+    # aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
+    # if not aggre_dict:
+    #     raise RequestValidationError(TypeError, body={"code": "30028", "status": 200})
+    # return ResponseOut(
+    #     result=aggre_dict,
+    #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    #     error="",
+    # )
 
 
 @user.get(
     "/users-total",
-    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
@@ -358,9 +350,6 @@ def users_total(
     Returns:
         _type_: _description_
     """
-    # get user id
-    # marketer_id = get_role_permission(request)
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -373,36 +362,21 @@ def users_total(
         pass
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
-
-    # database = get_database()
-
     customers_coll = database["customers"]
     firms_coll = database["firms"]
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
+    # from_gregorian_date = to_gregorian_(args.from_date)
+    # to_gregorian_date = to_gregorian_(args.to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
-    # check if marketer exists and return his name
-    # query_result = marketers_coll.find({"IdpId": marketer_id})
-    #
-    # marketer_dict = peek(query_result)
-    #
-    # if marketer_dict.get("FirstName") == "":
-    #     marketer_fullname = marketer_dict.get("LastName")
-    # elif marketer_dict.get("LastName") == "":
-    #     marketer_fullname = marketer_dict.get("FirstName")
-    # else:
-    #     marketer_fullname = (
-    #         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
-    #     )
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
 
-    # get all customers' TradeCodes
     query = {"$and": [{"Referer": ""}]}
 
     fields = {"PAMCode": 1}
@@ -499,19 +473,6 @@ def users_total(
                 "BankAccountNumber": "$UserProfile.BankAccountNumber",
             }
         },
-        # {
-        #     "$project": {
-        #         "TradeCode": 1,
-        #         "TotalFee": 1,
-        #         "TotalPureVolume": 1,
-        #         "FirstName": "$UserProfile.FirstName",
-        #         "LastName": "$UserProfile.LastName",
-        #         "Username": "$UserProfile.Username",
-        #         "Mobile": "$UserProfile.Mobile",
-        #         "RegisterDate": "$UserProfile.RegisterDate",
-        #         "BankAccountNumber": "$UserProfile.BankAccountNumber",
-        #     }
-        # },
         {"$sort": {"TotalPureVolume": 1, "RegisterDate": 1, "TradeCode": 1}},
         {
             "$facet": {
@@ -542,15 +503,7 @@ def users_total(
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
-        raise RequestValidationError(TypeError, body={"code": "30028", "status": 204})
-        # return ResponseOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "خروجی برای متغیرهای داده شده نداریم.",
-        #         "code": "30020",
-        #     },
-        # )
+        raise RequestValidationError(TypeError, body={"code": "30028", "status": 200})
     return ResponseOut(
         result=aggre_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -560,7 +513,6 @@ def users_total(
 
 @user.get(
     "/users-diff",
-    # dependencies=[Depends(JWTBearer())],
     tags=["User"],
     response_model=None,
 )
@@ -587,9 +539,6 @@ async def users_diff_with_tbs(
     Returns:
         _type_: _description_
     """
-    # get user id
-    # marketer_id = get_role_permission(request)
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.Read",
@@ -602,26 +551,21 @@ async def users_diff_with_tbs(
         pass
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
+    try:
+        to_date = jd(datetime.strptime(args.to_date,'%Y-%m-%d')).date().isoformat()
+        from_date = jd(datetime.strptime(args.from_date,'%Y-%m-%d')).date().isoformat()
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
 
-    start_date = jd.strptime(args.from_date, "%Y-%m-%d")
-    end_date = jd.strptime(args.to_date, "%Y-%m-%d")
+    start_date = jd.strptime(from_date, "%Y-%m-%d")
+    end_date = jd.strptime(to_date, "%Y-%m-%d")
     if args.TradeCode is None:
         raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "PAMCode  را وارد کنید.", "code": "30015"},
-        # )
-
     delta = timedelta(days=1)
     dates = []
     while start_date < end_date:
-        # add current date to list by converting  it to iso format
         dates.append(str(start_date.date()))
-        # increment start date by timedelta
         start_date += delta
-
-    ###############
     result = []
     for date in dates:
         print(date)
@@ -632,15 +576,7 @@ async def users_diff_with_tbs(
         else:
             result.append(q)
     if not result:
-        raise RequestValidationError(TypeError, body={"code": "30013", "status": 204})
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "مغایرتی در تاریخ های داده شده مشاهده نشد.",
-        #         "code": "30013",
-        #     },
-        # )
+        raise RequestValidationError(TypeError, body={"code": "30013", "status": 200})
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -666,12 +602,16 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     """
     database = get_database()
     trades_coll = database["trades"]
-    from_gregorian_date = to_gregorian_(from_date)
-    to_gregorian_date = to_gregorian_(to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+    # from_gregorian_date = to_gregorian_(from_date)
+    # to_gregorian_date = to_gregorian_(to_date)
+    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
+    #     days=1
+    # )
+    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
+
+    from_gregorian_date = from_date
+    to_gregorian_date = (datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
 
     pipeline = [
         {

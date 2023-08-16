@@ -78,7 +78,6 @@ async def validation_exception_handler(request, exc):
     except:
         for e in exc.errors():
             err = get_error(e['type'], e['ctx']['error'])
-    # err=get_error(b)
     response = {
         "result": [],
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),

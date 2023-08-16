@@ -8,7 +8,6 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
 from fastapi.exceptions import RequestValidationError
-# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import check_permissions
 from src.auth.authentication import get_role_permission
 from src.tools.database import get_database
@@ -25,7 +24,6 @@ database = APIRouter(prefix="/database")
 
 @database.put(
     "/get-customers",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Database"],
     response_model=None,
 )
@@ -56,7 +54,6 @@ async def get_customers(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.All",
@@ -75,7 +72,6 @@ async def get_customers(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    # brokerage = get_database()
     try:
         cus_collection = brokerage[settings.CUSTOMER_COLLECTION]
     except errors.CollectionInvalid as err:
@@ -85,30 +81,14 @@ async def get_customers(
     except:
         logger.error("Given Date was in Invalid Format.")
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "تاریخ اشتباه وارد شده است.",
-        #         "code": "30090",
-        #     },
-        # }
-        # return JSONResponse(status_code=412, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "تاریخ اشتباه وارد شده است.",
-        #         "code": "30090",
-        #     },
-        # )
 
-    cus_getter(date=given_date)
+    # cus_getter(date=given_date)
+    cus_getter(date=coll_ress.date)
     logger.info(f"Updating Customers Database was requested by {user_id}")
     logger.info(
         "Ending Time of getting List of Registered Customers in %s: %s",
-        coll_ress.date,
+        # coll_ress.date,
+        given_date,
         jd.now(),
     )
     return ResponseListOut(
@@ -120,7 +100,6 @@ async def get_customers(
 
 @database.put(
     "/get-firms",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Database"],
     response_model=None,
 )
@@ -151,7 +130,6 @@ async def get_firms(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.All",
@@ -170,7 +148,6 @@ async def get_firms(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    # brokerage = get_database()
     try:
         firm_collection = brokerage[settings.FIRMS_COLLECTION]
     except errors.CollectionInvalid as err:
@@ -180,30 +157,14 @@ async def get_firms(
     except:
         logger.error("Given Date was in Invalid Format.")
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "تاریخ اشتباه وارد شده است.",
-        #         "code": "30090",
-        #     },
-        # }
-        # return JSONResponse(status_code=412, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "تاریخ اشتباه وارد شده است.",
-        #         "code": "30090",
-        #     },
-        # )
 
-    firm_getter(date=given_date)
+    firm_getter(date=coll_ress.date)
+    # firm_getter(date=given_date)
     logger.info(f"Updating Firms Database was requested by {user_id}")
     logger.info(
         "Ending Time of getting List of Registered Firms in %s: %s",
-        coll_ress.date,
+        # coll_ress.date,
+        given_date,
         jd.now(),
     )
     return ResponseListOut(
@@ -215,7 +176,6 @@ async def get_firms(
 
 @database.post(
     "/get-trades",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Database"],
     response_model=None,
 )
@@ -243,7 +203,6 @@ async def get_trades(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.All",
@@ -259,7 +218,6 @@ async def get_trades(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    # brokerage = get_database()
     try:
         trades_collection = brokerage[settings.TRADES_COLLECTION]
     except errors.CollectionInvalid as err:
@@ -269,29 +227,15 @@ async def get_trades(
     except:
         logger.error("Given Date was in Invalid Format.")
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "تاریخ اشتباه وارد شده است.",
-        #         "code": "30090",
-        #     },
-        # }
-        # return JSONResponse(status_code=412, content=resp)
 
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "تاریخ اشتباه وارد شده است.",
-        #         "code": "30090",
-        #     },
-        # )
-
-    trade_getter(date=given_date)
+    # trade_getter(date=given_date)
+    trade_getter(date=coll_ress.date)
     logger.info(f"Updating Trades Database was requested by {user_id}")
     logger.info(
-        "Ending Time of getting List of Trades in %s is: %s", coll_ress.date, jd.now()
+        "Ending Time of getting List of Trades in %s is: %s",
+        # coll_ress.date,
+        given_date,
+        jd.now()
     )
     return ResponseListOut(
         result=[],
@@ -302,7 +246,6 @@ async def get_trades(
 
 @database.delete(
     "/delete-trades",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Database"],
     response_model=None,
 )
@@ -330,7 +273,7 @@ async def delete_trades(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
+
     user_id = role_perm["sub"]
     permissions = [
         "MarketerAdmin.All.All",
@@ -346,7 +289,6 @@ async def delete_trades(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    # brokerage = get_database()
     try:
         trades_collection = brokerage[settings.TRADES_COLLECTION]
     except errors.CollectionInvalid as err:
@@ -356,29 +298,15 @@ async def delete_trades(
     except:
         logger.error("Given Date was in Invalid Format.")
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "تاریخ اشتباه وارد شده است.",
-        #         "code": "30090",
-        #     },
-        # }
-        # return JSONResponse(status_code=412, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={
-        #         "message": "تاریخ اشتباه وارد شده است.",
-        #         "code": "30090",
-        #     },
-        # )
 
-    trades_collection.delete_many({"TradeDate": {"$regex": str(given_date)}})
+    # trades_collection.delete_many({"TradeDate": {"$regex": str(given_date)}})
+    trades_collection.delete_many({"TradeDate": {"$regex": str(args.date)}})
     logger.info(f"Updating Trades Database was requested by {user_id}")
     logger.info(
-        "Ending Time of deleting List of Trades in %s is: %s", args.date, jd.now()
+        "Ending Time of deleting List of Trades in %s is: %s",
+        # args.date,
+        given_date,
+        jd.now()
     )
     return ResponseListOut(
         result=[],
