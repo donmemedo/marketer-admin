@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     API_PREFIX: str = ""
     DOCS_URL: str = ""
-    MONGO_CONNECTION_STRING: str = "mongodb://root:root@172.24.65.105:30001/"
+    MONGO_CONNECTION_STRING: str = "mongodb://root:3tliSqt3tDD5Bg@172.24.65.105:30003/"#"mongodb://root:root@172.24.65.105:30001/"
 
     MONGO_DATABASE: str = "brokerage"
     CUSTOMER_COLLECTION: str = "customers"
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     ORIGINS: str = "*"
     ROOT_PATH: str = ""
     SWAGGER_TITLE: str = "Marketer Admin"
-    VERSION: str = "0.1.1"
+    VERSION: str = "1.3.3"
     ROOT_PATH: str = ""
     # Added from Marketer
     JWKS_CONFIGURATION_URL: str = (
