@@ -1167,6 +1167,8 @@ async def users_list_by_volume(
     args: UsersListIn = Depends(UsersListIn),
     brokerage: MongoClient = Depends(get_database),
 ):
+    if not args.IdpID:
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     query_result = brokerage.marketers.find_one({"IdpId": args.IdpID})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
