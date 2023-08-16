@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     ORIGINS: str = "*"
     ROOT_PATH: str = ""
     SWAGGER_TITLE: str = "Marketer Admin"
-    VERSION: str = "0.1.1"
+    VERSION: str = "1.3.3"
     ROOT_PATH: str = ""
     # Added from Marketer
     JWKS_CONFIGURATION_URL: str = (

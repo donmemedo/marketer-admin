@@ -78,6 +78,9 @@ class CalFactorIn:
     MarketerID: str = Query("")
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
     Collateral: int = 0
+    Additions: int = 0
+    Deductions: int = 0
+
 
 
 @dataclass
