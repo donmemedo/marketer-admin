@@ -70,9 +70,11 @@ def project_pure_stage():
 def join_customers_stage():
     return {
         "$lookup": {
-            "from": "customersbackup",#"from": "customers",
+            # "from": "customersbackup",
+            "from": "customers",
             "localField": "TradeCode",
-            "foreignField": "TradeCodes",
+            # "foreignField": "TradeCodes",
+            "foreignField": "PAMCode",
             "as": "UserProfile",
         }
     }

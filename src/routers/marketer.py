@@ -1177,8 +1177,8 @@ async def users_list_by_volume(
     # query = {"Referer": {"$regex": marketer_fullname}}
     # trade_codes = brokerage.customers.distinct("PAMCode", query)
 
-    query = {"RefererTitle": {"$regex": marketer_fullname}}
-    trade_codes = brokerage.customersbackup.distinct("TradeCodes", query)
+    query = {"Referer": {"$regex": marketer_fullname}}
+    trade_codes = brokerage.customers.distinct("PAMCode", query)
 
     if args.user_type.value == "active":
         pipeline = [

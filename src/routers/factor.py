@@ -779,8 +779,13 @@ async def calculate_factor(
         collateral = 0
     deductions = salary + insurance + tax + collateral
     additions = args.Collateral
+    if args.Additions:
+        additions = additions + args.Additions
+    if args.Deductions:
+        deductions = deductions + args.Deductions
     payment = final_fee + additions - deductions
     result = {
+        "TotalPureVolume": marketer_total.get("TotalPureVolume"),
         "TotalFee": marketer_total.get("TotalFee"),
         "PureFee": int(pure_fee),
         "MarketerFee": int(marketer_fee),
