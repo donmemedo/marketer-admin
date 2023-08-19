@@ -722,7 +722,7 @@ async def add_marketers_relations(
     ) and marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID}):
         pass
     else:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
     update["$set"]["FollowerMarketerName"] = get_marketer_name(
         marketers_coll.find_one({"IdpId": mrel.FollowerMarketerID})
     )
@@ -1167,6 +1167,8 @@ async def users_list_by_volume(
     args: UsersListIn = Depends(UsersListIn),
     brokerage: MongoClient = Depends(get_database),
 ):
+    if not args.IdpID:
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     query_result = brokerage.marketers.find_one({"IdpId": args.IdpID})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})

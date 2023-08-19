@@ -34,4 +34,4 @@ def get_error(type: str,code:str):
     if type =='TypeError':
         return {"code": code, "message": errors_mapping[code]}
     if type =='json_invalid':
-        return {"code": code, "message": errors_mapping[code]}
+        return {"code": 400, "message": code}

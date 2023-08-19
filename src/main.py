@@ -10,6 +10,7 @@ from routers.client_user import client_user
 from routers.client_volume_and_fee import client_volume_and_fee
 
 from routers.factor import factor
+from routers.factors import factors
 from routers.factor_marketer_ref_code import marketer_ref_code
 from routers.factor_marketer_contract import marketer_contract
 from routers.factor_marketer_contract_coefficient import marketer_contract_coefficient
@@ -98,4 +99,5 @@ app.include_router(marketer_contract_coefficient, prefix="")
 app.include_router(marketer_contract_deduction, prefix="")
 app.include_router(user, prefix="")
 app.include_router(database, prefix="")
+app.include_router(factors, prefix="")
 # app.include_router(subuser, prefix="")
