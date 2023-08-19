@@ -722,7 +722,7 @@ async def add_marketers_relations(
     ) and marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID}):
         pass
     else:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
     update["$set"]["FollowerMarketerName"] = get_marketer_name(
         marketers_coll.find_one({"IdpId": mrel.FollowerMarketerID})
     )

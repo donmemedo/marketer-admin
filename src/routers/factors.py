@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.schemas.factor import *
+from src.schemas.factors import *
 from src.tools.database import get_database
 from fastapi.exceptions import RequestValidationError
 from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
@@ -20,12 +20,12 @@ from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
 from math import inf
 
-factor = APIRouter(prefix="/factor")
+factors = APIRouter(prefix="/new-factor")
 
 
-@factor.get(
+@factors.get(
     "/get-factor-consts",
-    tags=["Factor"],
+    tags=["Factors"],
     response_model=None,
 )
 @authorize(
@@ -77,9 +77,9 @@ async def get_factors_consts(
     )
 
 
-@factor.get(
+@factors.get(
     "/get-all-factor-consts",
-    tags=["Factor"],
+    tags=["Factors"],
     response_model=None,
 )
 @authorize(
@@ -134,9 +134,9 @@ async def get_all_factors_consts(
     )
 
 
-@factor.put(
+@factors.put(
     "/modify-factor-consts",
-    tags=["Factor"],
+    tags=["Factors"],
 )
 @authorize(
     [
@@ -210,9 +210,9 @@ async def modify_factor_consts(
     )
 
 
-@factor.put(
+@factors.put(
     "/modify-factor",
-    tags=["Factor"],
+    tags=["Factors"],
 )
 @authorize(
     [
@@ -305,9 +305,9 @@ async def modify_factor(
     )
 
 
-@factor.post(
+@factors.post(
     "/add-factor",
-    tags=["Factor"],
+    tags=["Factors"],
 )
 @authorize(
     [
@@ -407,9 +407,9 @@ async def add_factor(
     )
 
 
-@factor.get(
+@factors.get(
     "/search-factor",
-    tags=["Factor"],
+    tags=["Factors"],
 )
 @authorize(
     [
@@ -506,9 +506,9 @@ async def search_factor(
     )
 
 
-@factor.delete(
+@factors.delete(
     "/delete-factor",
-    tags=["Factor"],
+    tags=["Factors"],
 )
 @authorize(
     [
@@ -548,25 +548,43 @@ async def delete_factor(
         pass
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
-    factor_coll = database["factors"]
-    if ((args.MarketerID or args.ContractID) and args.Period) or args.ID:
-        pass
+    factor_coll = database["MarketerFactor"]
+    # if ((args.MarketerID or args.ContractID) and args.Period) or args.ID:
+    #     pass
+    # else:
+    #     raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
+    if args.ID:
+        filter = {"ID": args.ID}
+    elif args.ContractID and args.Period:
+        filter = {"$and": [
+            {"ContractID": args.ContractID},
+            {"Period": args.Period},
+        ]
+        }
+    elif args.MarketerID and args.Period:
+        filter = {"$and": [
+                    {"MarketerID": args.MarketerID},
+                    {"Period": args.Period},
+                ]
+            }
     else:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
-    if args.ID:
-        filter = {"IdpID": args.ID}
-
-
-
-    filter = {"IdpID": args.MarketerID}
+    # filter = {"IdpID": args.MarketerID}
     update = {"$set": {}}
     per = args.Period
-    query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
+    query_result = factor_coll.find_one(filter, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
-    result = [
-        f"از ماکتر {query_result.get('FullName')}فاکتور مربوط به دوره {args.Period} پاک شد."
-    ]
+    if args.ID:
+        result = [
+            f"فاکتور شماره  {args.ID} پاک شد."
+        ]
+    else:
+
+        result = [
+            f"از ماکتر {query_result.get('Title')}فاکتور مربوط به دوره {args.Period} پاک شد."
+        ]
+    factor_coll.delete_one(filter)
     update = {"$unset": {}}
     update["$unset"][per + "PureFee"] = 1
     update["$unset"][per + "MarFee"] = 1
@@ -593,9 +611,9 @@ async def delete_factor(
     )
 
 
-@factor.get(
+@factors.get(
     "/calculate-factor",
-    tags=["Factor"],
+    tags=["Factors"],
 )
 @authorize(
     [
@@ -809,4 +827,4 @@ async def calculate_factor(
     return ResponseOut(timeGenerated=datetime.now(), result=result, error="")
 
 
-add_pagination(factor)
+add_pagination(factors)
