@@ -92,7 +92,7 @@ class ResponseListOut:
 @dataclass
 class SearchFactorIn:
 
-    MarketerID: str = Query("")
+    MarketerID: str = Query(None)
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
     FactorStatus: int = Query(None, alias="Status")
     ID: str = None
