@@ -91,7 +91,7 @@ async def add_factor(
         factor_coll.update_one(filter, update)
     query_result = factor_coll.find_one({"ID": mfi.ID}, {"_id": False})
     return ResponseListOut(
-        result=query_result,  # marketer_entity(marketer_dict),
+        result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )

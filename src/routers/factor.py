@@ -401,7 +401,7 @@ async def add_factor(
         factor_coll.update_one(filter, update)
     query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
     return ResponseListOut(
-        result=query_result,  # marketer_entity(marketer_dict),
+        result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
@@ -662,95 +662,6 @@ async def calculate_factor(
     ]
 
     marketer_total = next(database.trades.aggregate(pipeline=pipeline), [])
-    #
-    # buy_pipeline = [
-    #     {
-    #         "$match": {
-    #             "$and": [
-    #                 {"TradeCode": {"$in": trade_codes}},
-    #                 {"TradeDate": {"$gte": from_gregorian_date}},
-    #                 {"TradeDate": {"$lte": to_gregorian_date}},
-    #                 {"TradeType": 1},
-    #             ]
-    #         }
-    #     },
-    #     {
-    #         "$project": {
-    #             "Price": 1,
-    #             "Volume": 1,
-    #             "Total": {"$multiply": ["$Price", "$Volume"]},
-    #             "TotalCommission": 1,
-    #             "TradeItemBroker": 1,
-    #             "Buy": {
-    #                 "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
-    #             },
-    #         }
-    #     },
-    #     {
-    #         "$group": {
-    #             "_id": "$id",
-    #             "TotalFee": {"$sum": "$TradeItemBroker"},
-    #             "TotalBuy": {"$sum": "$Buy"},
-    #         }
-    #     },
-    #     {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
-    # ]
-    #
-    # sell_pipeline = [
-    #     {
-    #         "$match": {
-    #             "$and": [
-    #                 {"TradeCode": {"$in": trade_codes}},
-    #                 {"TradeDate": {"$gte": from_gregorian_date}},
-    #                 {"TradeDate": {"$lte": to_gregorian_date}},
-    #                 {"TradeType": 2},
-    #             ]
-    #         }
-    #     },
-    #     {
-    #         "$project": {
-    #             "Price": 1,
-    #             "Volume": 1,
-    #             "Total": {"$multiply": ["$Price", "$Volume"]},
-    #             "TotalCommission": 1,
-    #             "TradeItemBroker": 1,
-    #             "Sell": {
-    #                 "$subtract": [
-    #                     {"$multiply": ["$Price", "$Volume"]},
-    #                     "$TotalCommission",
-    #                 ]
-    #             },
-    #         }
-    #     },
-    #     {
-    #         "$group": {
-    #             "_id": "$id",
-    #             "TotalFee": {"$sum": "$TradeItemBroker"},
-    #             "TotalSell": {"$sum": "$Sell"},
-    #         }
-    #     },
-    #     {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
-    # ]
-    #
-    # buy_agg_result = peek(database.trades.aggregate(pipeline=buy_pipeline))
-    # sell_agg_result = peek(database.trades.aggregate(pipeline=sell_pipeline))
-    #
-    # marketer_total = {"TotalPureVolume": 0, "TotalFee": 0}
-    #
-    # buy_dict = {"vol": 0, "fee": 0}
-    #
-    # sell_dict = {"vol": 0, "fee": 0}
-    #
-    # if buy_agg_result:
-    #     buy_dict["vol"] = buy_agg_result.get("TotalBuy")
-    #     buy_dict["fee"] = buy_agg_result.get("TotalFee")
-    #
-    # if sell_agg_result:
-    #     sell_dict["vol"] = sell_agg_result.get("TotalSell")
-    #     sell_dict["fee"] = sell_agg_result.get("TotalFee")
-    #
-    # marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
-    # marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
     pure_fee = marketer_total.get("TotalFee") * 0.65
     marketer_fee = 0
     tpv = marketer_total.get("TotalPureVolume")
