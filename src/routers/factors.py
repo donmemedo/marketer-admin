@@ -23,75 +23,210 @@ from math import inf
 factors = APIRouter(prefix="/new-factor")
 
 
-@factors.get(
-    "/get-factor-consts",
+# # # @factors.get(
+# # #     "/get-factor-consts",
+# # #     tags=["Factors"],
+# # #     response_model=None,
+# # # )
+# # # @authorize(
+# # #     [
+# # #         "MarketerAdmin.All.Read",
+# # #         "MarketerAdmin.All.All",
+# # #         "MarketerAdmin.Factor.Read",
+# # #         "MarketerAdmin.Factor.All",
+# # #     ]
+# # # )
+# # # async def get_factors_consts(
+# # #     request: Request,
+# # #     args: MarketerIn = Depends(MarketerIn),
+# # #     brokerage: MongoClient = Depends(get_database),
+# # #     role_perm: dict = Depends(get_role_permission),
+# # # ):
+# # #     """_summary_
+# # #
+# # #     Args:
+# # #         request (Request): _description_
+# # #
+# # #     Returns:
+# # #         _type_: _description_
+# # #     """
+# # #     user_id = role_perm["sub"]
+# # #     permissions = [
+# # #         "MarketerAdmin.All.Read",
+# # #         "MarketerAdmin.All.All",
+# # #         "MarketerAdmin.Factor.Read",
+# # #         "MarketerAdmin.Factor.All",
+# # #     ]
+# # #     allowed = check_permissions(role_perm["roles"], permissions)
+# # #     if allowed:
+# # #         pass
+# # #     else:
+# # #         raise HTTPException(status_code=403, detail="Not authorized.")
+# # #
+# # #     marketer_id = args.IdpID
+# # #     consts_coll = brokerage["consts"]
+# # #     query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
+# # #     if not query_result:
+# # #         logger.error("No Record- Error 30001")
+# # #         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
+# # #     logger.info("Factor Constants were gotten Successfully.")
+# # #     return ResponseListOut(
+# # #         result=query_result,
+# # #         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+# # #         error="",
+# # #     )
+# #
+# #
+# # @factors.get(
+# #     "/get-all-factor-consts",
+# #     tags=["Factors"],
+# #     response_model=None,
+# # )
+# # @authorize(
+# #     [
+# #         "MarketerAdmin.All.Read",
+# #         "MarketerAdmin.All.All",
+# #         "MarketerAdmin.Factor.Read",
+# #         "MarketerAdmin.Factor.All",
+# #     ]
+# # )
+# # async def get_all_factors_consts(
+# #     request: Request,
+# #     database: MongoClient = Depends(get_database),
+# #     role_perm: dict = Depends(get_role_permission),
+# # ):
+# #     """_summary_
+# #
+# #     Args:
+# #         request (Request): _description_
+# #
+# #     Raises:
+# #         HTTPException: _description_
+# #
+# #     Returns:
+# #         _type_: _description_
+# #     """
+# #     user_id = role_perm["sub"]
+# #     permissions = [
+# #         "MarketerAdmin.All.Read",
+# #         "MarketerAdmin.All.All",
+# #         "MarketerAdmin.Factor.Read",
+# #         "MarketerAdmin.Factor.All",
+# #     ]
+# #     allowed = check_permissions(role_perm["roles"], permissions)
+# #     if allowed:
+# #         pass
+# #     else:
+# #         raise HTTPException(status_code=403, detail="Not authorized.")
+# #
+# #     results = []
+# #     consts_coll = database["consts"]
+# #     query_result = consts_coll.find({}, {"_id": False})
+# #     consts = dict(enumerate(query_result))
+# #     for i in range(len(consts)):
+# #         results.append((consts[i]))
+# #     if not results:
+# #         raise RequestValidationError(TypeError, body={"code": "30002", "status": 200})
+# #     return ResponseListOut(
+# #         result=results,
+# #         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+# #         error="",
+# #     )
+# #
+#
+# @factors.put(
+#     "/modify-factor-consts",
+#     tags=["Factors"],
+# )
+# @authorize(
+#     [
+#         "MarketerAdmin.All.Write",
+#         "MarketerAdmin.All.Update",
+#         "MarketerAdmin.All.All",
+#         "MarketerAdmin.Factor.Write",
+#         "MarketerAdmin.Factor.Update",
+#         "MarketerAdmin.Factor.All",
+#     ]
+# )
+# async def modify_factor_consts(
+#     request: Request,
+#     mci: ModifyConstIn,
+#     database: MongoClient = Depends(get_database),
+#     role_perm: dict = Depends(get_role_permission),
+# ):
+#     """_summary_
+#
+#     Args:
+#         request (Request): _description_
+#         args (ModifyConstIn, optional): _description_. Defaults to Depends(ModifyConstIn).
+#
+#     Raises:
+#         HTTPException: _description_
+#
+#     Returns:
+#         _type_: _description_
+#     """
+#     user_id = role_perm["sub"]
+#     permissions = [
+#         "MarketerAdmin.All.Write",
+#         "MarketerAdmin.All.Update",
+#         "MarketerAdmin.All.All",
+#         "MarketerAdmin.Factor.Write",
+#         "MarketerAdmin.Factor.Update",
+#         "MarketerAdmin.Factor.All",
+#     ]
+#     allowed = check_permissions(role_perm["roles"], permissions)
+#     if allowed:
+#         pass
+#     else:
+#         raise HTTPException(status_code=403, detail="Not authorized.")
+#     consts_coll = database["consts"]
+#     if mci.MarketerID is None:
+#         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+#
+#     filter = {"MarketerID": mci.MarketerID}
+#     update = {"$set": {}}
+#
+#     if mci.FixIncome is not None:
+#         update["$set"]["FixIncome"] = mci.FixIncome
+#
+#     if mci.Insurance is not None:
+#         update["$set"]["Insurance"] = mci.Insurance
+#
+#     if mci.Collateral is not None:
+#         update["$set"]["Collateral"] = mci.Collateral
+#
+#     if mci.Tax is not None:
+#         update["$set"]["Tax"] = mci.Tax
+#
+#     consts_coll.update_one(filter, update)
+#     query_result = consts_coll.find_one({"MarketerID": mci.MarketerID}, {"_id": False})
+#     if not query_result:
+#         raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
+#     return ResponseListOut(
+#         result=query_result,
+#         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+#         error="",
+#     )
+#
+
+@factors.post(
+    "/add-factor",
     tags=["Factors"],
-    response_model=None,
 )
 @authorize(
     [
-        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Create",
         "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.Write",
+        "MarketerAdmin.Factor.Create",
         "MarketerAdmin.Factor.All",
     ]
 )
-async def get_factors_consts(
+async def add_factor(
     request: Request,
-    args: MarketerIn = Depends(MarketerIn),
-    brokerage: MongoClient = Depends(get_database),
-    role_perm: dict = Depends(get_role_permission),
-):
-    """_summary_
-
-    Args:
-        request (Request): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
-    marketer_id = args.IdpID
-    consts_coll = brokerage["consts"]
-    query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
-    if not query_result:
-        logger.error("No Record- Error 30001")
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
-    logger.info("Factor Constants were gotten Successfully.")
-    return ResponseListOut(
-        result=query_result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
-
-
-@factors.get(
-    "/get-all-factor-consts",
-    tags=["Factors"],
-    response_model=None,
-)
-@authorize(
-    [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-)
-async def get_all_factors_consts(
-    request: Request,
+    mfi: ModifyFactorIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -99,6 +234,7 @@ async def get_all_factors_consts(
 
     Args:
         request (Request): _description_
+        args (ModifyFactorIn, optional): _description_. Defaults to Depends(ModifyFactorIn).
 
     Raises:
         HTTPException: _description_
@@ -108,9 +244,11 @@ async def get_all_factors_consts(
     """
     user_id = role_perm["sub"]
     permissions = [
-        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Create",
         "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.Write",
+        "MarketerAdmin.Factor.Create",
         "MarketerAdmin.Factor.All",
     ]
     allowed = check_permissions(role_perm["roles"], permissions)
@@ -119,92 +257,29 @@ async def get_all_factors_consts(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
 
-    results = []
-    consts_coll = database["consts"]
-    query_result = consts_coll.find({}, {"_id": False})
-    consts = dict(enumerate(query_result))
-    for i in range(len(consts)):
-        results.append((consts[i]))
-    if not results:
-        raise RequestValidationError(TypeError, body={"code": "30002", "status": 200})
-    return ResponseListOut(
-        result=results,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
-
-
-@factors.put(
-    "/modify-factor-consts",
-    tags=["Factors"],
-)
-@authorize(
-    [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-)
-async def modify_factor_consts(
-    request: Request,
-    mci: ModifyConstIn,
-    database: MongoClient = Depends(get_database),
-    role_perm: dict = Depends(get_role_permission),
-):
-    """_summary_
-
-    Args:
-        request (Request): _description_
-        args (ModifyConstIn, optional): _description_. Defaults to Depends(ModifyConstIn).
-
-    Raises:
-        HTTPException: _description_
-
-    Returns:
-        _type_: _description_
-    """
-    user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-    consts_coll = database["consts"]
-    if mci.MarketerID is None:
+    factor_coll = database["MarketerFactor"]
+    marketers_coll = database["MarketerTable"]
+    if mfi.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+    if mfi.ID is None:
+        raise RequestValidationError(TypeError, body={"code": "30033", "status": 412})
 
-    filter = {"MarketerID": mci.MarketerID}
+    filter = {"MarketerID": mfi.MarketerID}
     update = {"$set": {}}
-
-    if mci.FixIncome is not None:
-        update["$set"]["FixIncome"] = mci.FixIncome
-
-    if mci.Insurance is not None:
-        update["$set"]["Insurance"] = mci.Insurance
-
-    if mci.Collateral is not None:
-        update["$set"]["Collateral"] = mci.Collateral
-
-    if mci.Tax is not None:
-        update["$set"]["Tax"] = mci.Tax
-
-    consts_coll.update_one(filter, update)
-    query_result = consts_coll.find_one({"MarketerID": mci.MarketerID}, {"_id": False})
-    if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
+    for key, value in vars(mfi).items():
+        if value is not None:
+            update["$set"][key] = value
+    try:
+        marketer_name = get_marketer_name(
+            marketers_coll.find_one({"IdpId": mfi.MarketerID}, {"_id": False})
+        )
+        factor_coll.insert_one({"MarketerID": mfi.MarketerID, "Title": marketer_name})
+        factor_coll.update_one(filter, update)
+    except:
+        factor_coll.update_one(filter, update)
+    query_result = factor_coll.find_one({"ID": mfi.ID}, {"_id": False})
     return ResponseListOut(
-        result=query_result,
+        result=query_result,  # marketer_entity(marketer_dict),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
@@ -256,6 +331,38 @@ async def modify_factor(
         pass
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
+
+    factor_coll = database["MarketerFactor"]
+    marketers_coll = database["MarketerTable"]
+    if ((mfi.MarketerID and mfi.Period) or mfi.ID) is None:
+        raise RequestValidationError(TypeError, body={"code": "30030", "status": 412})
+    # if mfi.ID is None:
+    #     raise RequestValidationError(TypeError, body={"code": "30033", "status": 412})
+    if mfi.ID:
+        filter = {"ID": mfi.ID}
+    # else:
+    #     filter = {
+    #         "$and": [
+    #             {"TradeCode": {"$in": trade_codes}},
+    #             {"TradeDate": {"$gte": from_gregorian_date}},
+    #             {"TradeDate": {"$lte": to_gregorian_date}},
+    #         ]
+    #     }
+    #     {"MarketerID": mfi.MarketerID}
+    update = {"$set": {}}
+    for key, value in vars(mfi).items():
+        if value is not None:
+            update["$set"][key] = value
+    try:
+        marketer_name = get_marketer_name(
+            marketers_coll.find_one({"IdpId": mfi.MarketerID}, {"_id": False})
+        )
+        factor_coll.insert_one({"MarketerID": mfi.MarketerID, "Title": marketer_name})
+        factor_coll.update_one(filter, update)
+    except:
+        factor_coll.update_one(filter, update)
+    query_result = factor_coll.find_one({"ID": mfi.ID}, {"_id": False})
+
     factor_coll = database["factors"]
     if mfi.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
@@ -300,108 +407,6 @@ async def modify_factor(
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     return ResponseListOut(
         result=query_result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
-
-
-@factors.post(
-    "/add-factor",
-    tags=["Factors"],
-)
-@authorize(
-    [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Create",
-        "MarketerAdmin.Factor.All",
-    ]
-)
-async def add_factor(
-    request: Request,
-    mfi: ModifyFactorIn,
-    database: MongoClient = Depends(get_database),
-    role_perm: dict = Depends(get_role_permission),
-):
-    """_summary_
-
-    Args:
-        request (Request): _description_
-        args (ModifyFactorIn, optional): _description_. Defaults to Depends(ModifyFactorIn).
-
-    Raises:
-        HTTPException: _description_
-
-    Returns:
-        _type_: _description_
-    """
-    user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Create",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
-    factor_coll = database["factors"]
-    marketers_coll = database["marketers"]
-    if mfi.MarketerID is None:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-
-    filter = {"IdpID": mfi.MarketerID}
-    update = {"$set": {}}
-    per = mfi.Period
-
-    if mfi.TotalPureVolume is not None:
-        update["$set"][per + "TPV"] = mfi.TotalPureVolume
-
-    if mfi.TotalFee is not None:
-        update["$set"][per + "TF"] = mfi.TotalFee
-
-    if mfi.PureFee is not None:
-        update["$set"][per + "PureFee"] = mfi.PureFee
-
-    if mfi.MarketerFee is not None:
-        update["$set"][per + "MarFee"] = mfi.MarketerFee
-
-    if mfi.Plan is not None:
-        update["$set"][per + "Plan"] = mfi.Plan
-
-    if mfi.Tax is not None:
-        update["$set"][per + "Tax"] = mfi.Tax
-
-    if mfi.Collateral is not None:
-        update["$set"][per + "Collateral"] = mfi.Collateral
-
-    if mfi.FinalFee is not None:
-        update["$set"][per + "FinalFee"] = mfi.FinalFee
-
-    if mfi.Payment is not None:
-        update["$set"][per + "Payment"] = mfi.Payment
-
-    if mfi.FactorStatus is not None:
-        update["$set"][per + "FactStatus"] = mfi.FactorStatus
-
-    try:
-        marketer_name = get_marketer_name(
-            marketers_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
-        )
-        factor_coll.insert_one({"IdpID": mfi.MarketerID, "MarketerName": marketer_name})
-        factor_coll.update_one(filter, update)
-    except:
-        factor_coll.update_one(filter, update)
-    query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
-    return ResponseListOut(
-        result=query_result,  # marketer_entity(marketer_dict),
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
@@ -585,25 +590,25 @@ async def delete_factor(
             f"از ماکتر {query_result.get('Title')}فاکتور مربوط به دوره {args.Period} پاک شد."
         ]
     factor_coll.delete_one(filter)
-    update = {"$unset": {}}
-    update["$unset"][per + "PureFee"] = 1
-    update["$unset"][per + "MarFee"] = 1
-    update["$unset"][per + "TPV"] = 1
-    update["$unset"][per + "TF"] = 1
-    update["$unset"][per + "PureFee"] = 1
-    update["$unset"][per + "MarFee"] = 1
-    update["$unset"][per + "Plan"] = 1
-    update["$unset"][per + "Tax"] = 1
-    update["$unset"][per + "Collateral"] = 1
-    update["$unset"][per + "FinalFee"] = 1
-    update["$unset"][per + "Payment"] = 1
-    update["$unset"][per + "FactStatus"] = 1
-    try:
-        factor_coll.update_one({"IdpID": args.MarketerID}, update)
-
-    except:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
-    result.append(factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False}))
+    # update = {"$unset": {}}
+    # update["$unset"][per + "PureFee"] = 1
+    # update["$unset"][per + "MarFee"] = 1
+    # update["$unset"][per + "TPV"] = 1
+    # update["$unset"][per + "TF"] = 1
+    # update["$unset"][per + "PureFee"] = 1
+    # update["$unset"][per + "MarFee"] = 1
+    # update["$unset"][per + "Plan"] = 1
+    # update["$unset"][per + "Tax"] = 1
+    # update["$unset"][per + "Collateral"] = 1
+    # update["$unset"][per + "FinalFee"] = 1
+    # update["$unset"][per + "Payment"] = 1
+    # update["$unset"][per + "FactStatus"] = 1
+    # try:
+    #     factor_coll.update_one({"IdpID": args.MarketerID}, update)
+    #
+    # except:
+    #     raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
+    # result.append(factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False}))
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
