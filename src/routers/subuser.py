@@ -199,13 +199,6 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
 
     customers_records = customers_coll.find(query, fields)
     trade_codes = [c.get("PAMCode") for c in customers_records]
-    # from_gregorian_date = to_gregorian_(args.from_date)
-    # to_gregorian_date = to_gregorian_(args.to_date)
-    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-    #     days=1
-    # )
-    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
     from_gregorian_date = args.from_date
     to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
@@ -217,98 +210,6 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
     ]
 
     subuser_total = next(brokerage.trades.aggregate(pipeline=pipeline), [])
-    #
-    #
-    # buy_pipeline = [
-    #     {
-    #         "$match": {
-    #             "$and": [
-    #                 {"TradeCode": {"$in": trade_codes}},
-    #                 {"TradeDate": {"$gte": from_gregorian_date}},
-    #                 {"TradeDate": {"$lte": to_gregorian_date}},
-    #                 {"TradeType": 1},
-    #             ]
-    #         }
-    #     },
-    #     {
-    #         "$project": {
-    #             "Price": 1,
-    #             "Volume": 1,
-    #             "Total": {"$multiply": ["$Price", "$Volume"]},
-    #             "TotalCommission": 1,
-    #             "TradeItemBroker": 1,
-    #             "Buy": {
-    #                 "$add": ["$TotalCommission", {"$multiply": ["$Price", "$Volume"]}]
-    #             },
-    #         }
-    #     },
-    #     {
-    #         "$group": {
-    #             "_id": "$id",
-    #             "TotalFee": {"$sum": "$TradeItemBroker"},
-    #             "TotalBuy": {"$sum": "$Buy"},
-    #         }
-    #     },
-    #     {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
-    # ]
-    #
-    # sell_pipeline = [
-    #     {
-    #         "$match": {
-    #             "$and": [
-    #                 {"TradeCode": {"$in": trade_codes}},
-    #                 {"TradeDate": {"$gte": from_gregorian_date}},
-    #                 {"TradeDate": {"$lte": to_gregorian_date}},
-    #                 {"TradeType": 2},
-    #             ]
-    #         }
-    #     },
-    #     {
-    #         "$project": {
-    #             "Price": 1,
-    #             "Volume": 1,
-    #             "Total": {"$multiply": ["$Price", "$Volume"]},
-    #             "TotalCommission": 1,
-    #             "TradeItemBroker": 1,
-    #             "Sell": {
-    #                 "$subtract": [
-    #                     {"$multiply": ["$Price", "$Volume"]},
-    #                     "$TotalCommission",
-    #                 ]
-    #             },
-    #         }
-    #     },
-    #     {
-    #         "$group": {
-    #             "_id": "$id",
-    #             "TotalFee": {"$sum": "$TradeItemBroker"},
-    #             "TotalSell": {"$sum": "$Sell"},
-    #         }
-    #     },
-    #     {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
-    # ]
-    #
-    # buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
-    # sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
-    # subuser_total = {"TotalPureVolume": 0, "TotalFee": 0}
-    #
-    # if buy_agg_result and sell_agg_result:
-    #     total_buy = buy_agg_result.get("TotalBuy")
-    #     total_sell = sell_agg_result.get("TotalSell")
-    #     subuser_total["TotalFee"] = sell_agg_result.get(
-    #         "TotalFee"
-    #     ) + buy_agg_result.get("TotalFee")
-    # else:
-    #     total_buy = 0
-    #     total_sell = 0
-    # subuser_total["TotalPureVolume"] = total_sell + total_buy
-    #
-    # return {
-    #     "TotalBuy": total_buy,
-    #     "TotalSell": total_sell,
-    #     "TotalPureVolume": total_sell + total_buy,
-    #     "TotalFee": subuser_total.get("TotalFee"),
-    # }
     resp = {
         "result": subuser_total,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -629,12 +530,6 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
             marketer_fullname = (
                 marketer.get("FirstName") + " " + marketer.get("LastName")
             )
-        # from_gregorian_date = to_gregorian_(args.from_date)
-        # to_gregorian_date = to_gregorian_(args.to_date)
-        # to_gregorian_date = datetime.strptime(
-        #     to_gregorian_date, "%Y-%m-%d"
-        # ) + timedelta(days=1)
-        # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
         query = {"$and": [{"Referer": marketer_fullname}]}
         fields = {"PAMCode": 1}
         customers_records = customers_coll.find(query, fields)
@@ -802,13 +697,6 @@ def total_users_cost(
             marketer_fullname = (
                 marketer.get("FirstName") + " " + marketer.get("LastName")
             )
-        # from_gregorian_date = to_gregorian_(args.from_date)
-        # to_gregorian_date = to_gregorian_(args.to_date)
-        # to_gregorian_date = datetime.strptime(
-        #     to_gregorian_date, "%Y-%m-%d"
-        # ) + timedelta(days=1)
-        # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
         from_gregorian_date = args.from_date
         to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
@@ -963,13 +851,6 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     """
     database = get_database()
     trades_coll = database["trades"]
-    # from_gregorian_date = to_gregorian_(from_date)
-    # to_gregorian_date = to_gregorian_(to_date)
-    # to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-    #     days=1
-    # )
-    # to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
     from_gregorian_date = from_date
     to_gregorian_date = (datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 

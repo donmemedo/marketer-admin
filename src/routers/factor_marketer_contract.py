@@ -109,7 +109,7 @@ async def add_marketer_contract(
         raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
     query_result = coll.find_one({"MarketerID": mmci.MarketerID}, {"_id": False})
     return ResponseListOut(
-        result=query_result,  # marketer_entity(marketer_dict),
+        result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
