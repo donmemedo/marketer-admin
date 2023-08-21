@@ -78,12 +78,18 @@ async def validation_exception_handler(request, exc):
         status = exc.body['status']
     except:
         for e in exc.errors():
-            err = get_error(e['type'], e['ctx']['error'])
+            try:
+                err = get_error(e['type'], e['ctx']['error'])
+                status = err['code']
+            except:
+                err = get_error(e['type'], e['msg'])
+                status = err['code']
     response = {
         "result": [],
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         "error": err
     }
+    logger.error(exc)
     return JSONResponse(status_code=status, content=response)
 
 

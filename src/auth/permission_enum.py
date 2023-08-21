@@ -9,6 +9,7 @@ class Modules(Enum):
     All = "همه"
     Marketer = "مارکتر"
     Factor = "فاکتور"
+    Accounting = "حسابداری"
     User = "افراد"
     Database = "دیتابیس"
     TBSSync = "همگام‌سازی با TBS"

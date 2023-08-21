@@ -49,17 +49,17 @@ async def get_marketer_profile(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # permissions = [
+    #     "MarketerAdmin.All.Read",
+    #     "MarketerAdmin.All.All",
+    #     "MarketerAdmin.Marketer.Read",
+    #     "MarketerAdmin.Marketer.All",
+    # ]
+    # allowed = check_permissions(role_perm["roles"], permissions)
+    # if allowed:
+    #     pass
+    # else:
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     if args.IdpID is None:
         raise RequestValidationError(TypeError, body={"code":"30003","status":412})
@@ -103,17 +103,17 @@ async def get_marketer(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # permissions = [
+    #     "MarketerAdmin.All.Read",
+    #     "MarketerAdmin.All.All",
+    #     "MarketerAdmin.Marketer.Read",
+    #     "MarketerAdmin.Marketer.All",
+    # ]
+    # allowed = check_permissions(role_perm["roles"], permissions)
+    # if allowed:
+    #     pass
+    # else:
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
 
     marketers_coll = database["marketers"]
     results = []
@@ -160,19 +160,19 @@ async def modify_marketer(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Write",
-        "MarketerAdmin.Marketer.Update",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # permissions = [
+    #     "MarketerAdmin.All.Write",
+    #     "MarketerAdmin.All.Update",
+    #     "MarketerAdmin.All.All",
+    #     "MarketerAdmin.Marketer.Write",
+    #     "MarketerAdmin.Marketer.Update",
+    #     "MarketerAdmin.Marketer.All",
+    # ]
+    # allowed = check_permissions(role_perm["roles"], permissions)
+    # if allowed:
+    #     pass
+    # else:
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
     marketer_coll = database["marketers"]
     admins_coll = database["factors"]
     if mmi.CurrentIdpId is None:
@@ -180,18 +180,21 @@ async def modify_marketer(
     filter = {"IdpId": mmi.CurrentIdpId}
     idpid = mmi.CurrentIdpId
     update = {"$set": {}}
-
-    if mmi.FirstName is not None:
-        update["$set"]["FirstName"] = mmi.FirstName
-
-    if mmi.LastName is not None:
-        update["$set"]["LastName"] = mmi.LastName
-
-    if mmi.InvitationLink is not None:
-        update["$set"]["InvitationLink"] = mmi.InvitationLink
-
-    if mmi.RefererType is not None:
-        update["$set"]["RefererType"] = mmi.RefererType
+    for key, value in vars(mmi).items():
+        if value is not None:
+            update["$set"][key] = value
+    #
+    # if mmi.FirstName is not None:
+    #     update["$set"]["FirstName"] = mmi.FirstName
+    #
+    # if mmi.LastName is not None:
+    #     update["$set"]["LastName"] = mmi.LastName
+    #
+    # if mmi.InvitationLink is not None:
+    #     update["$set"]["InvitationLink"] = mmi.InvitationLink
+    #
+    # if mmi.RefererType is not None:
+    #     update["$set"]["RefererType"] = mmi.RefererType
 
     if check_permissions(
         role_perm["roles"],
@@ -262,36 +265,39 @@ async def add_marketer(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Create",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # permissions = [
+    #     "MarketerAdmin.All.Create",
+    #     "MarketerAdmin.All.All",
+    #     "MarketerAdmin.Marketer.Create",
+    #     "MarketerAdmin.Marketer.All",
+    # ]
+    # allowed = check_permissions(role_perm["roles"], permissions)
+    # if allowed:
+    #     pass
+    # else:
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
     admins_coll = database["factors"]
     marketer_coll = database["marketers"]
     if ami.CurrentIdpId is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"IdpId": ami.CurrentIdpId}
     update = {"$set": {}}
-
-    if ami.FirstName is not None:
-        update["$set"]["FirstName"] = ami.FirstName
-
-    if ami.LastName is not None:
-        update["$set"]["LastName"] = ami.LastName
-
-    if ami.InvitationLink is not None:
-        update["$set"]["InvitationLink"] = ami.InvitationLink
-
-    if ami.RefererType is not None:
-        update["$set"]["RefererType"] = ami.RefererType
-
+    for key, value in vars(ami).items():
+        if value is not None:
+            update["$set"][key] = value
+    #
+    # if ami.FirstName is not None:
+    #     update["$set"]["FirstName"] = ami.FirstName
+    #
+    # if ami.LastName is not None:
+    #     update["$set"]["LastName"] = ami.LastName
+    #
+    # if ami.InvitationLink is not None:
+    #     update["$set"]["InvitationLink"] = ami.InvitationLink
+    #
+    # if ami.RefererType is not None:
+    #     update["$set"]["RefererType"] = ami.RefererType
+    #
     update["$set"]["CreateDate"] = jd.today().strftime("%Y-%m-%d")
     update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
@@ -345,17 +351,17 @@ async def get_marketer_total_trades(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # permissions = [
+    #     "MarketerAdmin.All.Read",
+    #     "MarketerAdmin.All.All",
+    #     "MarketerAdmin.Marketer.Read",
+    #     "MarketerAdmin.Marketer.All",
+    # ]
+    # allowed = check_permissions(role_perm["roles"], permissions)
+    # if allowed:
+    #     pass
+    # else:
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
     customers_coll = database["customers"]
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
@@ -477,17 +483,17 @@ async def search_user_profile(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # permissions = [
+    #     "MarketerAdmin.All.Read",
+    #     "MarketerAdmin.All.All",
+    #     "MarketerAdmin.Marketer.Read",
+    #     "MarketerAdmin.Marketer.All",
+    # ]
+    # allowed = check_permissions(role_perm["roles"], permissions)
+    # if allowed:
+    #     pass
+    # else:
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
     marketer_coll = brokerage["marketers"]
     query = {
         "$and": [
@@ -549,17 +555,6 @@ async def add_marketers_relations(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Create",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_relations_coll = database["mrelations"]
     marketers_coll = database["marketers"]
     if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
@@ -593,9 +588,9 @@ async def add_marketers_relations(
             raise RequestValidationError(TypeError, body={"code": "30016", "status": 412})
     except:
         raise RequestValidationError(TypeError, body={"code": "30015", "status": 412})
-    update["$set"]["CreateDate"] = str(jd.now())
+    update["$set"]["CreateDate"] = datetime.now().isoformat()
     update["$set"]["UpdateDate"] = update["$set"]["CreateDate"]
-    update["$set"]["StartDate"] = str(jd.today().date())
+    update["$set"]["StartDate"] = datetime.today().date().isoformat()
 
     if mrel.StartDate is not None:
         update["$set"]["StartDate"] = mrel.StartDate
@@ -615,12 +610,6 @@ async def add_marketers_relations(
         ).todatetime()
     except:
         raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
-    update["$set"]["GCreateDate"] = jd.strptime(
-        update["$set"]["CreateDate"], "%Y-%m-%d %H:%M:%S.%f"
-    ).todatetime()
-    update["$set"]["GUpdateDate"] = jd.strptime(
-        update["$set"]["UpdateDate"], "%Y-%m-%d %H:%M:%S.%f"
-    ).todatetime()
     if marketers_coll.find_one(
         {"IdpId": mrel.FollowerMarketerID}
     ) and marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID}):
@@ -676,19 +665,6 @@ async def modify_marketers_relations(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Write",
-        "MarketerAdmin.Marketer.Update",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_relations_coll = database["mrelations"]
     if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
@@ -718,8 +694,8 @@ async def modify_marketers_relations(
     if mrel.LeaderMarketerID == mrel.FollowerMarketerID:
         raise RequestValidationError(TypeError, body={"code": "30011", "status": 409})
     update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
-    update["$set"]["UpdateDate"] = str(jd.now())
-    update["$set"]["StartDate"] = str(jd.today().date())
+    update["$set"]["UpdateDate"] = datetime.now().isoformat()
+    update["$set"]["StartDate"] = datetime.today().date().isoformat()
 
     if mrel.StartDate is not None:
         update["$set"]["StartDate"] = mrel.StartDate
@@ -739,9 +715,6 @@ async def modify_marketers_relations(
             raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
         if update["$set"]["GEndDate"] < update["$set"]["GStartDate"]:
             raise RequestValidationError(TypeError, body={"code": "30071", "status": 400})
-    update["$set"]["GUpdateDate"] = jd.strptime(
-        update["$set"]["UpdateDate"], "%Y-%m-%d %H:%M:%S.%f"
-    ).todatetime()
 
     query = {
         "$and": [
@@ -789,86 +762,34 @@ async def search_marketers_relations(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     try:
         StartDate = jd(datetime.strptime(args.StartDate, '%Y-%m-%d')).date().isoformat()
-        from_gregorian_date = jd.strptime(StartDate, "%Y-%m-%d").todatetime()
+        from_gregorian_date = jd.strptime(StartDate, "%Y-%m-%d").todatetime().isoformat()
     except:
         raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
     try:
         EndDate = jd(datetime.strptime(args.EndDate, '%Y-%m-%d')).date().isoformat()
-        to_gregorian_date = jd.strptime(EndDate, "%Y-%m-%d").todatetime() + timedelta(
-        days=1)
+        to_gregorian_date = (jd.strptime(EndDate, "%Y-%m-%d").todatetime() + timedelta(
+        days=1)).isoformat()
     except:
         raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
 
 
     marketers_relations_coll = database["mrelations"]
-    query = {}
-    if args.FollowerMarketerName or args.FollowerMarketerID:
-        if args.FollowerMarketerName is None:
-            args.FollowerMarketerName = ""
-        if args.LeaderMarketerName is None:
-            args.LeaderMarketerName = ""
-        if args.LeaderMarketerID is None:
-            args.LeaderMarketerID = ""
-        query = {
-            "$and": [
-                {"LeaderMarketerID": {"$regex": args.LeaderMarketerID}},
-                {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                {"GStartDate": {"$gte": from_gregorian_date}},
-                {"GEndDate": {"$lte": to_gregorian_date}},
-            ]
-        }
-        if args.FollowerMarketerID:
-            query = {
-                "$and": [
-                    {"FollowerMarketerID": args.FollowerMarketerID},
-                    {"LeaderMarketerID": {"$regex": args.LeaderMarketerID}},
-                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                    {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}},
-                ]
-            }
-    elif args.LeaderMarketerName or args.LeaderMarketerID:
-        if args.LeaderMarketerName is None:
-            args.LeaderMarketerName = ""
-        if args.FollowerMarketerName is None:
-            args.FollowerMarketerName = ""
-        if args.FollowerMarketerID is None:
-            args.FollowerMarketerID = ""
-        query = {
-            "$and": [
-                {"FollowerMarketerID": {"$regex": args.FollowerMarketerID}},
-                {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                {"GStartDate": {"$gte": from_gregorian_date}},
-                {"GEndDate": {"$lte": to_gregorian_date}},
-            ]
-        }
-        if args.LeaderMarketerID:
-            query = {
-                "$and": [
-                    {"FollowerMarketerID": {"$regex": args.FollowerMarketerID}},
-                    {"LeaderMarketerID": args.LeaderMarketerID},
-                    {"FollowerMarketerName": {"$regex": args.FollowerMarketerName}},
-                    {"LeaderMarketerName": {"$regex": args.LeaderMarketerName}},
-                    {"GStartDate": {"$gte": from_gregorian_date}},
-                    {"GEndDate": {"$lte": to_gregorian_date}},
-                ]
-            }
+    upa = []
+    query = {"$and": upa}
+
+    if args.LeaderMarketerName:
+        upa.append({"LeaderMarketerName": {"$regex": args.LeaderMarketerName}})
+    if args.FollowerMarketerName:
+        upa.append({"FollowerMarketerName": {"$regex": args.FollowerMarketerName}})
+    if args.LeaderMarketerID:
+        upa.append({"LeaderMarketerID": args.LeaderMarketerID})
+    if args.FollowerMarketerID:
+        upa.append({"FollowerMarketerID": args.FollowerMarketerID})
+    upa.append({"StartDate": {"$gte": args.StartDate}})
+    upa.append({"EndDate": {"$lte": args.EndDate}})
+
     results = []
     try:
         query_result = marketers_relations_coll.find_one(query, {"_id": False})
