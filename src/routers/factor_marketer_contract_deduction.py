@@ -55,40 +55,15 @@ async def add_marketer_contract_deduction(
     """
 
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Create",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     coll = database["MarketerContractDeduction"]
     marketers_coll = database["MarketerTable"]
     if mmcd.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmcd.MarketerID}
     update = {"$set": {}}
-    if mmcd.ID is not None:
-        update["$set"]["ID"] = mmcd.ID
-    if mmcd.CollateralCoefficient is not None:
-        update["$set"]["CollateralCoefficient"] = mmcd.CollateralCoefficient
-    if mmcd.ContractID is not None:
-        update["$set"]["ContractID"] = mmcd.ContractID
-    if mmcd.TaxCoefficient is not None:
-        update["$set"]["TaxCoefficient"] = mmcd.TaxCoefficient
-    if mmcd.InsuranceCoefficient is not None:
-        update["$set"]["InsuranceCoefficient"] = mmcd.InsuranceCoefficient
-    if mmcd.ReturnDuration is not None:
-        update["$set"]["ReturnDuration"] = mmcd.ReturnDuration
-    if mmcd.Title is not None:
-        update["$set"]["Title"] = mmcd.Title
+    for key, value in vars(mmcd).items():
+        if value is not None:
+            update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
     update["$set"]["UpdateDateTime"] = str(datetime.now())
 
@@ -141,40 +116,15 @@ async def modify_marketer_contract_deduction(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     coll = database["MarketerContractDeduction"]
     marketers_coll = database["MarketerTable"]
     if mmcd.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmcd.MarketerID}
     update = {"$set": {}}
-    if mmcd.ID is not None:
-        update["$set"]["ID"] = mmcd.ID
-    if mmcd.CollateralCoefficient is not None:
-        update["$set"]["CollateralCoefficient"] = mmcd.CollateralCoefficient
-    if mmcd.ContractID is not None:
-        update["$set"]["ContractID"] = mmcd.ContractID
-    if mmcd.TaxCoefficient is not None:
-        update["$set"]["TaxCoefficient"] = mmcd.TaxCoefficient
-    if mmcd.InsuranceCoefficient is not None:
-        update["$set"]["InsuranceCoefficient"] = mmcd.InsuranceCoefficient
-    if mmcd.ReturnDuration is not None:
-        update["$set"]["ReturnDuration"] = mmcd.ReturnDuration
-    if mmcd.Title is not None:
-        update["$set"]["Title"] = mmcd.Title
+    for key, value in vars(mmcd).items():
+        if value is not None:
+            update["$set"][key] = value
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     coll.update_one(filter, update)
     query_result = coll.find_one({"MarketerID": mmcd.MarketerID}, {"_id": False})
@@ -231,20 +181,9 @@ async def search_marketer_contract_deduction(
         raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContractDeduction"]
     upa=[]
-    if args.MarketerID:
-        upa.append({"MarketerID":args.MarketerID})
-    if args.ID:
-        upa.append({"ID":args.ID})
-    if args.ContractID:
-        upa.append({"ContractID":{"$regex": args.ContractID}})
-    if args.CollateralCoefficient:
-        upa.append({"CollateralCoefficient":args.CollateralCoefficient})
-    if args.TaxCoefficient:
-        upa.append({"TaxCoefficient":args.TaxCoefficient})
-    if args.InsuranceCoefficient:
-        upa.append({"InsuranceCoefficient":args.InsuranceCoefficient})
-    if args.ReturnDuration:
-        upa.append({"StepNumber":args.ReturnDuration})
+    for key, value in vars(args).items():
+        if value is not None:
+            upa.append({key:value})
     if args.Title:
         upa.append({"Title":{"$regex": args.Title}})
     query = {

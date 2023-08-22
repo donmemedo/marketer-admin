@@ -54,42 +54,15 @@ async def add_marketer_ref_code(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Create",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     coll = database["MarketerRefCode"]
     marketers_coll = database["MarketerTable"]
     if mmrci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmrci.MarketerID}
     update = {"$set": {}}
-    if mmrci.ID is not None:
-        update["$set"]["ID"] = mmrci.ID
-    if mmrci.Title is not None:
-        update["$set"]["Title"] = mmrci.Title
-    if mmrci.Type is not None:
-        update["$set"]["Type"] = mmrci.Type
-    if mmrci.RefCode is not None:
-        update["$set"]["RefCode"] = mmrci.RefCode
-    if mmrci.SubsidiaryCode is not None:
-        update["$set"]["SubsidiaryCode"] = mmrci.SubsidiaryCode
-    if mmrci.SubsidiaryTitle is not None:
-        update["$set"]["SubsidiaryTitle"] = mmrci.SubsidiaryTitle
-    if mmrci.BranchCode is not None:
-        update["$set"]["BranchCode"] = mmrci.BranchCode
-    if mmrci.BranchTitle is not None:
-        update["$set"]["BranchTitle"] = mmrci.BranchTitle
+    for key, value in vars(mmrci).items():
+        if value is not None:
+            update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
     update["$set"]["UpdateDateTime"] = str(datetime.now())
 
@@ -142,43 +115,14 @@ async def modify_marketer_ref_code(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     coll = database["MarketerRefCode"]
     if mmrci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmrci.MarketerID}
     update = {"$set": {}}
-
-
-    if mmrci.ID is not None:
-        update["$set"]["ID"] = mmrci.ID
-    if mmrci.Title is not None:
-        update["$set"]["Title"] = mmrci.Title
-    if mmrci.Type is not None:
-        update["$set"]["Type"] = mmrci.Type
-    if mmrci.RefCode is not None:
-        update["$set"]["RefCode"] = mmrci.RefCode
-    if mmrci.SubsidiaryCode is not None:
-        update["$set"]["SubsidiaryCode"] = mmrci.SubsidiaryCode
-    if mmrci.SubsidiaryTitle is not None:
-        update["$set"]["SubsidiaryTitle"] = mmrci.SubsidiaryTitle
-    if mmrci.BranchCode is not None:
-        update["$set"]["BranchCode"] = mmrci.BranchCode
-    if mmrci.BranchTitle is not None:
-        update["$set"]["BranchTitle"] = mmrci.BranchTitle
+    for key, value in vars(mmrci).items():
+        if value is not None:
+            update["$set"][key] = value
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     coll.update_one(filter, update)
     query_result = coll.find_one({"MarketerID": mmrci.MarketerID}, {"_id": False})
@@ -222,34 +166,15 @@ async def search_marketer_ref_code(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     coll = database["MarketerRefCode"]
     upa = []
-    if args.MarketerID:
-        upa.append({"MarketerID":args.MarketerID})
-    if args.ID:
-        upa.append({"ID":args.ID})
-    if args.SubsidiaryCode:
-        upa.append({"SubsidiaryCode":args.SubsidiaryCode})
+    for key, value in vars(args).items():
+        if value is not None:
+            upa.append({key:value})
     if args.SubsidiaryTitle:
         upa.append({"SubsidiaryTitle":{"$regex": args.SubsidiaryTitle}})
-    if args.BranchCode:
-        upa.append({"BranchCode":args.BranchCode})
     if args.BranchTitle:
         upa.append({"BranchTitle":{"$regex": args.BranchTitle}})
-    if args.RefCode:
-        upa.append({"RefCode":args.RefCode})
     if args.Type:
         upa.append({"Type":{"$regex": args.Type}})
     if args.Title:
@@ -312,17 +237,6 @@ async def delete_marketer_ref_code(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Delete",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Delete",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerRefCode"]
     if args.MarketerID:
         pass

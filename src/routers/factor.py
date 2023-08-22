@@ -51,18 +51,6 @@ async def get_factors_consts(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     marketer_id = args.IdpID
     consts_coll = brokerage["consts"]
     query_result = consts_coll.find_one({"MarketerID": marketer_id}, {"_id": False})
@@ -107,18 +95,6 @@ async def get_all_factors_consts(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     results = []
     consts_coll = database["consts"]
     query_result = consts_coll.find({}, {"_id": False})
@@ -167,19 +143,6 @@ async def modify_factor_consts(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     consts_coll = database["consts"]
     if mci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
@@ -187,18 +150,9 @@ async def modify_factor_consts(
     filter = {"MarketerID": mci.MarketerID}
     update = {"$set": {}}
 
-    if mci.FixIncome is not None:
-        update["$set"]["FixIncome"] = mci.FixIncome
-
-    if mci.Insurance is not None:
-        update["$set"]["Insurance"] = mci.Insurance
-
-    if mci.Collateral is not None:
-        update["$set"]["Collateral"] = mci.Collateral
-
-    if mci.Tax is not None:
-        update["$set"]["Tax"] = mci.Tax
-
+    for key, value in vars(mci).items():
+        if value is not None:
+            update["$set"][key] = value
     consts_coll.update_one(filter, update)
     query_result = consts_coll.find_one({"MarketerID": mci.MarketerID}, {"_id": False})
     if not query_result:
@@ -226,7 +180,7 @@ async def modify_factor_consts(
 )
 async def modify_factor(
     request: Request,
-    mfi: ModifyFactorIn,
+    mfi: ModifyFactorIN,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -243,19 +197,6 @@ async def modify_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     factor_coll = database["factors"]
     if mfi.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
@@ -263,37 +204,10 @@ async def modify_factor(
     filter = {"IdpID": mfi.MarketerID}
     update = {"$set": {}}
     per = mfi.Period
-
-    if mfi.TotalPureVolume is not None:
-        update["$set"][per + "TPV"] = mfi.TotalPureVolume
-
-    if mfi.TotalFee is not None:
-        update["$set"][per + "TF"] = mfi.TotalFee
-
-    if mfi.PureFee is not None:
-        update["$set"][per + "PureFee"] = mfi.PureFee
-
-    if mfi.MarketerFee is not None:
-        update["$set"][per + "MarFee"] = mfi.MarketerFee
-
-    if mfi.Plan is not None:
-        update["$set"][per + "Plan"] = mfi.Plan
-
-    if mfi.Tax is not None:
-        update["$set"][per + "Tax"] = mfi.Tax
-
-    if mfi.Collateral is not None:
-        update["$set"][per + "Collateral"] = mfi.Collateral
-
-    if mfi.FinalFee is not None:
-        update["$set"][per + "FinalFee"] = mfi.FinalFee
-
-    if mfi.Payment is not None:
-        update["$set"][per + "Payment"] = mfi.Payment
-
-    if mfi.FactorStatus is not None:
-        update["$set"][per + "FactStatus"] = mfi.FactorStatus
-
+    for key, value in vars(mfi).items():
+        if value is not None:
+            update["$set"][per+key] = value
+    update["$set"][f"{per}UpdateDateTime"] = datetime.now().isoformat()
     factor_coll.update_one(filter, update)
     query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
     if not query_result:
@@ -321,7 +235,7 @@ async def modify_factor(
 )
 async def add_factor(
     request: Request,
-    mfi: ModifyFactorIn,
+    mfi: ModifyFactorIN,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -338,20 +252,6 @@ async def add_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Create",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     factor_coll = database["factors"]
     marketers_coll = database["marketers"]
     if mfi.MarketerID is None:
@@ -360,36 +260,11 @@ async def add_factor(
     filter = {"IdpID": mfi.MarketerID}
     update = {"$set": {}}
     per = mfi.Period
-
-    if mfi.TotalPureVolume is not None:
-        update["$set"][per + "TPV"] = mfi.TotalPureVolume
-
-    if mfi.TotalFee is not None:
-        update["$set"][per + "TF"] = mfi.TotalFee
-
-    if mfi.PureFee is not None:
-        update["$set"][per + "PureFee"] = mfi.PureFee
-
-    if mfi.MarketerFee is not None:
-        update["$set"][per + "MarFee"] = mfi.MarketerFee
-
-    if mfi.Plan is not None:
-        update["$set"][per + "Plan"] = mfi.Plan
-
-    if mfi.Tax is not None:
-        update["$set"][per + "Tax"] = mfi.Tax
-
-    if mfi.Collateral is not None:
-        update["$set"][per + "Collateral"] = mfi.Collateral
-
-    if mfi.FinalFee is not None:
-        update["$set"][per + "FinalFee"] = mfi.FinalFee
-
-    if mfi.Payment is not None:
-        update["$set"][per + "Payment"] = mfi.Payment
-
-    if mfi.FactorStatus is not None:
-        update["$set"][per + "FactStatus"] = mfi.FactorStatus
+    for key, value in vars(mfi).items():
+        if value is not None:
+            update["$set"][per+key] = value
+    update["$set"][f"{per}CreateDateTime"] = datetime.now().isoformat()
+    update["$set"][f"{per}UpdateDateTime"] = datetime.now().isoformat()
 
     try:
         marketer_name = get_marketer_name(
@@ -438,17 +313,6 @@ async def search_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     factor_coll = database["factors"]
     if args.Period:
         pass
@@ -475,14 +339,21 @@ async def search_factor(
             result = {}
             result["MarketerName"] = query_result.get("FullName")
             result["Doreh"] = per
-            result["TotalPureVolume"] = query_result.get(per + "TPV")
-            result["TotalFee"] = query_result.get(per + "TF")
+            # result["TotalPureVolume"] = query_result.get(per + "TPV")
+            result["TotalPureVolume"] = query_result.get(per + "TotalPureVolume")
+            result["TotalFee"] = query_result.get(per + "TotalFee")
+            # result["TotalFee"] = query_result.get(per + "TF")
             result["PureFee"] = query_result.get(per + "PureFee")
-            result["MarketerFee"] = query_result.get(per + "MarFee")
+            # result["MarketerFee"] = query_result.get(per + "MarFee")
+            result["MarketerFee"] = query_result.get(per + "MarketerFee")
             result["Plan"] = query_result.get(per + "Plan")
-            result["Tax"] = query_result.get(per + "Tax")
-            result["ThisMonthCollateral"] = query_result.get(per + "Collateral")
-            result["TwoMonthsAgoCollateral"] = query_result.get(tma + "Collateral")
+            result["Tax"] = query_result.get(per + "SumOfDeductions")
+            result["TotalFeeOfFollowers"] = query_result.get(per + "TotalFeeOfFollowers")
+            result["SumOfDeductions"] = query_result.get(per + "SumOfDeductions")
+            # result["ThisMonthCollateral"] = query_result.get(per + "Collateral")
+            result["ThisMonthCollateral"] = query_result.get(per + "CollateralOfThisMonth")
+            # result["TwoMonthsAgoCollateral"] = query_result.get(tma + "Collateral")
+            result["TwoMonthsAgoCollateral"] = query_result.get(per + "TotalFeeOfFollowers")
             result["FinalFee"] = query_result.get(per + "FinalFee")
             result["Payment"] = query_result.get(per + "Payment")
             result["FactStatus"] = query_result.get(per + "FactStatus")
@@ -537,17 +408,6 @@ async def delete_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Delete",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Delete",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     factor_coll = database["factors"]
     if ((args.MarketerID or args.ContractID) and args.Period) or args.ID:
         pass
@@ -556,30 +416,36 @@ async def delete_factor(
     if args.ID:
         filter = {"IdpID": args.ID}
 
-
-
     filter = {"IdpID": args.MarketerID}
     update = {"$set": {}}
     per = args.Period
+    update["$set"][f"{per}DeletedDateTime"] = datetime.now().isoformat()
+
     query_result = factor_coll.find_one({"IdpID": args.MarketerID}, {"_id": False})
     if not query_result:
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
+    try:
+        factor_coll.update_one({"IdpID": args.MarketerID}, update)
+
+    except:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     result = [
         f"از ماکتر {query_result.get('FullName')}فاکتور مربوط به دوره {args.Period} پاک شد."
     ]
+
     update = {"$unset": {}}
+    update["$unset"][per + "TotalPureVolume"] = 1
+    update["$unset"][per + "TotalFee"] = 1
     update["$unset"][per + "PureFee"] = 1
-    update["$unset"][per + "MarFee"] = 1
-    update["$unset"][per + "TPV"] = 1
-    update["$unset"][per + "TF"] = 1
-    update["$unset"][per + "PureFee"] = 1
-    update["$unset"][per + "MarFee"] = 1
-    update["$unset"][per + "Plan"] = 1
-    update["$unset"][per + "Tax"] = 1
+    update["$unset"][per + "MarketerFee"] = 1
+    update["$unset"][per + "TotalFeeOfFollowers"] = 1
+    update["$unset"][per + "CollateralOfThisMonth"] = 1
+    update["$unset"][per + "SumOfDeductions"] = 1
+    update["$unset"][per + "Payment"] = 1
     update["$unset"][per + "Collateral"] = 1
     update["$unset"][per + "FinalFee"] = 1
     update["$unset"][per + "Payment"] = 1
-    update["$unset"][per + "FactStatus"] = 1
+    update["$unset"][per + "FactorStatus"] = 1
     try:
         factor_coll.update_one({"IdpID": args.MarketerID}, update)
 
