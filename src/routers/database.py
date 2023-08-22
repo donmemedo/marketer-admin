@@ -55,23 +55,6 @@ async def get_customers(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Database.All",
-        "MarketerAdmin.TBSSync.All",
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.Database.Write",
-        "MarketerAdmin.TBSSync.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.Database.Update",
-        "MarketerAdmin.TBSSync.Update",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     try:
         cus_collection = brokerage[settings.CUSTOMER_COLLECTION]
     except errors.CollectionInvalid as err:
@@ -129,23 +112,6 @@ async def get_firms(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Database.All",
-        "MarketerAdmin.TBSSync.All",
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.Database.Write",
-        "MarketerAdmin.TBSSync.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.Database.Update",
-        "MarketerAdmin.TBSSync.Update",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     try:
         firm_collection = brokerage[settings.FIRMS_COLLECTION]
     except errors.CollectionInvalid as err:
@@ -200,20 +166,6 @@ async def get_trades(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Database.All",
-        "MarketerAdmin.TBSSync.All",
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.Database.Create",
-        "MarketerAdmin.TBSSync.Create",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     try:
         trades_collection = brokerage[settings.TRADES_COLLECTION]
     except errors.CollectionInvalid as err:
@@ -269,20 +221,6 @@ async def delete_trades(
     """
 
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Database.All",
-        "MarketerAdmin.TBSSync.All",
-        "MarketerAdmin.All.Delete",
-        "MarketerAdmin.Database.Delete",
-        "MarketerAdmin.TBSSync.Delete",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     try:
         trades_collection = brokerage[settings.TRADES_COLLECTION]
     except errors.CollectionInvalid as err:

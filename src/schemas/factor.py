@@ -68,6 +68,22 @@ class ModifyFactorIn:
     CreateDateTime: str = None
     UpdateDateTime: str = None
 
+@dataclass
+class ModifyFactorIN:
+     MarketerID: str
+     Period: str = str(current_year) + f"{current_month:02}"
+     TotalPureVolume: int = None
+     TotalFee: int = None
+     PureFee: int = None
+     MarketerFee: int = None
+     TotalFeeOfFollowers: int = None
+     CollateralOfThisMonth: int = None
+     SumOfDeductions: int = None
+     Payment: int = None
+     # CreateDateTime: str = None
+     # UpdateDateTime: str = None
+     FactorStatus: int = Query(None, alias="Status")
+
 
 @dataclass
 class UserTotalOut:

@@ -54,20 +54,6 @@ async def get_marketer_profile(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     marketers_coll = brokerage["marketers"]
     results = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
     if not args.IdpID:
@@ -132,19 +118,6 @@ async def cal_marketer_cost(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
@@ -166,11 +139,8 @@ async def cal_marketer_cost(
         marketer_total = {}
         marketer_fullname = get_marketer_name(marketer)
         query = {"Referer": {"$regex": marketer_fullname}}
-
         fields = {"PAMCode": 1}
-
         customers_records = customers_coll.find(query, fields)
-
         trade_codes = [
             c.get("PAMCode") for c in customers_records
         ]
@@ -253,7 +223,6 @@ async def cal_marketer_cost(
         sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
 
         buy_dict = {"vol": 0, "fee": 0}
-
         sell_dict = {"vol": 0, "fee": 0}
 
         if buy_agg_result:
@@ -437,19 +406,6 @@ async def factor_print(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]

@@ -23,7 +23,7 @@ from math import inf
 factors = APIRouter(prefix="/new-factor")
 
 @factors.post(
-    "/add-factor",
+    "/add-base-factor",
     tags=["Factors"],
 )
 @authorize(
@@ -36,9 +36,9 @@ factors = APIRouter(prefix="/new-factor")
         "MarketerAdmin.Factor.All",
     ]
 )
-async def add_factor(
+async def add_base_factor(
     request: Request,
-    mfi: ModifyFactorIn,
+    mfi: ModifyBaseFactorIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -55,20 +55,6 @@ async def add_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Create",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     factor_coll = database["MarketerFactor"]
     marketers_coll = database["MarketerTable"]
     if mfi.MarketerID is None:
@@ -81,6 +67,10 @@ async def add_factor(
     for key, value in vars(mfi).items():
         if value is not None:
             update["$set"][key] = value
+    update["$set"]["CreateDateTime"] = jd.now().isoformat()
+    update["$set"]["UpdateDateTime"] = jd.now().isoformat()
+    update["$set"]["CreateBy"] = user_id
+    update["$set"]["UpdateBy"] = user_id
     try:
         marketer_name = get_marketer_name(
             marketers_coll.find_one({"IdpId": mfi.MarketerID}, {"_id": False})
@@ -98,7 +88,7 @@ async def add_factor(
 
 
 @factors.put(
-    "/modify-factor",
+    "/modify-base-factor",
     tags=["Factors"],
 )
 @authorize(
@@ -111,9 +101,9 @@ async def add_factor(
         "MarketerAdmin.Factor.All",
     ]
 )
-async def modify_factor(
+async def modify_base_factor(
     request: Request,
-    mfi: ModifyFactorIn,
+    mfi: ModifyBaseFactorIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -130,20 +120,6 @@ async def modify_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     factor_coll = database["MarketerFactor"]
     marketers_coll = database["MarketerTable"]
     if ((mfi.MarketerID and mfi.Period) or mfi.ID) is None:
@@ -161,6 +137,140 @@ async def modify_factor(
     for key, value in vars(mfi).items():
         if value is not None:
             update["$set"][key] = value
+    update["$set"]["UpdateDateTime"] = jd.now().isoformat()
+    update["$set"]["UpdateBy"] = user_id
+
+    try:
+        factor_coll.update_one(filter, update)
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 400})
+    query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
+    if not query_result:
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
+    return ResponseListOut(
+        result=query_result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
+
+
+@factors.post(
+    "/add-accounting-factor",
+    tags=["Factors"],
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Create",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Accounting.Write",
+        "MarketerAdmin.Accounting.Create",
+        "MarketerAdmin.Accounting.All",
+    ]
+)
+async def add_accounting_factor(
+    request: Request,
+    mfi: ModifyAccountingFactorIn,
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
+):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (ModifyFactorIn, optional): _description_. Defaults to Depends(ModifyFactorIn).
+
+    Raises:
+        HTTPException: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    user_id = role_perm["sub"]
+    factor_coll = database["MarketerFactor"]
+    marketers_coll = database["MarketerTable"]
+    if mfi.MarketerID is None:
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+    if mfi.ID is None:
+        raise RequestValidationError(TypeError, body={"code": "30033", "status": 412})
+
+    filter = {"MarketerID": mfi.MarketerID}
+    update = {"$set": {}}
+    for key, value in vars(mfi).items():
+        if value is not None:
+            update["$set"][key] = value
+    update["$set"]["CreateDateTime"] = jd.now().isoformat()
+    update["$set"]["UpdateDateTime"] = jd.now().isoformat()
+    update["$set"]["CreateBy"] = user_id
+    update["$set"]["UpdateBy"] = user_id
+    try:
+        marketer_name = get_marketer_name(
+            marketers_coll.find_one({"IdpId": mfi.MarketerID}, {"_id": False})
+        )
+        factor_coll.insert_one({"MarketerID": mfi.MarketerID, "Title": marketer_name})
+        factor_coll.update_one(filter, update)
+    except:
+        factor_coll.update_one(filter, update)
+    query_result = factor_coll.find_one({"ID": mfi.ID}, {"_id": False})
+    return ResponseListOut(
+        result=query_result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
+
+
+@factors.put(
+    "/modify-accounting-factor",
+    tags=["Factors"],
+)
+@authorize(
+    [
+        "MarketerAdmin.All.Write",
+        "MarketerAdmin.All.Update",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Accounting.Write",
+        "MarketerAdmin.Accounting.Update",
+        "MarketerAdmin.Accounting.All",
+    ]
+)
+async def modify_accounting_factor(
+    request: Request,
+    mfi: ModifyAccountingFactorIn,
+    database: MongoClient = Depends(get_database),
+    role_perm: dict = Depends(get_role_permission),
+):
+    """_summary_
+
+    Args:
+        request (Request): _description_
+        args (ModifyFactorIn, optional): _description_. Defaults to Depends(ModifyFactorIn).
+
+    Raises:
+        HTTPException: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    user_id = role_perm["sub"]
+    factor_coll = database["MarketerFactor"]
+    marketers_coll = database["MarketerTable"]
+    if ((mfi.MarketerID and mfi.Period) or mfi.ID) is None:
+        raise RequestValidationError(TypeError, body={"code": "30030", "status": 412})
+    if mfi.ID:
+        filter = {"ID": mfi.ID}
+    else:
+        filter = {
+            "$and": [
+                {"MarketerID": mfi.MarketerID},
+                {"Period": mfi.Period}
+            ]
+        }
+    update = {"$set": {}}
+    for key, value in vars(mfi).items():
+        if value is not None:
+            update["$set"][key] = value
+    update["$set"]["UpdateDateTime"] = jd.now().isoformat()
+    update["$set"]["UpdateBy"] = user_id
 
     try:
         factor_coll.update_one(filter, update)
@@ -186,6 +296,8 @@ async def modify_factor(
         "MarketerAdmin.All.All",
         "MarketerAdmin.Factor.Read",
         "MarketerAdmin.Factor.All",
+        "MarketerAdmin.Accounting.Read",
+        "MarketerAdmin.Accounting.All",
     ]
 )
 async def search_factor(
@@ -207,17 +319,6 @@ async def search_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     factor_coll = database["MarketerFactor"]
     if args.Period:
         pass
@@ -265,6 +366,8 @@ async def search_factor(
         "MarketerAdmin.All.All",
         "MarketerAdmin.Factor.Delete",
         "MarketerAdmin.Factor.All",
+        "MarketerAdmin.Accounting.Delete",
+        "MarketerAdmin.Accounting.All",
     ]
 )
 async def delete_factor(
@@ -286,17 +389,6 @@ async def delete_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Delete",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Delete",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     factor_coll = database["MarketerFactor"]
     if args.ID:
         filter = {"ID": args.ID}
@@ -344,6 +436,8 @@ async def delete_factor(
         "MarketerAdmin.All.All",
         "MarketerAdmin.Factor.Read",
         "MarketerAdmin.Factor.All",
+        "MarketerAdmin.Accounting.Read",
+        "MarketerAdmin.Accounting.All",
     ]
 )
 async def calculate_factor(
@@ -365,17 +459,6 @@ async def calculate_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     factor_coll = database["newfactors"]#database["MarketerFactor"]
     marketer_coll = database["MarketerTable"]
     customer_coll = database["customersbackup"]
@@ -435,7 +518,27 @@ async def calculate_factor(
     except:
         collateral = 0
     deductions = salary + insurance + tax + collateral
-    additions = args.Collateral
+    followers = dict(enumerate(database.mrelations.find({"LeaderMarketerID": args.MarketerID},{"_id":0})))
+    FTF = 0
+    for i in followers:
+        query = {"Referer": followers[i]['FollowerMarketerName']}
+
+        trade_codes = database.customers.distinct("PAMCode", query)
+        from_gregorian_date = args.from_date
+        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        pipeline = [
+            filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
+            project_commission_stage(),
+            group_by_total_stage("id"),
+            project_pure_stage()
+        ]
+        fresult = next(database.trades.aggregate(pipeline=pipeline), [])
+        FTF = FTF + fresult['TotalFee']*followers[i]['CommissionCoefficient']
+    additions = FTF
+    tmc = 0
+    if args.Collateral:
+        additions = additions + args.Collateral
+        tmc = args.Collateral
     if args.Additions:
         additions = additions + args.Additions
     if args.Deductions:
@@ -447,17 +550,17 @@ async def calculate_factor(
         "PureFee": int(pure_fee),
         "MarketerFee": int(marketer_fee),
         "Plan": plan,
-        "Next Plan": next_plan,
+        "NextPlan": next_plan,
         "Tax": int(tax),
-        "Collateral of This Month": int(collateral),
-        "Sum of Previous Collaterals": args.Collateral,
-        "Sum of Additions": int(additions),
-        "Sum of Deductions": int(deductions),
+        "CollateralOfThisMonth": int(collateral),
+        "SumOfPreviousCollaterals": tmc,
+        "TotalFeeOfFollowers": FTF,
+        "SumOfAdditions": int(additions),
+        "SumOfDeductions": int(deductions),
         "FinalFee": int(final_fee),
         "Payment": int(payment),
-
     }
-
+    factor_coll.insert_one(result)
     return ResponseOut(timeGenerated=datetime.now(), result=result, error="")
 
 

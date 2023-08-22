@@ -30,13 +30,9 @@ class ModifyConstIn:
 
 
 @dataclass
-class ModifyFactorIn:
+class ModifyAccountingFactorIn:
     MarketerID: str
     Period: str = str(current_year) + f"{current_month:02}"
-    TotalPureVolume: int = Query(None, alias="TotalTurnOver")
-    TotalFee: int = Query(None, alias="TotalBrokerCommission")
-    PureFee: int = Query(None, alias="TotalNetBrokerCommission")
-    MarketerFee: int = Query(None, alias="MarketerCommissionIncome")
     Plan: str = None
     Tax: int = Query(None, alias="TaxDeduction")
     TaxCoefficient: float = None
@@ -65,6 +61,23 @@ class ModifyFactorIn:
     InsuranceReturnPayment: int = None
     OtherPayment: int = None
     OtherPaymentDescription: str = None
+    CreateDateTime: str = None
+    UpdateDateTime: str = None
+
+
+@dataclass
+class ModifyBaseFactorIn:
+    MarketerID: str
+    Period: str = str(current_year) + f"{current_month:02}"
+    TotalPureVolume: int = Query(None, alias="TotalTurnOver")
+    TotalFee: int = Query(None, alias="TotalBrokerCommission")
+    TotalCMD: int = None
+    PureFee: int = Query(None, alias="TotalNetBrokerCommission")
+    MarketerFee: int = Query(None, alias="MarketerCommissionIncome")
+    ID: str = None
+    IsCmdConcluded: bool = False
+    MaketerCMDIncome: int = None
+    FollowersIncome: int = None
     CreateDateTime: str = None
     UpdateDateTime: str = None
 

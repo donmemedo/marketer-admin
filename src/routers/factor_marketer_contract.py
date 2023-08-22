@@ -54,47 +54,17 @@ async def add_marketer_contract(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Create",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     coll = database["MarketerContract"]
     marketers_coll = database["MarketerTable"]
     if mmci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmci.MarketerID}
     update = {"$set": {}}
-
     update["$set"]["StartDate"] = jd.today().strftime("%Y-%m-%d")
     update["$set"]["EndDate"] = jd.today().replace(year=jd.today().year + 1).strftime("%Y-%m-%d")
-    if mmci.ID is not None:
-        update["$set"]["ID"] = mmci.ID
-    if mmci.Title is not None:
-        update["$set"]["Title"] = mmci.Title
-    if mmci.CalculationBaseType is not None:
-        update["$set"]["CalculationBaseType"] = mmci.CalculationBaseType
-    if mmci.CoefficientBaseType is not None:
-        update["$set"]["CoefficientBaseType"] = mmci.CoefficientBaseType
-    if mmci.ContractNumber is not None:
-        update["$set"]["ContractNumber"] = mmci.ContractNumber
-    if mmci.ContractType is not None:
-        update["$set"]["ContractType"] = mmci.ContractType
-    if mmci.Description is not None:
-        update["$set"]["Description"] = mmci.Description
-    if mmci.EndDate is not None:
-        update["$set"]["EndDate"] = mmci.EndDate
-    if mmci.StartDate is not None:
-        update["$set"]["StartDate"] = mmci.StartDate
+    for key, value in vars(mmci).items():
+        if value is not None:
+            update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsDeleted"] = False
@@ -148,42 +118,14 @@ async def modify_marketer_contract(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContract"]
     if mmci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmci.MarketerID}
     update = {"$set": {}}
-    if mmci.ID is not None:
-        update["$set"]["ID"] = mmci.ID
-    if mmci.Title is not None:
-        update["$set"]["Title"] = mmci.Title
-    if mmci.CalculationBaseType is not None:
-        update["$set"]["CalculationBaseType"] = mmci.CalculationBaseType
-    if mmci.CoefficientBaseType is not None:
-        update["$set"]["CoefficientBaseType"] = mmci.CoefficientBaseType
-    if mmci.ContractNumber is not None:
-        update["$set"]["ContractNumber"] = mmci.ContractNumber
-    if mmci.ContractType is not None:
-        update["$set"]["ContractType"] = mmci.ContractType
-    if mmci.Description is not None:
-        update["$set"]["Description"] = mmci.Description
-    if mmci.EndDate is not None:
-        update["$set"]["EndDate"] = mmci.EndDate
-    if mmci.StartDate is not None:
-        update["$set"]["StartDate"] = mmci.StartDate
+    for key, value in vars(mmci).items():
+        if value is not None:
+            update["$set"][key] = value
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsDeleted"] = False
     coll.update_one(filter, update)
@@ -241,20 +183,11 @@ async def search_marketer_contract(
         raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContract"]
     upa=[]
-    if args.MarketerID:
-        upa.append({"MarketerID":args.MarketerID})
-    if args.ID:
-        upa.append({"ID":args.ID})
-    if args.CalculationBaseType:
-        upa.append({"CalculationBaseType":args.CalculationBaseType})
-    if args.CoefficientBaseType:
-        upa.append({"CoefficientBaseType": args.CoefficientBaseType})
-    if args.ContractNumber:
-        upa.append({"ContractNumber":args.ContractNumber})
+    for key, value in vars(args).items():
+        if value is not None:
+            upa.append({key: value})
     if args.Description:
         upa.append({"Description":{"$regex": args.Description}})
-    if args.ContractType:
-        upa.append({"ContractType":args.ContractType})
     if args.EndDate:
         upa.append({"EndDate":{"$regex": args.EndDate}})
     if args.StartDate:
@@ -318,17 +251,6 @@ async def delete_marketer_contract(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Delete",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Delete",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContract"]
     if args.MarketerID:
         pass
@@ -382,19 +304,6 @@ async def modify_marketer_contract_status(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContract"]
     if dmci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})

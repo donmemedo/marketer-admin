@@ -54,39 +54,15 @@ async def add_marketer_contract_coefficient(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Create",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContractCoefficient"]
     marketers_coll = database["MarketerTable"]
     if mmcci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmcci.MarketerID}
     update = {"$set": {}}
-    if mmcci.ID is not None:
-        update["$set"]["ID"] = mmcci.ID
-    if mmcci.CoefficientPercentage is not None:
-        update["$set"]["CoefficientPercentage"] = mmcci.CoefficientPercentage
-    if mmcci.ContractID is not None:
-        update["$set"]["ContractID"] = mmcci.ContractID
-    if mmcci.HighThreshold is not None:
-        update["$set"]["HighThreshold"] = mmcci.HighThreshold
-    if mmcci.LowThreshold is not None:
-        update["$set"]["LowThreshold"] = mmcci.LowThreshold
-    if mmcci.StepNumber is not None:
-        update["$set"]["StepNumber"] = mmcci.StepNumber
-    if mmcci.Title is not None:
-        update["$set"]["Title"] = mmcci.Title
+    for key, value in vars(mmcci).items():
+        if value is not None:
+            update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsCmdConcluded"] = False
@@ -140,38 +116,14 @@ async def modify_marketer_contract_coefficient(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContractCoefficient"]
     if mmcci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmcci.MarketerID}
     update = {"$set": {}}
-    if mmcci.ID is not None:
-        update["$set"]["ID"] = mmcci.ID
-    if mmcci.CoefficientPercentage is not None:
-        update["$set"]["CoefficientPercentage"] = mmcci.CoefficientPercentage
-    if mmcci.ContractID is not None:
-        update["$set"]["ContractID"] = mmcci.ContractID
-    if mmcci.HighThreshold is not None:
-        update["$set"]["HighThreshold"] = mmcci.HighThreshold
-    if mmcci.LowThreshold is not None:
-        update["$set"]["LowThreshold"] = mmcci.LowThreshold
-    if mmcci.StepNumber is not None:
-        update["$set"]["StepNumber"] = mmcci.StepNumber
-    if mmcci.Title is not None:
-        update["$set"]["Title"] = mmcci.Title
+    for key, value in vars(mmcci).items():
+        if value is not None:
+            update["$set"][key] = value
     update["$set"]["IsCmdConcluded"] = False
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     coll.update_one(filter, update)
@@ -216,23 +168,11 @@ async def search_marketer_contract_coefficient(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContractCoefficient"]
     upa=[]
-    if args.MarketerID:
-        upa.append({"MarketerID":args.MarketerID})
-    if args.ID:
-        upa.append({"ID":args.ID})
+    # for key, value in vars(args).items():
+    #     if value is not None:
+    #         upa.append({key:value})
     if args.CoefficientPercentage:
         upa.append({"CoefficientPercentage":{"$gte":args.CoefficientPercentage}})
     if args.HighThreshold:
@@ -241,8 +181,6 @@ async def search_marketer_contract_coefficient(
         upa.append({"LowThreshold":{"$gte": args.LowThreshold}})
     if args.ContractID:
         upa.append({"ContractID":{"$regex": args.ContractID}})
-    if args.StepNumber:
-        upa.append({"StepNumber":args.StepNumber})
     if args.Title:
         upa.append({"Title":{"$regex": args.Title}})
     query = {
@@ -302,17 +240,6 @@ async def delete_marketer_contract_coefficient(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Delete",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Delete",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContractCoefficient"]
     if args.MarketerID:
         pass
@@ -366,19 +293,6 @@ async def modify_marketer_contract_coefficient_status(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContractCoefficient"]
     if dmcci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})

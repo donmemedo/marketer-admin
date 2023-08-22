@@ -52,27 +52,12 @@ async def get_user_total_trades(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
     factors_coll = brokerage["factors"]
     from_gregorian_date = args.from_date
     to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-
-
 
     pipeline = [
         filter_users_stage([args.trade_code], from_gregorian_date, to_gregorian_date),
@@ -125,19 +110,6 @@ async def get_marketer_total_trades(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
@@ -240,19 +212,6 @@ async def users_list_by_volume(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]

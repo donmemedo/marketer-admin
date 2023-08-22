@@ -53,19 +53,6 @@ async def get_user_profile(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     if args.IdpID:
         query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})

@@ -49,17 +49,6 @@ async def get_marketer_profile(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    # permissions = [
-    #     "MarketerAdmin.All.Read",
-    #     "MarketerAdmin.All.All",
-    #     "MarketerAdmin.Marketer.Read",
-    #     "MarketerAdmin.Marketer.All",
-    # ]
-    # allowed = check_permissions(role_perm["roles"], permissions)
-    # if allowed:
-    #     pass
-    # else:
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     if args.IdpID is None:
         raise RequestValidationError(TypeError, body={"code":"30003","status":412})
@@ -103,18 +92,6 @@ async def get_marketer(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    # permissions = [
-    #     "MarketerAdmin.All.Read",
-    #     "MarketerAdmin.All.All",
-    #     "MarketerAdmin.Marketer.Read",
-    #     "MarketerAdmin.Marketer.All",
-    # ]
-    # allowed = check_permissions(role_perm["roles"], permissions)
-    # if allowed:
-    #     pass
-    # else:
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
-
     marketers_coll = database["marketers"]
     results = []
     query_result = marketers_coll.find({})
@@ -160,19 +137,6 @@ async def modify_marketer(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    # permissions = [
-    #     "MarketerAdmin.All.Write",
-    #     "MarketerAdmin.All.Update",
-    #     "MarketerAdmin.All.All",
-    #     "MarketerAdmin.Marketer.Write",
-    #     "MarketerAdmin.Marketer.Update",
-    #     "MarketerAdmin.Marketer.All",
-    # ]
-    # allowed = check_permissions(role_perm["roles"], permissions)
-    # if allowed:
-    #     pass
-    # else:
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
     marketer_coll = database["marketers"]
     admins_coll = database["factors"]
     if mmi.CurrentIdpId is None:
@@ -183,19 +147,6 @@ async def modify_marketer(
     for key, value in vars(mmi).items():
         if value is not None:
             update["$set"][key] = value
-    #
-    # if mmi.FirstName is not None:
-    #     update["$set"]["FirstName"] = mmi.FirstName
-    #
-    # if mmi.LastName is not None:
-    #     update["$set"]["LastName"] = mmi.LastName
-    #
-    # if mmi.InvitationLink is not None:
-    #     update["$set"]["InvitationLink"] = mmi.InvitationLink
-    #
-    # if mmi.RefererType is not None:
-    #     update["$set"]["RefererType"] = mmi.RefererType
-
     if check_permissions(
         role_perm["roles"],
         ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
@@ -265,17 +216,6 @@ async def add_marketer(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    # permissions = [
-    #     "MarketerAdmin.All.Create",
-    #     "MarketerAdmin.All.All",
-    #     "MarketerAdmin.Marketer.Create",
-    #     "MarketerAdmin.Marketer.All",
-    # ]
-    # allowed = check_permissions(role_perm["roles"], permissions)
-    # if allowed:
-    #     pass
-    # else:
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
     admins_coll = database["factors"]
     marketer_coll = database["marketers"]
     if ami.CurrentIdpId is None:
@@ -285,19 +225,6 @@ async def add_marketer(
     for key, value in vars(ami).items():
         if value is not None:
             update["$set"][key] = value
-    #
-    # if ami.FirstName is not None:
-    #     update["$set"]["FirstName"] = ami.FirstName
-    #
-    # if ami.LastName is not None:
-    #     update["$set"]["LastName"] = ami.LastName
-    #
-    # if ami.InvitationLink is not None:
-    #     update["$set"]["InvitationLink"] = ami.InvitationLink
-    #
-    # if ami.RefererType is not None:
-    #     update["$set"]["RefererType"] = ami.RefererType
-    #
     update["$set"]["CreateDate"] = jd.today().strftime("%Y-%m-%d")
     update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
@@ -351,17 +278,6 @@ async def get_marketer_total_trades(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    # permissions = [
-    #     "MarketerAdmin.All.Read",
-    #     "MarketerAdmin.All.All",
-    #     "MarketerAdmin.Marketer.Read",
-    #     "MarketerAdmin.Marketer.All",
-    # ]
-    # allowed = check_permissions(role_perm["roles"], permissions)
-    # if allowed:
-    #     pass
-    # else:
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
     customers_coll = database["customers"]
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
@@ -483,17 +399,6 @@ async def search_user_profile(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    # permissions = [
-    #     "MarketerAdmin.All.Read",
-    #     "MarketerAdmin.All.All",
-    #     "MarketerAdmin.Marketer.Read",
-    #     "MarketerAdmin.Marketer.All",
-    # ]
-    # allowed = check_permissions(role_perm["roles"], permissions)
-    # if allowed:
-    #     pass
-    # else:
-    #     raise HTTPException(status_code=403, detail="Not authorized.")
     marketer_coll = brokerage["marketers"]
     query = {
         "$and": [
