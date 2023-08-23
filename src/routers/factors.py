@@ -22,9 +22,10 @@ from math import inf
 
 factors = APIRouter(prefix="/new-factor")
 
+
 @factors.post(
-    "/add-base-factor",
-    tags=["Factors"],
+    "/base/add",
+    tags=["Factors - Base"],
 )
 @authorize(
     [
@@ -88,8 +89,8 @@ async def add_base_factor(
 
 
 @factors.put(
-    "/modify-base-factor",
-    tags=["Factors"],
+    "/base/modify",
+    tags=["Factors - Base"],
 )
 @authorize(
     [
@@ -155,8 +156,8 @@ async def modify_base_factor(
 
 
 @factors.post(
-    "/add-accounting-factor",
-    tags=["Factors"],
+    "/accounting/add",
+    tags=["Factors - Accounting"],
 )
 @authorize(
     [
@@ -220,8 +221,8 @@ async def add_accounting_factor(
 
 
 @factors.put(
-    "/modify-accounting-factor",
-    tags=["Factors"],
+    "/accounting/modify",
+    tags=["Factors - Accounting"],
 )
 @authorize(
     [
@@ -287,7 +288,7 @@ async def modify_accounting_factor(
 
 
 @factors.get(
-    "/search-factor",
+    "/search",
     tags=["Factors"],
 )
 @authorize(
@@ -357,7 +358,7 @@ async def search_factor(
 
 
 @factors.delete(
-    "/delete-factor",
+    "/delete",
     tags=["Factors"],
 )
 @authorize(
@@ -427,7 +428,7 @@ async def delete_factor(
 
 
 @factors.get(
-    "/calculate-factor",
+    "/calculate",
     tags=["Factors"],
 )
 @authorize(
@@ -461,7 +462,7 @@ async def calculate_factor(
     user_id = role_perm["sub"]
     factor_coll = database["newfactors"]#database["MarketerFactor"]
     marketer_coll = database["MarketerTable"]
-    customer_coll = database["customersbackup"]
+    customer_coll = database["customers"]
     contract_coll = database["MarketerContract"]
     contded_coll = database["MarketerContractDeduction"]
     if args.Period and args.MarketerID:

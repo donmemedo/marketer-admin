@@ -14,11 +14,12 @@ class Modules(Enum):
     Database = "دیتابیس"
     TBSSync = "همگام‌سازی با TBS"
     Client = "مارکتر کلاینت"
+    MultiFactorCalculation = "محاسبه اولیه فاکتورها"
 
 
 class Actions(Enum):
     Read = "خواندن"
-    Write = "نوشتن"
+    # Write = "نوشتن"
     Delete = "حذف"
     Create = "ایجاد کردن"
     Update = "به روز رسانی"

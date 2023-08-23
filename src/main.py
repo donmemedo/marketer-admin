@@ -3,7 +3,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from routers.marketer import marketer
+from routers.marketer import marketer, marketer_relation
 
 from routers.client_marketer import client_marketer
 from routers.client_user import client_user
@@ -95,6 +95,7 @@ async def validation_exception_handler(request, exc):
 
 # Add all routers
 app.include_router(marketer, prefix="")
+app.include_router(marketer_relation, prefix="")
 app.include_router(client_marketer, prefix="")
 app.include_router(client_user, prefix="")
 app.include_router(client_volume_and_fee, prefix="")

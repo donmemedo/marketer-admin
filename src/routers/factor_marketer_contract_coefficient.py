@@ -18,11 +18,12 @@ from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
 from fastapi.exceptions import RequestValidationError
 
-marketer_contract_coefficient = APIRouter(prefix="/factor/marketer-contract-coefficient")
+# marketer_contract_coefficient = APIRouter(prefix="/factor/marketer-contract-coefficient")
+marketer_contract_coefficient = APIRouter(prefix="/marketer-contract-coefficient")
 
 
 @marketer_contract_coefficient.post(
-    "/add-marketer-contract-coefficient",
+    "/add",
     tags=["Factor - MarketerContractCoefficient"],
 )
 @authorize(
@@ -83,7 +84,7 @@ async def add_marketer_contract_coefficient(
 
 
 @marketer_contract_coefficient.put(
-    "/modify-marketer-contract-coefficient",
+    "/modify",
 
     tags=["Factor - MarketerContractCoefficient"],
 )
@@ -138,7 +139,7 @@ async def modify_marketer_contract_coefficient(
 
 
 @marketer_contract_coefficient.get(
-    "/search-marketer-contract-coefficient",
+    "/search",
     tags=["Factor - MarketerContractCoefficient"],
 )
 @authorize(
@@ -210,7 +211,7 @@ async def search_marketer_contract_coefficient(
 
 
 @marketer_contract_coefficient.delete(
-    "/delete-marketer-contract-coefficient",
+    "/delete",
     tags=["Factor - MarketerContractCoefficient"],
 )
 @authorize(
@@ -261,7 +262,7 @@ async def delete_marketer_contract_coefficient(
 
 
 @marketer_contract_coefficient.put(
-    "/modify-marketer-contract-coefficient-status",
+    "/modify-status",
     tags=["Factor - MarketerContractCoefficient"],
 )
 @authorize(

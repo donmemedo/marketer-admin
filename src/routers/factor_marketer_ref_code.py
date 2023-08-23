@@ -18,11 +18,12 @@ from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
 
 
-marketer_ref_code = APIRouter(prefix="/factor/marketer-ref-code")
+# marketer_ref_code = APIRouter(prefix="/factor/marketer-ref-code")
+marketer_ref_code = APIRouter(prefix="/marketer-ref-code")
 
 
 @marketer_ref_code.post(
-    "/add-marketer_ref_code",
+    "/add",
     tags=["Factor - MarketerRefCode"],
 )
 @authorize(
@@ -83,7 +84,7 @@ async def add_marketer_ref_code(
 
 
 @marketer_ref_code.put(
-    "/modify-marketer-ref-code",
+    "/modify",
     tags=["Factor - MarketerRefCode"],
 )
 @authorize(
@@ -136,7 +137,7 @@ async def modify_marketer_ref_code(
 
 
 @marketer_ref_code.get(
-    "/search-marketer_ref_code",
+    "/search",
     tags=["Factor - MarketerRefCode"],
 )
 @authorize(
@@ -207,7 +208,7 @@ async def search_marketer_ref_code(
 
 
 @marketer_ref_code.delete(
-    "/delete-marketer_ref_code",
+    "/delete",
     tags=["Factor - MarketerRefCode"],
 )
 @authorize(

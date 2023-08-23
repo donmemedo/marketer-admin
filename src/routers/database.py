@@ -19,7 +19,8 @@ from pymongo import MongoClient, errors
 from src.auth.authorization import authorize
 
 
-database = APIRouter(prefix="/database")
+# database = APIRouter(prefix="/database")
+database = APIRouter(prefix="")
 
 
 @database.put(

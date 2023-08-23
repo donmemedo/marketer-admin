@@ -506,84 +506,183 @@ async def calculate_factor(
     customer_coll = database["customersbackup"]
     contract_coll = database["MarketerContract"]
     contded_coll = database["MarketerContractDeduction"]
-    if args.Period and args.MarketerID:
-        pass
-    else:
-        raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
+    factor_coll = database["newfactors"]#database["MarketerFactor"]
+    marketer_coll = database["marketers"]
+    customer_coll = database["customers"]
+    contract_coll = database["MarketerContract"]
+    contded_coll = database["MarketerContractDeduction"]
+
+    # if args.Period and args.MarketerID:
+    #     pass
+    # else:
+    #     raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
     per = args.Period
-    marketer = marketer_coll.find_one({"IdpId": args.MarketerID}, {"_id": False})
-    query = {"RefererTitle": marketer['Title']}
-    fields = {"TradeCodes": 1}
-    customers_records = customer_coll.find(query, fields)
-    trade_codes = [c.get("TradeCodes") for c in customers_records]
-    gdate = jd.strptime(per,"%Y%m")
-    from_gregorian_date = gdate.todatetime().isoformat()
-    to_gregorian_date = (datetime.strptime(gdate.replace(day=gdate.daysinmonth).todate().isoformat(),"%Y-%m-%d")+timedelta(days=1)).isoformat()
+    if args.MarketerID:
+        marketers = marketer_coll.find_one({"IdpId": args.MarketerID}, {"_id": False})
+    else:
+        marketerrs = marketer_coll.find({"IdpId": {"$exists": True, "$not": {"$size": 0}}}, {"_id": False})
+        marketers = dict(enumerate(marketerrs))
+    results = []
+    for num in marketers:
+        marketer = marketers[num]
 
-    pipeline = [
-        filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
-        project_commission_stage(),
-        group_by_total_stage("id"),
-        project_pure_stage()
-    ]
+    # query = {"RefererTitle": marketer['Title']}
+        query = {"Referer": get_marketer_name(marketer)}
+        fields = {"TradeCodes": 1}
+        customers_records = customer_coll.find(query, fields)
+        trade_codes = [c.get("TradeCodes") for c in customers_records]
+        gdate = jd.strptime(per,"%Y%m")
+        from_gregorian_date = gdate.todatetime().isoformat()
+        to_gregorian_date = (datetime.strptime(gdate.replace(day=gdate.daysinmonth).todate().isoformat(),"%Y-%m-%d")+timedelta(days=1)).isoformat()
 
-    marketer_total = next(database.trades.aggregate(pipeline=pipeline), [])
-    pure_fee = marketer_total.get("TotalFee") * 0.65
-    marketer_fee = 0
-    tpv = marketer_total.get("TotalPureVolume")
-    b=plans
-    cbt = contract_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["CalculationBaseType"]
-    for plan in plans[cbt]:
-        plans[cbt][plan]['start']
-        if plans[cbt][plan]['start'] <= tpv < plans[cbt][plan]['end']:
-            marketer_fee = pure_fee * plans[cbt][plan]['marketer_share']
-            plan_name = plan
-            if plans[cbt][plan]['end'] == inf:
-                next_plan = 0
-            else:
-                next_plan = plans[cbt][plan]['end'] - tpv
-    final_fee = marketer_fee
-    try:
-        salary = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["Salary"] * marketer_fee
-    except:
-        salary = 0
-    try:
-        insurance = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["InsuranceCoefficient"] * marketer_fee
-    except:
-        insurance = 0
-    try:
-        tax = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["TaxCoefficient"] * marketer_fee
-    except:
-        tax = 0
-    try:
-        collateral = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["CollateralCoefficient"] * marketer_fee
-    except:
-        collateral = 0
-    deductions = salary + insurance + tax + collateral
-    additions = args.Collateral
-    if args.Additions:
-        additions = additions + args.Additions
-    if args.Deductions:
-        deductions = deductions + args.Deductions
-    payment = final_fee + additions - deductions
-    result = {
-        "TotalPureVolume": marketer_total.get("TotalPureVolume"),
-        "TotalFee": marketer_total.get("TotalFee"),
-        "PureFee": int(pure_fee),
-        "MarketerFee": int(marketer_fee),
-        "Plan": plan,
-        "Next Plan": next_plan,
-        "Tax": int(tax),
-        "Collateral of This Month": int(collateral),
-        "Sum of Previous Collaterals": args.Collateral,
-        "Sum of Additions": int(additions),
-        "Sum of Deductions": int(deductions),
-        "FinalFee": int(final_fee),
-        "Payment": int(payment),
+        pipeline = [
+            filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
+            project_commission_stage(),
+            group_by_total_stage("id"),
+            project_pure_stage()
+        ]
+        zimbo ={
+            "TotalPureVolume":0,
+            "TotalFee":0
+        }
+        marketer_total = next(database.trades.aggregate(pipeline=pipeline), zimbo)
+        # pure_fee = marketer_total.get("TotalFee") * 0.65
+        marketer_fee = 0
+        # tpv = marketer_total.get("TotalPureVolume")
+        b=plans
+        # cbt = contract_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["CalculationBaseType"]
+        # find marketer's plan
+        marketer_plans = {
+            "payeh": {"start": 0, "end": 30000000000, "marketer_share": 0.05},
+            "morvarid": {"start": 30000000000, "end": 50000000000, "marketer_share": 0.1},
+            "firouzeh": {"start": 50000000000, "end": 100000000000, "marketer_share": 0.15},
+            "aghigh": {"start": 100000000000, "end": 150000000000, "marketer_share": 0.2},
+            "yaghout": {"start": 150000000000, "end": 200000000000, "marketer_share": 0.25},
+            "zomorod": {"start": 200000000000, "end": 300000000000, "marketer_share": 0.3},
+            "tala": {"start": 300000000000, "end": 400000000000, "marketer_share": 0.35},
+            "almas": {"start": 400000000000, "marketer_share": 0.4},
+        }
 
-    }
+        pure_fee = marketer_total.get("TotalFee") * 0.65
+        # marketer_fee = 0
+        tpv = marketer_total.get("TotalPureVolume")
 
-    return ResponseOut(timeGenerated=datetime.now(), result=result, error="")
+
+
+        if marketer_plans["payeh"]["start"] <= tpv < marketer_plans["payeh"]["end"]:
+            marketer_fee = pure_fee * marketer_plans["payeh"]["marketer_share"]
+            plan = "Payeh"
+            next_plan = marketer_plans["payeh"]["end"] - pure_fee
+        elif marketer_plans["morvarid"]["start"] <= tpv < marketer_plans["morvarid"]["end"]:
+            marketer_fee = pure_fee * marketer_plans["morvarid"]["marketer_share"]
+            plan = "Morvarid"
+            next_plan = marketer_plans["morvarid"]["end"] - pure_fee
+        elif marketer_plans["firouzeh"]["start"] <= tpv < marketer_plans["firouzeh"]["end"]:
+            marketer_fee = pure_fee * marketer_plans["firouzeh"]["marketer_share"]
+            plan = "Firouzeh"
+            next_plan = marketer_plans["firouzeh"]["end"] - pure_fee
+        elif marketer_plans["aghigh"]["start"] <= tpv < marketer_plans["aghigh"]["end"]:
+            marketer_fee = pure_fee * marketer_plans["aghigh"]["marketer_share"]
+            plan = "Aghigh"
+            next_plan = marketer_plans["aghigh"]["end"] - pure_fee
+        elif marketer_plans["yaghout"]["start"] <= tpv < marketer_plans["yaghout"]["end"]:
+            marketer_fee = pure_fee * marketer_plans["yaghout"]["marketer_share"]
+            plan = "Yaghout"
+            next_plan = marketer_plans["yaghout"]["end"] - pure_fee
+        elif marketer_plans["zomorod"]["start"] <= tpv < marketer_plans["zomorod"]["end"]:
+            marketer_fee = pure_fee * marketer_plans["zomorod"]["marketer_share"]
+            plan = "Zomorod"
+            next_plan = marketer_plans["zomorod"]["end"] - pure_fee
+        elif marketer_plans["tala"]["start"] <= tpv < marketer_plans["tala"]["end"]:
+            marketer_fee = pure_fee * marketer_plans["tala"]["marketer_share"]
+            plan = "Tala"
+            next_plan = marketer_plans["tala"]["end"] - pure_fee
+        elif marketer_plans["almas"]["start"] <= tpv:
+            marketer_fee = pure_fee * marketer_plans["almas"]["marketer_share"]
+            plan = "Almas"
+            next_plan = 0
+
+        # final_fee = marketer_fee
+        # salary = 0
+        # insurance = 0
+        #
+        #
+        #
+        # for plan in plans[cbt]:
+        #     plans[cbt][plan]['start']
+        #     if plans[cbt][plan]['start'] <= tpv < plans[cbt][plan]['end']:
+        #         marketer_fee = pure_fee * plans[cbt][plan]['marketer_share']
+        #         plan_name = plan
+        #         if plans[cbt][plan]['end'] == inf:
+        #             next_plan = 0
+        #         else:
+        #             next_plan = plans[cbt][plan]['end'] - tpv
+        final_fee = marketer_fee
+        # try:
+        #     salary = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["Salary"] * marketer_fee
+        # except:
+        #     salary = 0
+        # try:
+        #     insurance = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["InsuranceCoefficient"] * marketer_fee
+        # except:
+        #     insurance = 0
+        # try:
+        #     tax = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["TaxCoefficient"] * marketer_fee
+        # except:
+        #     tax = 0
+        # try:
+        #     collateral = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["CollateralCoefficient"] * marketer_fee
+        # except:
+        #     collateral = 0
+        followers = dict(enumerate(database.mrelations.find({"LeaderMarketerID": args.MarketerID}, {"_id": 0})))
+        FTF = 0
+        for i in followers:
+            query = {"Referer": followers[i]['FollowerMarketerName']}
+
+            trade_codes = database.customers.distinct("PAMCode", query)
+            from_gregorian_date = args.from_date
+            to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+            pipeline = [
+                filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
+                project_commission_stage(),
+                group_by_total_stage("id"),
+                project_pure_stage()
+            ]
+            fresult = next(database.trades.aggregate(pipeline=pipeline), [])
+            FTF = FTF + fresult['TotalFee'] * followers[i]['CommissionCoefficient']
+
+        collateral = 0.1*final_fee
+        deductions = collateral#salary + insurance + tax + collateral
+        # additions = args.Collateral
+        # if args.Additions:
+        #     additions = additions + args.Additions
+        # if args.Deductions:
+        #     deductions = deductions + args.Deductions
+        payment = final_fee - deductions+FTF
+        result = {
+            "IdpID":marketer['IdpId'],
+            "FullName": get_marketer_name(marketer),
+            "TotalPureVolume": marketer_total.get("TotalPureVolume"),
+            "TotalFee": marketer_total.get("TotalFee"),
+            "PureFee": int(pure_fee),
+            "MarketerFee": int(marketer_fee),
+            "Plan": plan,
+            "NextPlan": next_plan,
+            # "Tax": int(tax),
+            "TotalFeeOfFollowers": FTF,
+            "CollateralOfThisMonth": int(collateral),
+            # "Sum of Previous Collaterals": args.Collateral,
+            # "Sum of Additions": int(additions),
+            "SumOfDeductions": int(deductions),
+            "FinalFee": int(final_fee),
+            "Payment": int(payment),
+
+        }
+        factor_coll.insert_one(result)
+        result.pop("_id")
+        results.append(result)
+    resp={"PagedData":results}
+    return ResponseOut(timeGenerated=datetime.now(), result=resp, error="")
 
 
 add_pagination(factor)

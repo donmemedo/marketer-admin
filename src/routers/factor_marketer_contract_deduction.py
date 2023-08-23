@@ -18,11 +18,12 @@ from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
 
 
-marketer_contract_deduction = APIRouter(prefix="/factor/marketer-contract-deduction")
+# marketer_contract_deduction = APIRouter(prefix="/factor/marketer-contract-deduction")
+marketer_contract_deduction = APIRouter(prefix="/marketer-contract-deduction")
 
 
 @marketer_contract_deduction.post(
-    "/add-marketer-contract-deduction",
+    "/add",
     tags=["Factor - MarketerContractDeduction"],
 )
 @authorize(
@@ -84,7 +85,7 @@ async def add_marketer_contract_deduction(
 
 
 @marketer_contract_deduction.put(
-    "/modify-marketer-contract-deduction",
+    "/modify",
     tags=["Factor - MarketerContractDeduction"],
 )
 @authorize(
@@ -138,7 +139,7 @@ async def modify_marketer_contract_deduction(
 
 
 @marketer_contract_deduction.get(
-    "/search-marketer-contract-deduction",
+    "/search",
     tags=["Factor - MarketerContractDeduction"],
 )
 @authorize(
@@ -214,7 +215,7 @@ async def search_marketer_contract_deduction(
 
 
 @marketer_contract_deduction.delete(
-    "/delete-marketer-contract-deduction",
+    "/delete",
     tags=["Factor - MarketerContractDeduction"],
 )
 @authorize(
