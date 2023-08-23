@@ -23,7 +23,7 @@ class ModifyMarketerIn:
     LastName: Optional[str] = None
     RefererType: Optional[str] = None
     NewIdpId: Optional[str] = None
-    NationalID: Optional[int] = None
+    NationalID: Optional[str] = None
 
 
 @dataclass

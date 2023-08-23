@@ -147,23 +147,23 @@ async def modify_marketer(
     for key, value in vars(mmi).items():
         if value is not None:
             update["$set"][key] = value
-    if check_permissions(
-        role_perm["roles"],
-        ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
-    ):
-        if mmi.CreateDate is not None:
-            update["$set"]["CreateDate"] = mmi.CreateDate
+    # if check_permissions(
+    #     role_perm["roles"],
+    #     ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
+    # ):
+    #     if mmi.CreateDate is not None:
+    #         update["$set"]["CreateDate"] = mmi.CreateDate
 
-    if mmi.ModifiedBy is not None:
-        update["$set"]["ModifiedBy"] = admins_coll.find_one(
-            {"IdpId": user_id}, {"_id": False}
-        ).get("FullName")
-    if check_permissions(
-        role_perm["roles"],
-        ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
-    ):
-        if mmi.CreatedBy is not None:
-            update["$set"]["CreatedBy"] = mmi.CreatedBy
+    # if mmi.ModifiedBy is not None:
+    #     update["$set"]["ModifiedBy"] = admins_coll.find_one(
+    #         {"IdpId": user_id}, {"_id": False}
+    #     ).get("FullName")
+    # if check_permissions(
+    #     role_perm["roles"],
+    #     ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
+    # ):
+    #     if mmi.CreatedBy is not None:
+    #         update["$set"]["CreatedBy"] = mmi.CreatedBy
 
     update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
 
