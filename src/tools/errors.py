@@ -31,10 +31,10 @@ errors_mapping = {
 }
 
 
-def get_error(type: str,code:str):
-    if type =='TypeError':
+def get_error(type: str, code: str):
+    if type == "TypeError":
         return {"code": code, "message": errors_mapping[code]}
-    if type =='json_invalid':
+    if type == "json_invalid":
         return {"code": 400, "message": code}
-    if type =='missing':
+    if type == "missing":
         return {"code": 412, "message": code}

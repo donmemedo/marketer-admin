@@ -171,21 +171,20 @@ async def search_marketer_ref_code(
     upa = []
     for key, value in vars(args).items():
         if value is not None:
-            upa.append({key:value})
+            upa.append({key: value})
     if args.SubsidiaryTitle:
-        upa.append({"SubsidiaryTitle":{"$regex": args.SubsidiaryTitle}})
+        upa.append({"SubsidiaryTitle": {"$regex": args.SubsidiaryTitle}})
     if args.BranchTitle:
-        upa.append({"BranchTitle":{"$regex": args.BranchTitle}})
+        upa.append({"BranchTitle": {"$regex": args.BranchTitle}})
     if args.Type:
-        upa.append({"Type":{"$regex": args.Type}})
+        upa.append({"Type": {"$regex": args.Type}})
     if args.Title:
-        upa.append({"Title":{"$regex": args.Title}})
-    query = {
-        "$and": upa}
+        upa.append({"Title": {"$regex": args.Title}})
+    query = {"$and": upa}
 
     query_result = coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))
-    results=[]
+    results = []
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
@@ -246,9 +245,7 @@ async def delete_marketer_ref_code(
     query_result = coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
-    result = [
-        f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."
-    ]
+    result = [f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."]
     coll.delete_one({"MarketerID": args.MarketerID})
     resp = {
         "result": result,

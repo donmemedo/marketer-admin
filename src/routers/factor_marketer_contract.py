@@ -62,7 +62,9 @@ async def add_marketer_contract(
     filter = {"MarketerID": mmci.MarketerID}
     update = {"$set": {}}
     update["$set"]["StartDate"] = jd.today().strftime("%Y-%m-%d")
-    update["$set"]["EndDate"] = jd.today().replace(year=jd.today().year + 1).strftime("%Y-%m-%d")
+    update["$set"]["EndDate"] = (
+        jd.today().replace(year=jd.today().year + 1).strftime("%Y-%m-%d")
+    )
     for key, value in vars(mmci).items():
         if value is not None:
             update["$set"][key] = value
@@ -183,23 +185,22 @@ async def search_marketer_contract(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContract"]
-    upa=[]
+    upa = []
     for key, value in vars(args).items():
         if value is not None:
             upa.append({key: value})
     if args.Description:
-        upa.append({"Description":{"$regex": args.Description}})
+        upa.append({"Description": {"$regex": args.Description}})
     if args.EndDate:
-        upa.append({"EndDate":{"$regex": args.EndDate}})
+        upa.append({"EndDate": {"$regex": args.EndDate}})
     if args.StartDate:
-        upa.append({"StartDate":{"$regex": args.StartDate}})
+        upa.append({"StartDate": {"$regex": args.StartDate}})
     if args.Title:
-        upa.append({"Title":{"$regex": args.Title}})
-    query = {
-        "$and": upa}
+        upa.append({"Title": {"$regex": args.Title}})
+    query = {"$and": upa}
     query_result = coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))
-    results=[]
+    results = []
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
@@ -260,9 +261,7 @@ async def delete_marketer_contract(
     query_result = coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
-    result = [
-        f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."
-    ]
+    result = [f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."]
     coll.delete_one({"MarketerID": args.MarketerID})
     resp = {
         "result": result,

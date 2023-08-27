@@ -19,7 +19,6 @@ class Modules(Enum):
 
 class Actions(Enum):
     Read = "خواندن"
-    # Write = "نوشتن"
     Delete = "حذف"
     Create = "ایجاد کردن"
     Update = "به روز رسانی"

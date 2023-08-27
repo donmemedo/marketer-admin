@@ -164,9 +164,7 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
     return paginate(customer_coll, filter, sort=[("RegisterDate", -1)])
 
 
-@subuser.get(
-    "/cost", tags=["SubUser"], response_model=None
-)
+@subuser.get("/cost", tags=["SubUser"], response_model=None)
 async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostIn)):
     """_summary_
 
@@ -200,13 +198,15 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
     customers_records = customers_coll.find(query, fields)
     trade_codes = [c.get("PAMCode") for c in customers_records]
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     pipeline = [
         filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
         project_commission_stage(),
         group_by_total_stage("id"),
-        project_pure_stage()
+        project_pure_stage(),
     ]
 
     subuser_total = next(brokerage.trades.aggregate(pipeline=pipeline), [])
@@ -539,7 +539,9 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         ]
 
         from_gregorian_date = args.from_date
-        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        to_gregorian_date = (
+            datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+        ).strftime("%Y-%m-%d")
 
         pipeline = [
             {
@@ -698,7 +700,9 @@ def total_users_cost(
                 marketer.get("FirstName") + " " + marketer.get("LastName")
             )
         from_gregorian_date = args.from_date
-        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        to_gregorian_date = (
+            datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+        ).strftime("%Y-%m-%d")
 
         query = {"$and": [{"Referer": marketer_fullname}]}
         fields = {"PAMCode": 1}
@@ -852,8 +856,9 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     database = get_database()
     trades_coll = database["trades"]
     from_gregorian_date = from_date
-    to_gregorian_date = (datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-
+    to_gregorian_date = (
+        datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     pipeline = [
         {

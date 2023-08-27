@@ -128,12 +128,7 @@ async def modify_base_factor(
     if mfi.ID:
         filter = {"ID": mfi.ID}
     else:
-        filter = {
-            "$and": [
-                {"MarketerID": mfi.MarketerID},
-                {"Period": mfi.Period}
-            ]
-        }
+        filter = {"$and": [{"MarketerID": mfi.MarketerID}, {"Period": mfi.Period}]}
     update = {"$set": {}}
     for key, value in vars(mfi).items():
         if value is not None:
@@ -260,12 +255,7 @@ async def modify_accounting_factor(
     if mfi.ID:
         filter = {"ID": mfi.ID}
     else:
-        filter = {
-            "$and": [
-                {"MarketerID": mfi.MarketerID},
-                {"Period": mfi.Period}
-            ]
-        }
+        filter = {"$and": [{"MarketerID": mfi.MarketerID}, {"Period": mfi.Period}]}
     update = {"$set": {}}
     for key, value in vars(mfi).items():
         if value is not None:
@@ -329,9 +319,9 @@ async def search_factor(
     upa = []
     for key, value in vars(args).items():
         if value is not None:
-            upa.append({key:value})
+            upa.append({key: value})
     results = []
-    filter={"$and": upa}
+    filter = {"$and": upa}
     query_result = dict(enumerate(factor_coll.find(filter, {"_id": False})))
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
@@ -340,7 +330,9 @@ async def search_factor(
         try:
             results.append(query_result[i])
         except:
-            raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
+            raise RequestValidationError(
+                TypeError, body={"code": "30001", "status": 200}
+            )
     if args.MarketerID:
         last_result = results
     else:
@@ -394,26 +386,26 @@ async def delete_factor(
     if args.ID:
         filter = {"ID": args.ID}
     elif args.ContractID and args.Period:
-        filter = {"$and": [
-            {"ContractID": args.ContractID},
-            {"Period": args.Period},
-        ]
+        filter = {
+            "$and": [
+                {"ContractID": args.ContractID},
+                {"Period": args.Period},
+            ]
         }
     elif args.MarketerID and args.Period:
-        filter = {"$and": [
-                    {"MarketerID": args.MarketerID},
-                    {"Period": args.Period},
-                ]
-            }
+        filter = {
+            "$and": [
+                {"MarketerID": args.MarketerID},
+                {"Period": args.Period},
+            ]
+        }
     else:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
     query_result = factor_coll.find_one(filter, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     if args.ID:
-        result = [
-            f"فاکتور شماره  {args.ID} پاک شد."
-        ]
+        result = [f"فاکتور شماره  {args.ID} پاک شد."]
     else:
 
         result = [
@@ -435,10 +427,8 @@ async def delete_factor(
     [
         "MarketerAdmin.All.Read",
         "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-        "MarketerAdmin.Accounting.Read",
-        "MarketerAdmin.Accounting.All",
+        "MarketerAdmin.MultiFactorCalculation.Read",
+        "MarketerAdmin.MultiFactorCalculation.All",
     ]
 )
 async def calculate_factor(
@@ -460,7 +450,7 @@ async def calculate_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    factor_coll = database["newfactors"]#database["MarketerFactor"]
+    factor_coll = database["newfactors"]  # database["MarketerFactor"]
     marketer_coll = database["MarketerTable"]
     customer_coll = database["customers"]
     contract_coll = database["MarketerContract"]
@@ -471,70 +461,103 @@ async def calculate_factor(
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
     per = args.Period
     marketer = marketer_coll.find_one({"IdpId": args.MarketerID}, {"_id": False})
-    query = {"RefererTitle": marketer['Title']}
+    query = {"RefererTitle": marketer["Title"]}
     fields = {"TradeCodes": 1}
     customers_records = customer_coll.find(query, fields)
     trade_codes = [c.get("TradeCodes") for c in customers_records]
-    gdate = jd.strptime(per,"%Y%m")
+    gdate = jd.strptime(per, "%Y%m")
     from_gregorian_date = gdate.todatetime().isoformat()
-    to_gregorian_date = (datetime.strptime(gdate.replace(day=gdate.daysinmonth).todate().isoformat(),"%Y-%m-%d")+timedelta(days=1)).isoformat()
+    to_gregorian_date = (
+        datetime.strptime(
+            gdate.replace(day=gdate.daysinmonth).todate().isoformat(), "%Y-%m-%d"
+        )
+        + timedelta(days=1)
+    ).isoformat()
 
     pipeline = [
         filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
         project_commission_stage(),
         group_by_total_stage("id"),
-        project_pure_stage()
+        project_pure_stage(),
     ]
 
     marketer_total = next(database.trades.aggregate(pipeline=pipeline), [])
     pure_fee = marketer_total.get("TotalFee") * 0.65
     marketer_fee = 0
     tpv = marketer_total.get("TotalPureVolume")
-    b=plans
-    cbt = contract_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["CalculationBaseType"]
+    b = plans
+    cbt = contract_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})[
+        "CalculationBaseType"
+    ]
     for plan in plans[cbt]:
-        plans[cbt][plan]['start']
-        if plans[cbt][plan]['start'] <= tpv < plans[cbt][plan]['end']:
-            marketer_fee = pure_fee * plans[cbt][plan]['marketer_share']
+        plans[cbt][plan]["start"]
+        if plans[cbt][plan]["start"] <= tpv < plans[cbt][plan]["end"]:
+            marketer_fee = pure_fee * plans[cbt][plan]["marketer_share"]
             plan_name = plan
-            if plans[cbt][plan]['end'] == inf:
+            if plans[cbt][plan]["end"] == inf:
                 next_plan = 0
             else:
-                next_plan = plans[cbt][plan]['end'] - tpv
+                next_plan = plans[cbt][plan]["end"] - tpv
     final_fee = marketer_fee
     try:
-        salary = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["Salary"] * marketer_fee
+        salary = (
+            contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})[
+                "Salary"
+            ]
+            * marketer_fee
+        )
     except:
         salary = 0
     try:
-        insurance = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["InsuranceCoefficient"] * marketer_fee
+        insurance = (
+            contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})[
+                "InsuranceCoefficient"
+            ]
+            * marketer_fee
+        )
     except:
         insurance = 0
     try:
-        tax = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["TaxCoefficient"] * marketer_fee
+        tax = (
+            contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})[
+                "TaxCoefficient"
+            ]
+            * marketer_fee
+        )
     except:
         tax = 0
     try:
-        collateral = contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})["CollateralCoefficient"] * marketer_fee
+        collateral = (
+            contded_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})[
+                "CollateralCoefficient"
+            ]
+            * marketer_fee
+        )
     except:
         collateral = 0
     deductions = salary + insurance + tax + collateral
-    followers = dict(enumerate(database.mrelations.find({"LeaderMarketerID": args.MarketerID},{"_id":0})))
+    followers = dict(
+        enumerate(
+            database.mrelations.find({"LeaderMarketerID": args.MarketerID}, {"_id": 0})
+        )
+    )
     FTF = 0
     for i in followers:
-        query = {"Referer": followers[i]['FollowerMarketerName']}
+        query = {"Referer": followers[i]["FollowerMarketerName"]}
 
         trade_codes = database.customers.distinct("PAMCode", query)
         from_gregorian_date = args.from_date
-        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        to_gregorian_date = (
+            datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+        ).strftime("%Y-%m-%d")
         pipeline = [
             filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
             project_commission_stage(),
             group_by_total_stage("id"),
-            project_pure_stage()
+            project_pure_stage(),
         ]
         fresult = next(database.trades.aggregate(pipeline=pipeline), [])
-        FTF = FTF + fresult['TotalFee']*followers[i]['CommissionCoefficient']
+        FTF = FTF + fresult["TotalFee"] * followers[i]["CommissionCoefficient"]
     additions = FTF
     tmc = 0
     if args.Collateral:

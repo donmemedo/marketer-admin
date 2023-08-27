@@ -180,9 +180,7 @@ async def get_trades(
     trade_getter(date=coll_ress.date)
     logger.info(f"Updating Trades Database was requested by {user_id}")
     logger.info(
-        "Ending Time of getting List of Trades in %s is: %s",
-        given_date,
-        jd.now()
+        "Ending Time of getting List of Trades in %s is: %s", given_date, jd.now()
     )
     return ResponseListOut(
         result=[],
@@ -235,9 +233,7 @@ async def delete_trades(
     trades_collection.delete_many({"TradeDate": {"$regex": str(args.date)}})
     logger.info(f"Updating Trades Database was requested by {user_id}")
     logger.info(
-        "Ending Time of deleting List of Trades in %s is: %s",
-        given_date,
-        jd.now()
+        "Ending Time of deleting List of Trades in %s is: %s", given_date, jd.now()
     )
     return ResponseListOut(
         result=[],

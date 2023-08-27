@@ -13,7 +13,11 @@ current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 
 from datetime import date
-current_date = date.today().isoformat()#JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+
+current_date = (
+    date.today().isoformat()
+)  # JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+
 
 @dataclass
 class MarketerIn:
@@ -129,7 +133,6 @@ class CalFactorIn:
     Collateral: int = 0
     Additions: int = 0
     Deductions: int = 0
-
 
 
 @dataclass

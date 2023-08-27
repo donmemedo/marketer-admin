@@ -31,7 +31,10 @@ from typing import Any, Dict, List
 from fastapi import Query
 from khayyam import JalaliDatetime
 from datetime import date
-current_date = date.today().isoformat()#JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+
+current_date = (
+    date.today().isoformat()
+)  # JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 
 
 @dataclass

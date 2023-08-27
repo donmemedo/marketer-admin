@@ -13,7 +13,11 @@ current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 
 from datetime import date
-current_date = date.today().isoformat()#JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+
+current_date = (
+    date.today().isoformat()
+)
+
 
 @dataclass
 class MarketerIn:
@@ -68,21 +72,20 @@ class ModifyFactorIn:
     CreateDateTime: str = None
     UpdateDateTime: str = None
 
+
 @dataclass
 class ModifyFactorIN:
-     MarketerID: str
-     Period: str = str(current_year) + f"{current_month:02}"
-     TotalPureVolume: int = None
-     TotalFee: int = None
-     PureFee: int = None
-     MarketerFee: int = None
-     TotalFeeOfFollowers: int = None
-     CollateralOfThisMonth: int = None
-     SumOfDeductions: int = None
-     Payment: int = None
-     # CreateDateTime: str = None
-     # UpdateDateTime: str = None
-     FactorStatus: int = Query(None, alias="Status")
+    MarketerID: str
+    Period: str = str(current_year) + f"{current_month:02}"
+    TotalPureVolume: int = None
+    TotalFee: int = None
+    PureFee: int = None
+    MarketerFee: int = None
+    TotalFeeOfFollowers: int = None
+    CollateralOfThisMonth: int = None
+    SumOfDeductions: int = None
+    Payment: int = None
+    FactorStatus: int = Query(None, alias="Status")
 
 
 @dataclass
@@ -129,10 +132,6 @@ class CalFactorIn:
 
     MarketerID: str = Query("")
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
-    # # Collateral: int = 0
-    # # Additions: int = 0
-    # Deductions: int = 0
-
 
 
 @dataclass

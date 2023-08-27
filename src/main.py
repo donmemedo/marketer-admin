@@ -74,20 +74,20 @@ async def read_root(request: Request):
 async def validation_exception_handler(request, exc):
     status = 400
     try:
-        err = get_error(exc.errors().__name__,exc.body['code'])
-        status = exc.body['status']
+        err = get_error(exc.errors().__name__, exc.body["code"])
+        status = exc.body["status"]
     except:
         for e in exc.errors():
             try:
-                err = get_error(e['type'], e['ctx']['error'])
-                status = err['code']
+                err = get_error(e["type"], e["ctx"]["error"])
+                status = err["code"]
             except:
-                err = get_error(e['type'], e['msg'])
-                status = err['code']
+                err = get_error(e["type"], e["msg"])
+                status = err["code"]
     response = {
         "result": [],
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        "error": err
+        "error": err,
     }
     logger.error(exc)
     return JSONResponse(status_code=status, content=response)

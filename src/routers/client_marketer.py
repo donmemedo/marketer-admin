@@ -133,7 +133,9 @@ async def cal_marketer_cost(
         marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
-    total_count = marketers_coll.count_documents({"IdpId": {"$exists": True, "$not": {"$size": 0}}})
+    total_count = marketers_coll.count_documents(
+        {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+    )
     results = []
     for marketer in marketers_list:
         marketer_total = {}
@@ -141,11 +143,11 @@ async def cal_marketer_cost(
         query = {"Referer": {"$regex": marketer_fullname}}
         fields = {"PAMCode": 1}
         customers_records = customers_coll.find(query, fields)
-        trade_codes = [
-            c.get("PAMCode") for c in customers_records
-        ]
+        trade_codes = [c.get("PAMCode") for c in customers_records]
         from_gregorian_date = args.from_date
-        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        to_gregorian_date = (
+            datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+        ).strftime("%Y-%m-%d")
 
         buy_pipeline = [
             {
@@ -423,7 +425,9 @@ async def factor_print(
         marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
-    total_count = marketers_coll.count_documents({"IdpId": {"$exists": True, "$not": {"$size": 0}}})
+    total_count = marketers_coll.count_documents(
+        {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+    )
     results = []
     for marketer in marketers_list:
         marketer_total = {}

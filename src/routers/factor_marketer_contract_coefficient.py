@@ -85,7 +85,6 @@ async def add_marketer_contract_coefficient(
 
 @marketer_contract_coefficient.put(
     "/modify",
-
     tags=["Factor - MarketerContractCoefficient"],
 )
 @authorize(
@@ -152,7 +151,9 @@ async def modify_marketer_contract_coefficient(
 )
 async def search_marketer_contract_coefficient(
     request: Request,
-    args: SearchMarketerContractCoefficientIn = Depends(SearchMarketerContractCoefficientIn),
+    args: SearchMarketerContractCoefficientIn = Depends(
+        SearchMarketerContractCoefficientIn
+    ),
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -170,26 +171,22 @@ async def search_marketer_contract_coefficient(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContractCoefficient"]
-    upa=[]
-    # for key, value in vars(args).items():
-    #     if value is not None:
-    #         upa.append({key:value})
+    upa = []
     if args.CoefficientPercentage:
-        upa.append({"CoefficientPercentage":{"$gte":args.CoefficientPercentage}})
+        upa.append({"CoefficientPercentage": {"$gte": args.CoefficientPercentage}})
     if args.HighThreshold:
-        upa.append({"HighThreshold":{"$lte": args.HighThreshold}})
+        upa.append({"HighThreshold": {"$lte": args.HighThreshold}})
     if args.LowThreshold:
-        upa.append({"LowThreshold":{"$gte": args.LowThreshold}})
+        upa.append({"LowThreshold": {"$gte": args.LowThreshold}})
     if args.ContractID:
-        upa.append({"ContractID":{"$regex": args.ContractID}})
+        upa.append({"ContractID": {"$regex": args.ContractID}})
     if args.Title:
-        upa.append({"Title":{"$regex": args.Title}})
-    query = {
-        "$and": upa}
+        upa.append({"Title": {"$regex": args.Title}})
+    query = {"$and": upa}
 
     query_result = coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))
-    results=[]
+    results = []
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
@@ -224,7 +221,9 @@ async def search_marketer_contract_coefficient(
 )
 async def delete_marketer_contract_coefficient(
     request: Request,
-    args: DelMarketerMarketerContractCoefficientIn = Depends(DelMarketerMarketerContractCoefficientIn),
+    args: DelMarketerMarketerContractCoefficientIn = Depends(
+        DelMarketerMarketerContractCoefficientIn
+    ),
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -249,9 +248,7 @@ async def delete_marketer_contract_coefficient(
     query_result = coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
-    result = [
-        f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."
-    ]
+    result = [f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."]
     coll.delete_one({"MarketerID": args.MarketerID})
     resp = {
         "result": result,
@@ -311,5 +308,6 @@ async def modify_marketer_contract_coefficient_status(
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
+
 
 add_pagination(marketer_contract_coefficient)

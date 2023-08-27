@@ -57,7 +57,9 @@ async def get_user_total_trades(
     trades_coll = brokerage["trades"]
     factors_coll = brokerage["factors"]
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     pipeline = [
         filter_users_stage([args.trade_code], from_gregorian_date, to_gregorian_date),
@@ -66,7 +68,7 @@ async def get_user_total_trades(
         project_pure_stage(),
         join_customers_stage(),
         unwind_user_stage(),
-        project_fields_stage()
+        project_fields_stage(),
     ]
     res = next(brokerage.trades.aggregate(pipeline=pipeline), None)
     resp = {
@@ -127,7 +129,9 @@ async def get_marketer_total_trades(
         marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
-    total_count = marketers_coll.count_documents({"IdpId": {"$exists": True, "$not": {"$size": 0}}})
+    total_count = marketers_coll.count_documents(
+        {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+    )
 
     results = []
     for marketer in marketers_list:
@@ -139,18 +143,18 @@ async def get_marketer_total_trades(
 
         customers_records = customers_coll.find(query, fields)
 
-        trade_codes = [
-            c.get("PAMCode") for c in customers_records
-        ]
+        trade_codes = [c.get("PAMCode") for c in customers_records]
 
         from_gregorian_date = args.from_date
-        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        to_gregorian_date = (
+            datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+        ).strftime("%Y-%m-%d")
 
         pipeline = [
             filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
             project_commission_stage(),
             group_by_total_stage("id"),
-            project_pure_stage()
+            project_pure_stage(),
         ]
 
         marketer_total = next(brokerage.trades.aggregate(pipeline=pipeline), [])
@@ -223,7 +227,9 @@ async def users_list_by_volume(
 
     marketer_fullname = get_marketer_name(query_result)
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
     query = {"RefererTitle": {"$regex": marketer_fullname}}
     trade_codes = brokerage.customersbackup.distinct("TradeCodes", query)
 
@@ -239,7 +245,7 @@ async def users_list_by_volume(
             sort_stage(args.sort_by.value, args.sort_order.value),
             paginate_data(args.page, args.size),
             unwind_metadata_stage(),
-            project_total_stage()
+            project_total_stage(),
         ]
 
         active_dict = next(brokerage.trades.aggregate(pipeline=pipeline), {})
@@ -266,7 +272,7 @@ async def users_list_by_volume(
         active_users_pipeline = [
             filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
             group_by_trade_code_stage(),
-            project_by_trade_code_stage()
+            project_by_trade_code_stage(),
         ]
 
         active_users_res = brokerage.trades.aggregate(pipeline=active_users_pipeline)
@@ -281,7 +287,7 @@ async def users_list_by_volume(
             sort_stage(args.sort_by.value, args.sort_order.value),
             paginate_data(args.page, args.size),
             unwind_metadata_stage(),
-            project_total_stage()
+            project_total_stage(),
         ]
 
         inactive_dict = next(

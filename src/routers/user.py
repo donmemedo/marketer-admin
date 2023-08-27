@@ -69,8 +69,9 @@ async def get_user_trades(
         raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
     results = []
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     trades_coll = database["trades"]
     query = {
@@ -140,7 +141,9 @@ def users_list_by_volume(
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     query = {"$and": [{"Referer": ""}]}
     if args.marketername:
@@ -162,7 +165,7 @@ def users_list_by_volume(
         sort_stage(args.sort_by.value, args.sort_order.value),
         paginate_data(args.page, args.size),
         unwind_metadata_stage(),
-        project_total_stage()
+        project_total_stage(),
     ]
 
     active_dict = next(database.trades.aggregate(pipeline=pipeline), {})
@@ -231,8 +234,9 @@ def users_total(
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     query = {"$and": [{"Referer": ""}]}
 
@@ -409,8 +413,8 @@ async def users_diff_with_tbs(
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
     try:
-        to_date = jd(datetime.strptime(args.to_date,'%Y-%m-%d')).date().isoformat()
-        from_date = jd(datetime.strptime(args.from_date,'%Y-%m-%d')).date().isoformat()
+        to_date = jd(datetime.strptime(args.to_date, "%Y-%m-%d")).date().isoformat()
+        from_date = jd(datetime.strptime(args.from_date, "%Y-%m-%d")).date().isoformat()
     except:
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
 
@@ -460,8 +464,9 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     database = get_database()
     trades_coll = database["trades"]
     from_gregorian_date = from_date
-    to_gregorian_date = (datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-
+    to_gregorian_date = (
+        datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     pipeline = [
         {
