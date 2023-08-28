@@ -34,7 +34,7 @@ class ModifyMarketerContractIn:
 
 @dataclass
 class SearchMarketerContractIn:
-    MarketerID: str = Query("")
+    MarketerID: str = Query(None)
     ID: str = None
     CalculationBaseType: str = None
     CoefficientBaseType: str = None
@@ -43,7 +43,7 @@ class SearchMarketerContractIn:
     Description: str = None
     EndDate: str = None
     StartDate: str = None
-    Title: str = Query("")
+    Title: str = Query(None)
 
 
 @dataclass

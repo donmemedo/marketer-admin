@@ -136,7 +136,7 @@ def users_list_by_volume(
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
     customers_coll = database["customers"]
-    firms_coll = database["firms"]
+    # firms_coll = database["firms"]
 
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
@@ -145,15 +145,13 @@ def users_list_by_volume(
         datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
     ).strftime("%Y-%m-%d")
 
-    query = {"$and": [{"Referer": ""}]}
+    query = {}#{"$and": [{"Referer": ""}]}
     if args.marketername:
         query = {"Referer": {"$regex": args.marketername}}
     fields = {"PAMCode": 1}
     customers_records = customers_coll.find(query, fields)
-    firms_records = firms_coll.find(query, fields)
-    trade_codes = [c.get("PAMCode") for c in customers_records] + [
-        c.get("PAMCode") for c in firms_records
-    ]
+    # firms_records = firms_coll.find(query, fields)
+    trade_codes = [c.get("PAMCode") for c in customers_records]# + [c.get("PAMCode") for c in firms_records]
     pipeline = [
         filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
         project_commission_stage(),
@@ -230,7 +228,7 @@ def users_total(
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
     customers_coll = database["customers"]
-    firms_coll = database["firms"]
+    # firms_coll = database["firms"]
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     from_gregorian_date = args.from_date
@@ -238,15 +236,13 @@ def users_total(
         datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
     ).strftime("%Y-%m-%d")
 
-    query = {"$and": [{"Referer": ""}]}
+    query = {}#{"$and": [{"Referer": ""}]}
 
     fields = {"PAMCode": 1}
 
     customers_records = customers_coll.find(query, fields)
-    firms_records = firms_coll.find(query, fields)
-    trade_codes = [c.get("PAMCode") for c in customers_records] + [
-        c.get("PAMCode") for c in firms_records
-    ]
+    # firms_records = firms_coll.find(query, fields)
+    trade_codes = [c.get("PAMCode") for c in customers_records]# + [c.get("PAMCode") for c in firms_records]
 
     pipeline = [
         {

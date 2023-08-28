@@ -171,24 +171,36 @@ async def search_marketer_contract_deduction(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
+    # permissions = [
+    #     "MarketerAdmin.All.Read",
+    #     "MarketerAdmin.All.All",
+    #     "MarketerAdmin.Factor.Read",
+    #     "MarketerAdmin.Factor.All",
+    # ]
+    # allowed = check_permissions(role_perm["roles"], permissions)
+    # if allowed:
+    #     pass
+    # else:
+    #     raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContractDeduction"]
     upa = []
-    for key, value in vars(args).items():
-        if value is not None:
-            upa.append({key: value})
+    # for key, value in vars(args).items():
+    #     if value is not None:
+    #         upa.append({key: value})
+    # ?CollateralCoefficient: float = None
+    # ?TaxCoefficient: float = None
+    # ?InsuranceCoefficient: float = None
+
+    if args.MarketerID:
+        upa.append({"MarketerID": args.MarketerID})
+    if args.ID:
+        upa.append({"ID": args.ID})
+    if args.ContractID:
+        upa.append({"ContractID": {"$regex": args.ContractID}})
     if args.Title:
         upa.append({"Title": {"$regex": args.Title}})
+    if args.ReturnDuration:
+        upa.append({"ReturnDuration": {"$gte": args.ReturnDuration}})
     query = {"$and": upa}
 
     query_result = coll.find(query, {"_id": False})

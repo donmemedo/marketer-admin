@@ -169,9 +169,20 @@ async def search_marketer_ref_code(
     user_id = role_perm["sub"]
     coll = database["MarketerRefCode"]
     upa = []
-    for key, value in vars(args).items():
-        if value is not None:
-            upa.append({key: value})
+    # for key, value in vars(args).items():
+    #     if value is not None:
+    #         upa.append({key: value})
+
+    if args.MarketerID:
+        upa.append({"MarketerID": args.MarketerID})
+    if args.ID:
+        upa.append({"ID": args.ID})
+    if args.SubsidiaryCode:
+        upa.append({"SubsidiaryCode": args.SubsidiaryCode})
+    if args.BranchCode:
+        upa.append({"BranchCode": args.BranchCode})
+    if args.RefCode:
+        upa.append({"RefCode": args.RefCode})
     if args.SubsidiaryTitle:
         upa.append({"SubsidiaryTitle": {"$regex": args.SubsidiaryTitle}})
     if args.BranchTitle:

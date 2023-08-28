@@ -53,7 +53,7 @@ class ResponseListOut:
 
 @dataclass
 class SearchMarketerRefCodeIn:
-    MarketerID: str = Query("")
+    MarketerID: str = Query(None)
     ID: str = None
     SubsidiaryCode: str = None
     SubsidiaryTitle: str = None
@@ -61,7 +61,7 @@ class SearchMarketerRefCodeIn:
     BranchTitle: str = None
     RefCode: str = None
     Type: str = None
-    Title: str = Query("")
+    Title: str = Query(None)
 
 
 @dataclass

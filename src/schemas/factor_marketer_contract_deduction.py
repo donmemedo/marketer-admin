@@ -32,14 +32,14 @@ class ModifyMarketerContractDeductionIn:
 
 @dataclass
 class SearchMarketerContractDeductionIn:
-    MarketerID: str = Query("")
+    MarketerID: str = Query(None)
     ID: str = None
     CollateralCoefficient: float = None
     ContractID: str = None
     TaxCoefficient: float = None
     InsuranceCoefficient: float = None
     ReturnDuration: int = None
-    Title: str = Query("")
+    Title: str = Query(None)
 
 
 @dataclass

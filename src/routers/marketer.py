@@ -50,11 +50,14 @@ async def add_marketer(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    admins_coll = database["factors"]
+    # admins_coll = database["factors"]
     marketer_coll = database["marketers"]
     if ami.CurrentIdpId is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"IdpId": ami.CurrentIdpId}
+    query_result = marketer_coll.find_one(filter, {"_id": False})
+    if query_result:
+        raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
     update = {"$set": {}}
     for key, value in vars(ami).items():
         if value is not None:
@@ -71,10 +74,11 @@ async def add_marketer(
                 TypeError, body={"code": "30066", "status": 412}
             )
     update["$set"]["IdpId"] = ami.CurrentIdpId
+    update["$set"].pop("CurrentIdpId")
     try:
         marketer_coll.insert_one(update["$set"])
     except:
-        raise RequestValidationError(TypeError, body={"code": "30066", "status": 409})
+        raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
     query_result = marketer_coll.find_one(filter, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30051", "status": 200})
@@ -121,6 +125,9 @@ async def modify_marketer(
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"IdpId": mmi.CurrentIdpId}
     idpid = mmi.CurrentIdpId
+    query_result = marketer_coll.find_one({"IdpId": idpid}, {"_id": False})
+    if not query_result:
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
     update = {"$set": {}}
     for key, value in vars(mmi).items():
         if value is not None:
@@ -637,7 +644,7 @@ async def users_diff_with_tbs(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
     customers_coll = database["customers"]
-    firms_coll = database["firms"]
+    # firms_coll = database["firms"]
     marketers_coll = database["marketers"]
     if args.IdpID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
@@ -647,10 +654,8 @@ async def users_diff_with_tbs(
     customers_records = customers_coll.find(
         {"Referer": marketer_fullname}, {"PAMCode": 1}
     )
-    firms_records = firms_coll.find({"Referer": marketer_fullname}, {"PAMCode": 1})
-    trade_codes = [c.get("PAMCode") for c in customers_records] + [
-        c.get("PAMCode") for c in firms_records
-    ]
+    # firms_records = firms_coll.find({"Referer": marketer_fullname}, {"PAMCode": 1})
+    trade_codes = [c.get("PAMCode") for c in customers_records]# + [c.get("PAMCode") for c in firms_records]
     try:
         to_date = jd(datetime.strptime(args.to_date, "%Y-%m-%d")).date().isoformat()
         from_date = jd(datetime.strptime(args.from_date, "%Y-%m-%d")).date().isoformat()

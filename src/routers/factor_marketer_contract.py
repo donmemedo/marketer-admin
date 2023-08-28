@@ -186,15 +186,25 @@ async def search_marketer_contract(
         raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContract"]
     upa = []
-    for key, value in vars(args).items():
-        if value is not None:
-            upa.append({key: value})
+    # for key, value in vars(args).items():
+    #     if value is not None:
+    #         upa.append({key: value})
+    # ?CalculationBaseType: str = None
+    # ?CoefficientBaseType: str = None
+    if args.MarketerID:
+        upa.append({"MarketerID": args.MarketerID})
+    if args.ID:
+        upa.append({"ID": args.ID})
+    if args.ContractNumber:
+        upa.append({"ContractNumber": args.ContractNumber})
+    if args.ContractType:
+        upa.append({"ContractType": {"$regex": args.ContractType}})
     if args.Description:
         upa.append({"Description": {"$regex": args.Description}})
     if args.EndDate:
-        upa.append({"EndDate": {"$regex": args.EndDate}})
+        upa.append({"EndDate": {"$lte": args.EndDate}})
     if args.StartDate:
-        upa.append({"StartDate": {"$regex": args.StartDate}})
+        upa.append({"StartDate": {"$gte": args.StartDate}})
     if args.Title:
         upa.append({"Title": {"$regex": args.Title}})
     query = {"$and": upa}
