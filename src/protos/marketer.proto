@@ -1,0 +1,188 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "CustomerManagement.GRPCServices";
+
+import "customTypes.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+
+service MarketerRPCService{
+	rpc GetAllMarketers (GetAllMarketersRPCRequest) returns (ListGetMarketersRPCResponse);
+	rpc GetMarketerById (GetMarketerByIdRPCRequest) returns (GetMarketerByIdRPCResponse);
+	rpc InsertMarketer (InsertMarketerRPCRequest) returns (MarketerRPCResponse);
+	rpc UpdateMarketer (UpdateMarketerRPCRequest) returns (MarketerRPCResponse);
+	rpc UpdateMarketerActivationStatus (UpdateMarketerActivationStatusRPCRequest) returns (MarketerRPCResponse);
+	rpc CreateMarketerRefCode (CreateMarketerRefCodeRPCRequest) returns (MarketerRPCResponse);
+	rpc DeleteMarketer (DeleteMarketerRPCRequest) returns (MarketerRPCResponse);
+	rpc SearchMarketer (SearchMarketerRPCRequest) returns (SearchMarketerPagedRPCResponse);
+	rpc GetMarketerUrl (GetMarketerUrlRPCRequest) returns (GetMarketerUrlRPCResponse);
+}
+
+message GetAllMarketersRPCRequest
+{
+}
+
+message ListGetMarketersRPCResponse
+{
+	bool IsFailed = 1;
+	MarketerRPCError Error = 2;
+	repeated MarketerRPCModel Result = 3;
+}
+
+message MarketerRPCModel
+{
+	UUID Id = 1;
+	int32 Type = 2;
+	UUID CustomerId = 3;
+	UUID BranchId = 4;
+	google.protobuf.StringValue MarketerRefCode = 5;
+	google.protobuf.StringValue ReagentRefCode = 6;
+	google.protobuf.BoolValue IsActive = 7;
+	google.protobuf.Timestamp CreateDateTime = 8;
+	google.protobuf.Timestamp UpdateDateTime = 9;
+	google.protobuf.StringValue Title = 10;
+	google.protobuf.StringValue UniqueId = 11;
+	google.protobuf.StringValue Mobile = 12;
+	UUID UserId = 13;
+	google.protobuf.Int64Value TbsMarketerId = 14;
+	google.protobuf.StringValue TbsMarketerName = 15;
+	google.protobuf.Int64Value TbsReagentId = 16;
+	google.protobuf.StringValue TbsReagentName = 17;
+}
+
+message GetMarketerByIdRPCRequest
+{
+	UUID Id = 1;
+}
+
+message GetMarketerByIdRPCResponse
+{
+	bool IsFailed = 1;
+	MarketerRPCError Error = 2;
+	MarketerRPCModel Result = 3;
+}
+
+message InsertMarketerRPCRequest
+{
+	int32 Type = 1;
+	UUID CustomerId = 2;
+	UUID BranchId = 3;
+	google.protobuf.BoolValue IsActive = 4;
+	string Title = 5;
+	string UniqueId = 6;
+	string Mobile = 7;
+	UUID UserId = 8;
+	google.protobuf.Int64Value TbsMarketerId = 9;
+	google.protobuf.Int64Value TbsReagentId = 10;
+}
+
+message UpdateMarketerRPCRequest
+{
+	UUID Id = 1;
+	google.protobuf.Int32Value Type = 2;
+	UUID CustomerId = 3;
+	UUID BranchId = 4;
+	google.protobuf.StringValue Title = 5;
+	google.protobuf.StringValue UniqueId = 6;
+	google.protobuf.StringValue Mobile = 7;
+	UUID UserId = 8;
+	google.protobuf.Int64Value TbsMarketerId = 9;
+	google.protobuf.Int64Value TbsReagentId = 10;
+}
+
+message UpdateMarketerActivationStatusRPCRequest
+{
+	UUID Id = 1;
+	google.protobuf.BoolValue IsActive = 2;
+}
+
+message CreateMarketerRefCodeRPCRequest
+{
+	UUID Id = 1;
+}
+
+message DeleteMarketerRPCRequest
+{
+	UUID Id = 1;
+}
+
+message MarketerRPCResponse
+{
+	bool IsFailed = 1;
+	MarketerRPCError Error = 2;
+	UUID Id = 3;
+	string Message = 4;
+	google.protobuf.Int32Value ErrorCode = 5;
+}
+
+message MarketerRPCError
+{
+	google.protobuf.StringValue ErrorMessage = 1;
+}
+
+message SearchMarketerRPCRequest
+{
+	google.protobuf.Int32Value Type = 1;
+	google.protobuf.StringValue UniqueId = 2;
+	google.protobuf.StringValue Mobile = 3;
+	google.protobuf.StringValue Title = 4;
+	UUID UserId = 5;
+	UUID SubsidiaryId = 6;
+	UUID BranchId = 7;
+	google.protobuf.BoolValue IsActive = 8;
+	google.protobuf.Timestamp StartDate = 9;
+	google.protobuf.Timestamp EndDate = 10;
+	sint32 PageNumber = 11;
+	sint32 PageSize= 12;
+	google.protobuf.StringValue RefCode = 13;
+	google.protobuf.StringValue TbsName = 14;
+}
+
+message SearchMarketerPagedRPCResponse
+{
+	int32 TotalCount = 1;
+	repeated SearchMarketerRPCResponse PagedData = 2;
+	google.protobuf.Int32Value ErrorCode = 3;
+	google.protobuf.StringValue ErrorMessage = 4;
+}
+
+message SearchMarketerRPCResponse
+{
+	UUID Id = 1;
+	UUID CustomerId = 2;
+	google.protobuf.StringValue UniqueId = 3;
+	google.protobuf.StringValue Title = 4;
+	google.protobuf.Int32Value Type = 5;
+	google.protobuf.StringValue TypeTitle = 6;
+	google.protobuf.StringValue Mobile = 7;
+	UUID SubsidiaryId = 8;
+	google.protobuf.StringValue SubsidiaryTitle = 9;
+	UUID BranchId = 10;
+	google.protobuf.StringValue BranchTitle = 11;
+	google.protobuf.StringValue MarketerRefCode = 12;
+	google.protobuf.StringValue ReagentRefCode = 13;
+	google.protobuf.BoolValue IsActive = 14;
+	google.protobuf.Timestamp CreateDateTime = 15;
+	google.protobuf.Timestamp UpdateDateTime  = 16;
+	UUID UserId = 17;
+	google.protobuf.Int64Value TbsMarketerId = 18;
+	google.protobuf.StringValue TbsMarketerName = 19;
+	google.protobuf.Int64Value TbsReagentId = 20;
+	google.protobuf.StringValue TbsReagentName = 21;
+	google.protobuf.StringValue MarketerRefLink = 22;
+	google.protobuf.StringValue ReagentRefLink = 23;
+}
+
+message GetMarketerUrlRPCRequest
+{
+	UUID MarketerId = 1;
+}
+
+message GetMarketerUrlRPCResponse
+{
+	bool IsFailed = 1;
+	MarketerRPCError Error = 2;
+	google.protobuf.StringValue MarketerUrl = 3;
+	google.protobuf.StringValue ReagentUrl = 4;
+	google.protobuf.Int32Value ErrorCode = 5;
+}
