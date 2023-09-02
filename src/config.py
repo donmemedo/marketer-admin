@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     ORIGINS: str = "*"
     ROOT_PATH: str = ""
     SWAGGER_TITLE: str = "Marketer Admin"
-    VERSION: str = "1.5.1"
+    VERSION: str = "1.5.2"
     ROOT_PATH: str = ""
     # Added from Marketer
     JWKS_CONFIGURATION_URL: str = (
@@ -44,7 +44,8 @@ class Settings(BaseSettings):
     REGISTRATION_URL: str = (
         "https://cluster.tech1a.co/api/service-permossion/register-service-permission"
     )
-
+    GRPC_IP: str = "172.24.65.20"
+    GRPC_PORT: int = 9035
     SPLUNK_HOST: str = "172.24.65.206"
     SPLUNK_PORT: int = 5141
     SPLUNK_INDEX: str = "dev"

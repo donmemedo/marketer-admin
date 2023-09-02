@@ -58,7 +58,7 @@ async def get_current_user(
     return verify_token(token.credentials, public_key)
 
 
-def get_role_permission(
+async def get_role_permission(
     token: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ):
     """_summary_
@@ -69,7 +69,7 @@ def get_role_permission(
     Returns:
         _type_: _description_
     """
-    public_key = get_public_key()
+    public_key = await get_public_key()
 
     try:
         decoded = jwt.decode(
