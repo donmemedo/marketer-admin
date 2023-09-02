@@ -3,35 +3,23 @@
 Returns:
     _type_: _description_
 """
-from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi_pagination import add_pagination
-from khayyam import JalaliDatetime as jd
-from fastapi.exceptions import RequestValidationError
-from src.auth.authentication import get_role_permission
-from src.tools.database import get_database
-from src.schemas.marketer import *
-from src.tools.utils import *
-from src.tools.queries import *
-from pymongo import MongoClient
-from src.auth.authorization import authorize
-
-import json
 import grpc
-from datetime import datetime
-
-from google.protobuf.descriptor import FieldDescriptor
-from validator import Validator
+from fastapi import APIRouter, Depends, Request
 from google.protobuf.json_format import MessageToDict
+from pymongo import MongoClient
+from validator import Validator
+
+from src.auth.authentication import get_role_permission
+from src.auth.authorization import authorize
+# from src.tools.database import get_db
+# from src.models.model import BankCreditLines
+from src.protos import marketer_pb2, marketer_pb2_grpc  # ,customTypes_pb2,customTypes_pb2_grpc
+from src.schemas.marketer import *
+from src.tools.database import get_database
+from src.tools.logger import logger
 
 # from sqlalchemy import or_, and_
 # from sqlalchemy.exc import IntegrityError, OperationalError
-
-from src.tools.logger import logger
-# from src.tools.database import get_db
-# from src.models.model import BankCreditLines
-from src.protos import marketer_pb2,marketer_pb2_grpc#,customTypes_pb2,customTypes_pb2_grpc
 # from src.tools.errors import database_error, create_error_response
 
 

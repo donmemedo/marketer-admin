@@ -4,12 +4,13 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
-
 from fastapi_pagination import add_pagination
 from fastapi_pagination.ext.pymongo import paginate
 from khayyam import JalaliDatetime as jd
+
 from src.schemas.subuser import (
     SubUserIn,
     SubCostIn,
@@ -20,9 +21,8 @@ from src.schemas.subuser import (
     ResponseListOut,
 )
 from src.tools.database import get_database
-from src.tools.utils import peek, to_gregorian_
 from src.tools.queries import *
-from pymongo import MongoClient
+from src.tools.utils import peek, to_gregorian_
 
 subuser = APIRouter(prefix="/subuser")
 

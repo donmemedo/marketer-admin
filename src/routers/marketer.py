@@ -4,19 +4,20 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from fastapi.exceptions import RequestValidationError
-from src.auth.authentication import get_role_permission
-from src.tools.database import get_database
-from src.schemas.marketer import *
-from src.tools.utils import *
-from src.tools.queries import *
 from pymongo import MongoClient
-from src.auth.authorization import authorize
 
+from src.auth.authentication import get_role_permission
+from src.auth.authorization import authorize
+from src.schemas.marketer import *
+from src.tools.database import get_database
+from src.tools.queries import *
+from src.tools.utils import *
 
 marketer = APIRouter(prefix="/marketer")
 marketer_relation = APIRouter(prefix="/marketer-relation")

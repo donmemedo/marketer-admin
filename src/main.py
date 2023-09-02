@@ -1,36 +1,31 @@
 """_summary_
 """
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from config import settings
-from routers.marketer import marketer, marketer_relation
-
-from routers.client_marketer import client_marketer
-from routers.client_user import client_user
-from routers.client_volume_and_fee import client_volume_and_fee
-
-from routers.factor import factor
-from routers.factors import factors
-from routers.grpc_services import grpc_services
-from routers.factor_marketer_ref_code import marketer_ref_code
-from routers.factor_marketer_contract import marketer_contract
-from routers.factor_marketer_contract_coefficient import marketer_contract_coefficient
-from routers.factor_marketer_contract_deduction import marketer_contract_deduction
-
-from routers.user import user
-from routers.database import database
-from auth.permissions import permissions
-from auth.registration import get_token, set_permissions
-
-# from routers.subuser import subuser
-from src.tools.logger import logger
-from src.tools.database import get_database
-from src.tools.errors import get_error
-
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
 
+from auth.permissions import permissions
+from auth.registration import get_token, set_permissions
+from config import settings
+from routers.client_marketer import client_marketer
+from routers.client_user import client_user
+from routers.client_volume_and_fee import client_volume_and_fee
+from routers.database import database
+from routers.factor import factor
+from routers.factor_marketer_contract import marketer_contract
+from routers.factor_marketer_contract_coefficient import marketer_contract_coefficient
+from routers.factor_marketer_contract_deduction import marketer_contract_deduction
+from routers.factor_marketer_ref_code import marketer_ref_code
+from routers.factors import factors
+from routers.grpc_services import grpc_services
+from routers.marketer import marketer, marketer_relation
+from routers.user import user
+from src.tools.database import get_database
+from src.tools.errors import get_error
+# from routers.subuser import subuser
+from src.tools.logger import logger
 
 app = FastAPI(
     version=settings.VERSION,

@@ -4,19 +4,20 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi_pagination import add_pagination
-from fastapi.responses import JSONResponse
-from khayyam import JalaliDatetime as jd
 from fastapi.exceptions import RequestValidationError
-from src.tools.database import get_database
-from src.tools.utils import to_gregorian_, peek, check_permissions
-from src.tools.queries import *
-from src.schemas.user import *
-from pymongo import MongoClient, errors
+from fastapi.responses import JSONResponse
+from fastapi_pagination import add_pagination
+from khayyam import JalaliDatetime as jd
+from pymongo import MongoClient
+
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
-
+from src.schemas.user import *
+from src.tools.database import get_database
+from src.tools.queries import *
+from src.tools.utils import to_gregorian_, check_permissions
 
 user = APIRouter(prefix="/user")
 

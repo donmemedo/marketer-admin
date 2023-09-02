@@ -4,20 +4,19 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, date
-from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.responses import JSONResponse
-from khayyam import JalaliDatetime as jd
-from fastapi.exceptions import RequestValidationError
-from src.tools.utils import check_permissions
-from src.auth.authentication import get_role_permission
-from src.tools.database import get_database
-from src.schemas.database import ResponseListOut, CollectionRestore
-from src.config import settings
-from src.tools.logger import logger
-import requests
-from pymongo import MongoClient, errors
-from src.auth.authorization import authorize
 
+import requests
+from fastapi import APIRouter, Depends, Request
+from fastapi.exceptions import RequestValidationError
+from khayyam import JalaliDatetime as jd
+from pymongo import MongoClient, errors
+
+from src.auth.authentication import get_role_permission
+from src.auth.authorization import authorize
+from src.config import settings
+from src.schemas.database import ResponseListOut, CollectionRestore
+from src.tools.database import get_database
+from src.tools.logger import logger
 
 # database = APIRouter(prefix="/database")
 database = APIRouter(prefix="")

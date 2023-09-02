@@ -3,20 +3,20 @@
 Returns:
     _type_: _description_
 """
-from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Request
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.schemas.factor_marketer_ref_code import *
-from src.tools.database import get_database
-from fastapi.exceptions import RequestValidationError
-from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
-from src.tools.logger import logger
-from pymongo import MongoClient, errors
+from pymongo import MongoClient
+
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
-
+from src.schemas.factor_marketer_ref_code import *
+from src.tools.database import get_database
+from src.tools.utils import get_marketer_name
 
 # marketer_ref_code = APIRouter(prefix="/factor/marketer-ref-code")
 marketer_ref_code = APIRouter(prefix="/marketer-ref-code")

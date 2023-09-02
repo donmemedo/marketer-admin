@@ -3,21 +3,21 @@
 Returns:
     _type_: _description_
 """
-from fastapi import APIRouter, Depends, Request, HTTPException
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends
+from fastapi import Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
-from fastapi.exceptions import RequestValidationError
-from src.auth.authentication import get_role_permission
-from src.schemas.client_volume_and_fee import *
-from src.tools.utils import *
-from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo import MongoClient
-from src.auth.authorization import authorize
-from src.tools.database import get_database
-from src.tools.utils import get_marketer_name, to_gregorian_
-from src.tools.queries import *
 
+from src.auth.authentication import get_role_permission
+from src.auth.authorization import authorize
+from src.schemas.client_volume_and_fee import *
+from src.tools.database import get_database
+from src.tools.queries import *
+from src.tools.utils import get_marketer_name
 
 client_volume_and_fee = APIRouter(prefix="/client/volume-and-fee")
 

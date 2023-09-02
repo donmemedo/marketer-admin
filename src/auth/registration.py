@@ -2,6 +2,7 @@ import json
 
 import aiohttp
 from fastapi import HTTPException
+
 from src.config import settings
 
 

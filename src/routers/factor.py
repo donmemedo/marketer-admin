@@ -4,21 +4,21 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.schemas.factor import *
-from src.tools.database import get_database
-from fastapi.exceptions import RequestValidationError
-from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
-from src.tools.logger import logger
-from src.tools.stages import plans
-from src.tools.queries import *
-from pymongo import MongoClient, errors
+from pymongo import MongoClient
+
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
-from math import inf
+from src.schemas.factor import *
+from src.tools.database import get_database
+from src.tools.logger import logger
+from src.tools.queries import *
+from src.tools.stages import plans
+from src.tools.utils import get_marketer_name, check_permissions
 
 factor = APIRouter(prefix="/factor")
 

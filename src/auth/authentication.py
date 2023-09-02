@@ -4,6 +4,7 @@ from fastapi.security import HTTPBearer
 from fastapi.security.http import HTTPAuthorizationCredentials
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError
+
 from src.config import settings
 from src.tools.logger import logger
 

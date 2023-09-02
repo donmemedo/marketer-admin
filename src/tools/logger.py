@@ -1,8 +1,8 @@
 import logging
-from logging.config import dictConfig
 import socket
-from src.config import settings
+from logging.config import dictConfig
 
+from src.config import settings
 
 log_config = {
     "version": 1,
