@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import marketer_pb2 as marketer__pb2
+import src.protos.marketer_pb2 as marketer__pb2
 
 
 class MarketerRPCServiceStub(object):

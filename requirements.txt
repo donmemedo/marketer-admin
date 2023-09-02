@@ -50,3 +50,7 @@ urllib3==2.0.4
 uvicorn==0.23.2
 wrapt==1.15.0
 yarl==1.9.2
+grpcio-tools
+protobuf
+validator
+grpcio
