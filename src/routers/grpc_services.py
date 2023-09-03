@@ -56,7 +56,7 @@ async def sync_marketers(
     metadata = []
     auth_token = request.headers.get("authorization")
     metadata.append(('authorization', auth_token))
-    sync_request = marketer_pb2.SearchMarketerRPCRequest(PageSize=args.size)
+    sync_request = marketer_pb2.SearchMarketerRPCRequest(PageSize=args.size, PageNumber=args.page)
 
     try:
         response = stub.SearchMarketer(sync_request,metadata=metadata)
@@ -98,6 +98,7 @@ async def sync_marketers(
         except:
             try:
                 update["$set"].pop("_id")
+                # To-Do: Check if something changes then update.
                 db.newmarketersss.update_one({"Id": update["$set"]["Id"]}, update)
                 try:
                     result = f"Marketer {marketer['Title']} with ID {marketer['Id']['value']} is updated successfully."

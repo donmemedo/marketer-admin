@@ -15,12 +15,15 @@ class Settings(BaseSettings):
 
     API_PREFIX: str = ""
     DOCS_URL: str = ""
-    MONGO_CONNECTION_STRING: str = "mongodb://root:root@172.24.65.105:30001/"
+    MONGO_CONNECTION_STRING: str = "mongodb://root:root@172.24.65.105:30001/"#"mongodb://root:3tliSqt3tDD5Bg@172.24.65.105:30003/"
 
     MONGO_DATABASE: str = "brokerage"
     CUSTOMER_COLLECTION: str = "customers"
+    MARKETER_COLLECTION: str = "newmarketersss"
+    FACTOR_COLLECTION: str = "factorsss"
     FIRMS_COLLECTION: str = "firms"
     TRADES_COLLECTION: str = "trades"
+    RELATIONS_COLLECTION: str = "mrelations"
 
     OPENAPI_URL: str = ""
     ORIGINS: str = "*"

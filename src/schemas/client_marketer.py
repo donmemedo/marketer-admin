@@ -157,7 +157,7 @@ class GetCostIn:
 
 @dataclass
 class GetFactorIn:
-    IdpID: Optional[str] = Query("")
+    IdpID: Optional[str] = Query(None)
     insurance: int = Query(0)
     tax: int = Query(0)
     salary: int = Query(0)

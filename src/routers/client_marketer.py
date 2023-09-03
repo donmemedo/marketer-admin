@@ -17,7 +17,7 @@ from src.schemas.client_marketer import *
 from src.tools.database import get_database
 from src.tools.utils import *
 from src.tools.utils import peek, to_gregorian_
-
+from src.config import settings
 client_marketer = APIRouter(prefix="/client/marketer")
 
 
@@ -51,17 +51,20 @@ async def get_marketer_profile(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    marketers_coll = brokerage["marketers"]
-    results = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
+    marketers_coll = brokerage[settings.MARKETER_COLLECTION]
+    # results = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
+    results = marketers_coll.find_one({"Id": args.IdpID}, {"_id": False})
     if not args.IdpID:
         total_count = marketers_coll.count_documents({})
         query_result = (
-            marketers_coll.find({}).skip(args.size * args.page).limit(args.size)
+            marketers_coll.find({},{"_id":0}).skip(args.size * args.page).limit(args.size)
         )
         results = []
-        marketers = dict(enumerate(query_result))
-        for i in range(len(marketers)):
-            results.append(marketer_entity(marketers[i]))
+        # marketers = dict(enumerate(query_result))
+        # for i in range(len(marketers)):
+        #     results.append(marketer_entity(marketers[i]))
+        for marketer in query_result:
+            results.append(marketer)
 
     if not results:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
@@ -115,29 +118,36 @@ async def cal_marketer_cost(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    marketers_coll = brokerage["marketers"]
-    customers_coll = brokerage["customers"]
-    trades_coll = brokerage["trades"]
+    marketers_coll = brokerage[settings.MARKETER_COLLECTION]
+    customers_coll = brokerage[settings.CUSTOMER_COLLECTION]
+    trades_coll = brokerage[settings.TRADES_COLLECTION]
     marketers_query = (
+        # marketers_coll.find(
+        #     {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
+        #     {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+        # )
         marketers_coll.find(
-            {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-            {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+            {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},
+            {"TbsReagentName": 1, "ReagentRefLink": 1, "_id": 0, "Id": 1},
         )
         .skip(args.size * args.page)
         .limit(args.size)
     )
     if args.IdpID:
-        marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
+        # marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
+        marketers_query = marketers_coll.find({"Id": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
     total_count = marketers_coll.count_documents(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+        # {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+          {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}}
     )
     results = []
     for marketer in marketers_list:
         marketer_total = {}
-        marketer_fullname = get_marketer_name(marketer)
-        query = {"Referer": {"$regex": marketer_fullname}}
+        # marketer_fullname = get_marketer_name(marketer)
+        # query = {"Referer": marketer_fullname}
+        query = {"Referer": marketer['TbsReagentName']}
         fields = {"PAMCode": 1}
         customers_records = customers_coll.find(query, fields)
         trade_codes = [c.get("PAMCode") for c in customers_records]
@@ -234,11 +244,13 @@ async def cal_marketer_cost(
 
         marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
         marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
-        marketer_total["FirstName"] = marketer.get("FirstName")
-        marketer_total["LastName"] = marketer.get("LastName")
+        # marketer_total["FirstName"] = marketer.get("FirstName")
+        # marketer_total["LastName"] = marketer.get("LastName")
+        marketer_total["TbsReagentName"] = marketer.get("TbsReagentName")
 
         marketer_total["UsersCount"] = customers_coll.count_documents(
-            {"Referer": {"$regex": marketer_fullname}}
+            # {"Referer": marketer_fullname}
+            {"Referer": marketer['TbsReagentName']}
         )
         marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
         marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
@@ -405,25 +417,29 @@ async def factor_print(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    marketers_coll = brokerage["marketers"]
-    customers_coll = brokerage["customers"]
-    trades_coll = brokerage["trades"]
-    factors_coll = brokerage["factors"]
+    marketers_coll = brokerage[settings.MARKETER_COLLECTION]
+    customers_coll = brokerage[settings.CUSTOMER_COLLECTION]
+    trades_coll = brokerage[settings.TRADES_COLLECTION]
+    factors_coll = brokerage[settings.FACTOR_COLLECTION]
 
     marketers_query = (
         marketers_coll.find(
-            {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-            {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+            # {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
+            # {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+            {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},
+            {"TbsReagentName": 1, "ReagentRefLink": 1, "_id": 0, "Id": 1},
         )
         .skip(args.size * args.page)
         .limit(args.size)
     )
     if args.IdpID:
-        marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
+        # marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
+        marketers_query = marketers_coll.find({"Id": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
     total_count = marketers_coll.count_documents(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+        # {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+        {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}}
     )
     results = []
     for marketer in marketers_list:

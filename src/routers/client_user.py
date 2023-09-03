@@ -14,6 +14,7 @@ from src.auth.authorization import authorize
 from src.schemas.client_user import *
 from src.tools.database import get_database
 from src.tools.utils import get_marketer_name
+from src.config import settings
 
 client_user = APIRouter(prefix="/client/user")
 
@@ -48,12 +49,14 @@ async def get_user_profile(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    marketers_coll = brokerage["marketers"]
+    marketers_coll = brokerage[settings.MARKETER_COLLECTION]
     if args.IdpID:
-        query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
-        marketer_fullname = get_marketer_name(query_result)
+        # query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
+        query_result = marketers_coll.find_one({"Id": args.IdpID}, {"_id": False})
+        # marketer_fullname = get_marketer_name(query_result)
         pipeline = [
-            {"$match": {"$and": [{"Referer": marketer_fullname}]}},
+            # {"$match": {"$and": [{"Referer": marketer_fullname}]}},
+            {"$match": {"$and": [{"Referer": query_result['TbsReagentName']}]}},
             {
                 "$project": {
                     "Name": {"$concat": ["$FirstName", " ", "$LastName"]},
@@ -156,8 +159,8 @@ async def get_user_profile(
         result["totalCount"] = result_dict.get("total", 0)
         result["code"] = "Null"
         result["message"] = "Null"
-        result["PageSize"] = args.size
-        result["PageNumber"] = args.page
+        result["PageSize"] = args.page_size
+        result["PageNumber"] = args.page_index
         resp = {
             "result": result,
             "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),

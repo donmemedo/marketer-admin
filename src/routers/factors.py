@@ -21,6 +21,7 @@ from src.tools.logger import logger
 from src.tools.queries import *
 from src.tools.stages import plans
 from src.tools.utils import get_marketer_name
+from src.config import settings
 
 factors = APIRouter(prefix="/new-factor")
 
