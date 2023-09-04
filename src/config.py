@@ -15,21 +15,27 @@ class Settings(BaseSettings):
 
     API_PREFIX: str = ""
     DOCS_URL: str = ""
-    MONGO_CONNECTION_STRING: str = "mongodb://root:root@172.24.65.105:30001/"#"mongodb://root:3tliSqt3tDD5Bg@172.24.65.105:30003/"
+    MONGO_CONNECTION_STRING: str = "mongodb://root:root@172.24.65.105:30001/"
 
     MONGO_DATABASE: str = "brokerage"
     CUSTOMER_COLLECTION: str = "customers"
     MARKETER_COLLECTION: str = "newmarketersss"
-    FACTOR_COLLECTION: str = "factorsss"
+    FACTOR_COLLECTION: str = "napfactorsss"
     FIRMS_COLLECTION: str = "firms"
     TRADES_COLLECTION: str = "trades"
     RELATIONS_COLLECTION: str = "mrelations"
+
+    CONTRACT_COLLECTION: str = "MarketerContract"
+    CONTRACT_COEFFICIENT_COLLECTION: str = "MarketerContractCoefficient"
+    CONTRACT_DEDUCTION_COLLECTION: str = "MarketerContractDeduction"
+    REF_CODE_COLLECTION: str = "MarketerRefCode"
+
 
     OPENAPI_URL: str = ""
     ORIGINS: str = "*"
     ROOT_PATH: str = ""
     SWAGGER_TITLE: str = "Marketer Admin"
-    VERSION: str = "1.5.2"
+    VERSION: str = "1.5.3"
     ROOT_PATH: str = ""
     # Added from Marketer
     JWKS_CONFIGURATION_URL: str = (

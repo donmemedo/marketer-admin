@@ -36,18 +36,18 @@ class ModifyConstIn:
 class ModifyAccountingFactorIn:
     MarketerID: str
     Period: str = str(current_year) + f"{current_month:02}"
+    FactorID: str = None
     Plan: str = None
-    Tax: int = Query(None, alias="TaxDeduction")
+    TaxDeduction: int = Query(None, alias="TaxDeduction")
     TaxCoefficient: float = None
-    Collateral: int = Query(None, alias="CollateralDeduction")
+    CollateralDeduction: int = Query(None, alias="CollateralDeduction")
     CollateralCoefficient: float = None
-    Insurance: int = Query(None, alias="InsuranceDeduction")
+    InsuranceDeduction: int = Query(None, alias="InsuranceDeduction")
     InsuranceCoefficient: float = None
-    FinalFee: int = Query(None, alias="MarketerTotalIncome")
+    MarketerTotalIncome: int = Query(None, alias="MarketerTotalIncome")
     Payment: int = None
-    FactorStatus: int = Query(None, alias="Status")
-    ID: str = None
-    ContractID: str = None
+    Status: int = Query(None, alias="Status")
+    # ContractID: str = None
     CalculationCoefficient: float = None
     TotalCMD: int = None
     IsCmdConcluded: bool = False
@@ -72,15 +72,15 @@ class ModifyAccountingFactorIn:
 class ModifyBaseFactorIn:
     MarketerID: str
     Period: str = str(current_year) + f"{current_month:02}"
-    TotalPureVolume: int = Query(None, alias="TotalTurnOver")
-    TotalFee: int = Query(None, alias="TotalBrokerCommission")
+    FactorID: str = None
+    TotalTurnOver: int = Query(None, alias="TotalTurnOver")#TotalPureVolume
+    TotalBrokerCommission: int = Query(None, alias="TotalBrokerCommission")#TotalFee
     TotalCMD: int = None
-    PureFee: int = Query(None, alias="TotalNetBrokerCommission")
-    MarketerFee: int = Query(None, alias="MarketerCommissionIncome")
-    ID: str = None
+    TotalNetBrokerCommission: int = Query(None, alias="TotalNetBrokerCommission")#PureFee
+    MarketerCommissionIncome: int = Query(None, alias="MarketerCommissionIncome")#MarketerFee
+    FollowersIncome: int = None
     IsCmdConcluded: bool = False
     MaketerCMDIncome: int = None
-    FollowersIncome: int = None
     CreateDateTime: str = None
     UpdateDateTime: str = None
 
@@ -101,7 +101,7 @@ class ResponseOut:
 @dataclass
 class ResponseListOut:
     result: Dict
-    timeGenerated: JalaliDatetime
+    timeGenerated: str
     error: str = Query("nothing")
 
 
@@ -111,8 +111,12 @@ class SearchFactorIn:
     MarketerID: str = Query(None)
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
     FactorStatus: int = Query(None, alias="Status")
-    ID: str = None
+    FactorID: str = None
     ContractID: str = None
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
+
+
 
 
 @dataclass
@@ -129,7 +133,7 @@ class CalFactorIn:
 
     MarketerID: str = Query(None)
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
-    Collateral: int = 0
+    # Collateral: int = 0
     Additions: int = 0
     Deductions: int = 0
 

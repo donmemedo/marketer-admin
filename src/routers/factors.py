@@ -3,6 +3,7 @@
 Returns:
     _type_: _description_
 """
+import uuid
 from datetime import datetime, timedelta
 from math import inf
 
@@ -59,31 +60,38 @@ async def add_base_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    factor_coll = database["MarketerFactor"]
-    marketers_coll = database["MarketerTable"]
-    if mfi.MarketerID is None:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    if mfi.ID is None:
-        raise RequestValidationError(TypeError, body={"code": "30033", "status": 412})
-
-    filter = {"MarketerID": mfi.MarketerID}
+    factor_coll = database[settings.FACTOR_COLLECTION] #["MarketerFactor"]
+    marketers_coll = database[settings.MARKETER_COLLECTION] #["MarketerTable"]
+    if (mfi.MarketerID and mfi.Period) is None:
+        raise RequestValidationError(TypeError, body={"code": "30030", "status": 412})
+    # elif mfi.ID is None:
+    #     raise RequestValidationError(TypeError, body={"code": "30033", "status": 412})
+    filter = {"$and": [
+                    {"MarketerID": mfi.MarketerID},
+                    {"Period": mfi.Period}
+              ]}
     update = {"$set": {}}
     for key, value in vars(mfi).items():
         if value is not None:
             update["$set"][key] = value
     update["$set"]["CreateDateTime"] = jd.now().isoformat()
     update["$set"]["UpdateDateTime"] = jd.now().isoformat()
+    update["$set"]["FactorID"] = uuid.uuid1().hex
+    update["$set"]["Status"] = 20
+
     update["$set"]["CreateBy"] = user_id
     update["$set"]["UpdateBy"] = user_id
     try:
-        marketer_name = get_marketer_name(
-            marketers_coll.find_one({"IdpId": mfi.MarketerID}, {"_id": False})
-        )
-        factor_coll.insert_one({"MarketerID": mfi.MarketerID, "Title": marketer_name})
+        # marketer_name = get_marketer_name(
+        #     marketers_coll.find_one({"IdpId": mfi.MarketerID}, {"_id": False})
+        # )
+        marketer_name = marketers_coll.find_one({"Id": mfi.MarketerID}, {"_id":False})["TbsReagentName"]
+
+        factor_coll.insert_one({"MarketerID": mfi.MarketerID, "Period": mfi.Period, "Title": marketer_name})
         factor_coll.update_one(filter, update)
     except:
         factor_coll.update_one(filter, update)
-    query_result = factor_coll.find_one({"ID": mfi.ID}, {"_id": False})
+    query_result = factor_coll.find_one({"FactorID": update["$set"]["FactorID"]}, {"_id": False})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -124,12 +132,12 @@ async def modify_base_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    factor_coll = database["MarketerFactor"]
-    marketers_coll = database["MarketerTable"]
-    if ((mfi.MarketerID and mfi.Period) or mfi.ID) is None:
+    factor_coll = database[settings.FACTOR_COLLECTION] #["MarketerFactor"]
+    marketers_coll = database[settings.MARKETER_COLLECTION] #["MarketerTable"]
+    if ((mfi.MarketerID and mfi.Period) or mfi.FactorID) is None:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 412})
-    if mfi.ID:
-        filter = {"ID": mfi.ID}
+    if mfi.FactorID:
+        filter = {"FactorID": mfi.FactorID}
     else:
         filter = {"$and": [{"MarketerID": mfi.MarketerID}, {"Period": mfi.Period}]}
     update = {"$set": {}}
@@ -143,7 +151,7 @@ async def modify_base_factor(
         factor_coll.update_one(filter, update)
     except:
         raise RequestValidationError(TypeError, body={"code": "30008", "status": 400})
-    query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
+    query_result = factor_coll.find_one(filter, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
     return ResponseListOut(
@@ -186,31 +194,38 @@ async def add_accounting_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    factor_coll = database["MarketerFactor"]
-    marketers_coll = database["MarketerTable"]
-    if mfi.MarketerID is None:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    if mfi.ID is None:
-        raise RequestValidationError(TypeError, body={"code": "30033", "status": 412})
+    factor_coll = database[settings.FACTOR_COLLECTION] #["MarketerFactor"]
+    marketers_coll = database[settings.MARKETER_COLLECTION] #["MarketerTable"]
+    if ((mfi.MarketerID and mfi.Period) or mfi.FactorID) is None:
+        raise RequestValidationError(TypeError, body={"code": "30030", "status": 412})
+    if mfi.FactorID:
+        filter = {"FactorID": mfi.FactorID}
+    else:
+        filter = {"$and": [{"MarketerID": mfi.MarketerID}, {"Period": mfi.Period}]}
 
-    filter = {"MarketerID": mfi.MarketerID}
+    # if mfi.MarketerID is None:
+    #     raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+    # if mfi.ID is None:
+    #     raise RequestValidationError(TypeError, body={"code": "30033", "status": 412})
+
+    # filter = {"MarketerID": mfi.MarketerID}
     update = {"$set": {}}
     for key, value in vars(mfi).items():
         if value is not None:
             update["$set"][key] = value
     update["$set"]["CreateDateTime"] = jd.now().isoformat()
     update["$set"]["UpdateDateTime"] = jd.now().isoformat()
+    update["$set"]["Status"] = 30
     update["$set"]["CreateBy"] = user_id
     update["$set"]["UpdateBy"] = user_id
     try:
-        marketer_name = get_marketer_name(
-            marketers_coll.find_one({"IdpId": mfi.MarketerID}, {"_id": False})
-        )
-        factor_coll.insert_one({"MarketerID": mfi.MarketerID, "Title": marketer_name})
+        marketer_name = marketers_coll.find_one({"Id": mfi.MarketerID}, {"_id":False})["TbsReagentName"]
+
+        factor_coll.insert_one({"MarketerID": mfi.MarketerID, "Period": mfi.Period, "Title": marketer_name})
         factor_coll.update_one(filter, update)
     except:
         factor_coll.update_one(filter, update)
-    query_result = factor_coll.find_one({"ID": mfi.ID}, {"_id": False})
+    query_result = factor_coll.find_one(filter, {"_id": False})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -251,12 +266,12 @@ async def modify_accounting_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    factor_coll = database["MarketerFactor"]
-    marketers_coll = database["MarketerTable"]
-    if ((mfi.MarketerID and mfi.Period) or mfi.ID) is None:
+    factor_coll = database[settings.FACTOR_COLLECTION] #["MarketerFactor"]
+    marketers_coll = database[settings.MARKETER_COLLECTION] #["MarketerTable"]
+    if ((mfi.MarketerID and mfi.Period) or mfi.FactorID) is None:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 412})
-    if mfi.ID:
-        filter = {"ID": mfi.ID}
+    if mfi.FactorID:
+        filter = {"ID": mfi.FactorID}
     else:
         filter = {"$and": [{"MarketerID": mfi.MarketerID}, {"Period": mfi.Period}]}
     update = {"$set": {}}
@@ -270,7 +285,7 @@ async def modify_accounting_factor(
         factor_coll.update_one(filter, update)
     except:
         raise RequestValidationError(TypeError, body={"code": "30008", "status": 400})
-    query_result = factor_coll.find_one({"IdpID": mfi.MarketerID}, {"_id": False})
+    query_result = factor_coll.find_one(filter, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
     return ResponseListOut(
@@ -313,7 +328,7 @@ async def search_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    factor_coll = database["MarketerFactor"]
+    factor_coll = database[settings.FACTOR_COLLECTION] #["MarketerFactor"]
     if args.Period:
         pass
     else:
@@ -330,14 +345,14 @@ async def search_factor(
         upa.append({"Period": args.Period})
     if args.FactorStatus:
         upa.append({"FactorStatus": args.FactorStatus})
-    if args.ID:
-        upa.append({"ID": args.ID})
+    if args.FactorID:
+        upa.append({"FactorID": args.FactorID})
     if args.ContractID:
         upa.append({"ContractID": {"$regex": args.ContractID}})
 
     results = []
     filter = {"$and": upa}
-    query_result = dict(enumerate(factor_coll.find(filter, {"_id": False})))
+    query_result = dict(enumerate(factor_coll.find(filter, {"_id": False}).skip(args.size * args.page).limit(args.size)))
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
 
@@ -354,12 +369,12 @@ async def search_factor(
         last_result = {
             "code": "Null",
             "message": "Null",
-            "totalCount": len(query_result),
+            "totalCount": factor_coll.count_documents(filter),
             "pagedData": results,
         }
     return ResponseListOut(
         result=last_result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        timeGenerated=jd.now().isoformat(),
         error="",
     )
 
@@ -398,8 +413,8 @@ async def delete_factor(
     """
     user_id = role_perm["sub"]
     factor_coll = database["MarketerFactor"]
-    if args.ID:
-        filter = {"ID": args.ID}
+    if args.FactorID:
+        filter = {"FactorID": args.FactorID}
     elif args.ContractID and args.Period:
         filter = {
             "$and": [
@@ -419,8 +434,8 @@ async def delete_factor(
     query_result = factor_coll.find_one(filter, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
-    if args.ID:
-        result = [f"فاکتور شماره  {args.ID} پاک شد."]
+    if args.FactorID:
+        result = [f"فاکتور شماره  {args.FactorID} پاک شد."]
     else:
 
         result = [
@@ -465,21 +480,25 @@ async def calculate_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    factor_coll = database["newwfactors"]  # database["MarketerFactor"]
-    marketer_coll = database["marketers"]#database["MarketerTable"]
-    customer_coll = database["customers"]
-    contract_coll = database["MarketerContract"]
-    contded_coll = database["MarketerContractDeduction"]
+    factor_coll = database[settings.FACTOR_COLLECTION]  # database["MarketerFactor"]
+    marketer_coll = database[settings.MARKETER_COLLECTION]#database["MarketerTable"]
+    customer_coll = database[settings.CUSTOMER_COLLECTION]
+    contract_coll = database[settings.CONTRACT_COLLECTION]
+    contded_coll = database[settings.CONTRACT_DEDUCTION_COLLECTION]
     if args.Period:# and args.MarketerID:
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
     per = args.Period
     if args.MarketerID:
-        marketers = marketer_coll.find_one({"IdpId": args.MarketerID}, {"_id": False})
+        marketers = marketer_coll.find_one(
+            # {"IdpId": args.MarketerID}, {"_id": False}
+            {"Id": args.MarketerID}, {"_id": False}
+        )
     else:
         marketerrs = marketer_coll.find(
-            {"IdpId": {"$exists": True, "$not": {"$size": 0}}}, {"_id": False}
+            # {"IdpId": {"$exists": True, "$not": {"$size": 0}}}, {"_id": False}
+            {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}}, {"_id": False}
         )
         marketers = dict(enumerate(marketerrs))
     results = []
@@ -488,8 +507,9 @@ async def calculate_factor(
 
         # query = {"RefererTitle": marketer['Title']}
         # query = {"Referer": marketer["Title"]}
-        query = {"Referer": get_marketer_name(marketer)}
-        fields = {"TradeCodes": 1}
+        # query = {"Referer": get_marketer_name(marketer)}
+        query = {"Referer": marketer['TbsReagentName']}
+        fields = {"PAMCode": 1}
 
 
         customers_records = customer_coll.find(query, fields)
@@ -517,7 +537,7 @@ async def calculate_factor(
         tpv = marketer_total.get("TotalPureVolume")
         b = plans
         try:
-            cbt = contract_coll.find_one({"MarketerID": marketer['IdpId']}, {"_id": False})[
+            cbt = contract_coll.find_one({"MarketerID": marketer['Id']}, {"_id": False})[
                 "CalculationBaseType"
             ]
         except:
@@ -592,32 +612,38 @@ async def calculate_factor(
             fresult = next(database.trades.aggregate(pipeline=pipeline), [])
             FTF = FTF + fresult["TotalFee"] * followers[i]["CommissionCoefficient"]
         additions = FTF
-        tmc = 0
-        if args.Collateral:
-            additions = additions + args.Collateral
-            tmc = args.Collateral
+        #ToDo: TotalCMD AutoCalculation
+        total_cmd = 0
+        # tmc = 0
+        # if args.Collateral:
+        #     additions = additions + args.Collateral
+        #     tmc = args.Collateral
         if args.Additions:
             additions = additions + args.Additions
         if args.Deductions:
             deductions = deductions + args.Deductions
         payment = final_fee + additions - deductions
         result = {
-            "Title": get_marketer_name(marketer),#marketer["Title"],
-            "MarketerID": marketer["IdpId"],#marketer["MarketerID"],
+            # "Title": get_marketer_name(marketer),#marketer["Title"],
+            "MarketerID": marketer["Id"],#marketer["MarketerID"],
             "Period": args.Period,
-            "TotalPureVolume": marketer_total.get("TotalPureVolume"),
-            "TotalFee": marketer_total.get("TotalFee"),
-            "PureFee": int(pure_fee),
-            "MarketerFee": int(marketer_fee),
+            "TotalTurnOver": marketer_total.get("TotalPureVolume"), #TotalPureVolume
+            "TotalBrokerCommission": marketer_total.get("TotalFee"),
+            "TotalNetBrokerCommission": int(pure_fee),
+            "MarketerCommissionIncome": int(marketer_fee),
+            #ToDo: Use uuid1 to audit MAC of Calculators and Timing for Security Reasons
+            "FactorID": uuid.uuid1().hex,
+            "TotalCMD": int(total_cmd),
             "Plan": plan_name,
-            "NextPlan": next_plan,
+            "NextPlanDiff": next_plan,
             "Tax": int(tax),
             "CollateralOfThisMonth": int(collateral),
-            "SumOfPreviousCollaterals": tmc,
+            # "SumOfPreviousCollaterals": tmc,
             "TotalFeeOfFollowers": FTF,
             "SumOfAdditions": int(additions),
             "SumOfDeductions": int(deductions),
-            "FinalFee": int(final_fee),
+            # "FinalFee": int(final_fee),
+            "Status": 10,
             "Payment": int(payment),
         }
         try:
@@ -625,7 +651,8 @@ async def calculate_factor(
             result.pop("_id")
             results.append(result)
         except:
-            logger.critical(f"فاکتور {result['Title']} در دوره {result['Period']} موجود است.")
+            logger.critical(f"فاکتور مربوط به {result['MarketerID']} در دوره {result['Period']} با شماره {result['ID']} موجود است.")
+            result['Error'] = f"فاکتور مربوط به {result['MarketerID']} در دوره {result['Period']} با شماره {result['ID']} موجود است."
             result.pop("_id")
             results.append(result)
     resp = {
