@@ -6,11 +6,9 @@ from enum import Enum, IntEnum
 from pydantic import BaseModel
 from fastapi import Query
 from khayyam import JalaliDatetime
-from datetime import date
 
 
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
-# current_date = date.today().isoformat()
 current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 
@@ -32,13 +30,9 @@ class ModifyConstIn:
 
 
 @dataclass
-class ModifyFactorIn:
+class ModifyAccountingFactorIn:
     MarketerID: str
     Period: str = str(current_year) + f"{current_month:02}"
-    TotalPureVolume: int = Query(None, alias="TotalTurnOver")
-    TotalFee: int = Query(None, alias="TotalBrokerCommission")
-    PureFee: int = Query(None, alias="TotalNetBrokerCommission")
-    MarketerFee: int = Query(None, alias="MarketerCommissionIncome")
     Plan: str = None
     Tax: int = Query(None, alias="TaxDeduction")
     TaxCoefficient: float = None
@@ -70,21 +64,22 @@ class ModifyFactorIn:
     CreateDateTime: str = None
     UpdateDateTime: str = None
 
+
 @dataclass
-class ModifyFactorIN:
-     MarketerID: str
-     Period: str = str(current_year) + f"{current_month:02}"
-     TotalPureVolume: int = None
-     TotalFee: int = None
-     PureFee: int = None
-     MarketerFee: int = None
-     TotalFeeOfFollowers: int = None
-     CollateralOfThisMonth: int = None
-     SumOfDeductions: int = None
-     Payment: int = None
-     # CreateDateTime: str = None
-     # UpdateDateTime: str = None
-     FactorStatus: int = Query(None, alias="Status")
+class ModifyBaseFactorIn:
+    MarketerID: str
+    Period: str = str(current_year) + f"{current_month:02}"
+    TotalPureVolume: int = Query(None, alias="TotalTurnOver")
+    TotalFee: int = Query(None, alias="TotalBrokerCommission")
+    TotalCMD: int = None
+    PureFee: int = Query(None, alias="TotalNetBrokerCommission")
+    MarketerFee: int = Query(None, alias="MarketerCommissionIncome")
+    ID: str = None
+    IsCmdConcluded: bool = False
+    MaketerCMDIncome: int = None
+    FollowersIncome: int = None
+    CreateDateTime: str = None
+    UpdateDateTime: str = None
 
 
 @dataclass
@@ -110,7 +105,7 @@ class ResponseListOut:
 @dataclass
 class SearchFactorIn:
 
-    MarketerID: str = Query("")
+    MarketerID: str = Query(None)
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
     FactorStatus: int = Query(None, alias="Status")
     ID: str = None

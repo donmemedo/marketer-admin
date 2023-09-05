@@ -13,6 +13,8 @@ current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 # current_date = date.today().isoformat()
 current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
+from datetime import date
+current_date = date.today().isoformat()#JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 
 
 @dataclass
@@ -23,7 +25,7 @@ class ModifyMarketerIn:
     LastName: Optional[str] = None
     RefererType: Optional[str] = None
     NewIdpId: Optional[str] = None
-    NationalID: Optional[int] = None
+    NationalID: Optional[str] = None
 
 
 @dataclass
@@ -114,8 +116,8 @@ class SearchMarketerRelations:
     LeaderMarketerID: str = None
     FollowerMarketerName: str = None
     FollowerMarketerID: str = None
-    StartDate: str = Query(default="1301-01-01")
-    EndDate: str = Query(default="2501-12-29")
+    StartDate: str = Query(default="2021-01-01")
+    EndDate: str = Query(default="2521-12-29")
 
 
 @dataclass

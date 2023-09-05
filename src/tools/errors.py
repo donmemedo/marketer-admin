@@ -1,5 +1,6 @@
 errors_mapping = {
     "30003": "IDP مارکتر را وارد کنید.",
+    "30033": "شماره فاکتور را وارد کنید.",
     "30004": "موردی با IDP داده شده یافت نشد.",
     "30001": "موردی در دیتابیس یافت نشد.",
     "30002": "موردی برای ثابتهای فاکتورها یافت نشد.",
@@ -34,4 +35,6 @@ def get_error(type: str,code:str):
     if type =='TypeError':
         return {"code": code, "message": errors_mapping[code]}
     if type =='json_invalid':
-        return {"code": code, "message": errors_mapping[code]}
+        return {"code": 400, "message": code}
+    if type =='missing':
+        return {"code": 412, "message": code}

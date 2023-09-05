@@ -11,8 +11,6 @@ from khayyam import JalaliDatetime as jd
 from src.schemas.factor_marketer_ref_code import *
 from src.tools.database import get_database
 from fastapi.exceptions import RequestValidationError
-
-# from src.tools.tokens import JWTBearer, get_role_permission
 from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
 from src.tools.logger import logger
 from pymongo import MongoClient, errors
@@ -25,7 +23,6 @@ marketer_ref_code = APIRouter(prefix="/factor/marketer-ref-code")
 
 @marketer_ref_code.post(
     "/add-marketer_ref_code",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor - MarketerRefCode"],
 )
 @authorize(
@@ -56,60 +53,16 @@ async def add_marketer_ref_code(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Create",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
-    # database = get_database()
     coll = database["MarketerRefCode"]
     marketers_coll = database["MarketerTable"]
     if mmrci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # }
-        # return JSONResponse(status_code=412, content=resp)
-        #
-        # return ResponseListOut(
-        #     result=[],
-        #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     error={"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # )
-
     filter = {"MarketerID": mmrci.MarketerID}
     update = {"$set": {}}
-
-
-    if mmrci.ID is not None:
-        update["$set"]["ID"] = mmrci.ID
-    if mmrci.Title is not None:
-        update["$set"]["Title"] = mmrci.Title
-    if mmrci.Type is not None:
-        update["$set"]["Type"] = mmrci.Type
-    if mmrci.RefCode is not None:
-        update["$set"]["RefCode"] = mmrci.RefCode
-    if mmrci.SubsidiaryCode is not None:
-        update["$set"]["SubsidiaryCode"] = mmrci.SubsidiaryCode
-    if mmrci.SubsidiaryTitle is not None:
-        update["$set"]["SubsidiaryTitle"] = mmrci.SubsidiaryTitle
-    if mmrci.BranchCode is not None:
-        update["$set"]["BranchCode"] = mmrci.BranchCode
-    if mmrci.BranchTitle is not None:
-        update["$set"]["BranchTitle"] = mmrci.BranchTitle
+    for key, value in vars(mmrci).items():
+        if value is not None:
+            update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
     update["$set"]["UpdateDateTime"] = str(datetime.now())
 
@@ -121,17 +74,9 @@ async def add_marketer_ref_code(
         coll.update_one(filter, update)
     except:
         raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "IDP وارد شده در دیتابیس موجود است.", "code": "30003"},
-        # }
-        # return JSONResponse(status_code=409, content=resp)
-
-        # coll.update_one(filter, update)
     query_result = coll.find_one({"MarketerID": mmrci.MarketerID}, {"_id": False})
     return ResponseListOut(
-        result=query_result,  # marketer_entity(marketer_dict),
+        result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
@@ -139,7 +84,6 @@ async def add_marketer_ref_code(
 
 @marketer_ref_code.put(
     "/modify-marketer-ref-code",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor - MarketerRefCode"],
 )
 @authorize(
@@ -170,66 +114,20 @@ async def modify_marketer_ref_code(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Write",
-        "MarketerAdmin.All.Update",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Write",
-        "MarketerAdmin.Factor.Update",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     coll = database["MarketerRefCode"]
     if mmrci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "IDP مارکتر را وارد کنید.", "code": "30003"},
-        # }
-        # return JSONResponse(status_code=412, content=resp)
-
     filter = {"MarketerID": mmrci.MarketerID}
     update = {"$set": {}}
-
-
-    if mmrci.ID is not None:
-        update["$set"]["ID"] = mmrci.ID
-    if mmrci.Title is not None:
-        update["$set"]["Title"] = mmrci.Title
-    if mmrci.Type is not None:
-        update["$set"]["Type"] = mmrci.Type
-    if mmrci.RefCode is not None:
-        update["$set"]["RefCode"] = mmrci.RefCode
-    if mmrci.SubsidiaryCode is not None:
-        update["$set"]["SubsidiaryCode"] = mmrci.SubsidiaryCode
-    if mmrci.SubsidiaryTitle is not None:
-        update["$set"]["SubsidiaryTitle"] = mmrci.SubsidiaryTitle
-    if mmrci.BranchCode is not None:
-        update["$set"]["BranchCode"] = mmrci.BranchCode
-    if mmrci.BranchTitle is not None:
-        update["$set"]["BranchTitle"] = mmrci.BranchTitle
-    # update["$set"]["CreateDateTime"] = str(datetime.now())
+    for key, value in vars(mmrci).items():
+        if value is not None:
+            update["$set"][key] = value
     update["$set"]["UpdateDateTime"] = str(datetime.now())
-    # filter = {"IdpID": mfi.MarketerID}
     coll.update_one(filter, update)
     query_result = coll.find_one({"MarketerID": mmrci.MarketerID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # }
-        # return JSONResponse(status_code=204, content=resp)
-
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -239,7 +137,6 @@ async def modify_marketer_ref_code(
 
 @marketer_ref_code.get(
     "/search-marketer_ref_code",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor - MarketerRefCode"],
 )
 @authorize(
@@ -268,45 +165,20 @@ async def search_marketer_ref_code(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Read",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
-    # database = get_database()
-
     coll = database["MarketerRefCode"]
-
-    upa=[]
-    if args.MarketerID:
-        upa.append({"MarketerID":args.MarketerID})
-    if args.ID:
-        upa.append({"ID":args.ID})
-    if args.SubsidiaryCode:
-        upa.append({"SubsidiaryCode":args.SubsidiaryCode})
+    upa = []
+    for key, value in vars(args).items():
+        if value is not None:
+            upa.append({key:value})
     if args.SubsidiaryTitle:
         upa.append({"SubsidiaryTitle":{"$regex": args.SubsidiaryTitle}})
-    if args.BranchCode:
-        upa.append({"BranchCode":args.BranchCode})
     if args.BranchTitle:
         upa.append({"BranchTitle":{"$regex": args.BranchTitle}})
-    if args.RefCode:
-        upa.append({"RefCode":args.RefCode})
     if args.Type:
         upa.append({"Type":{"$regex": args.Type}})
     if args.Title:
         upa.append({"Title":{"$regex": args.Title}})
-    # if args.MarketerID and args.Period:
-
     query = {
         "$and": upa}
 
@@ -316,22 +188,7 @@ async def search_marketer_ref_code(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30008", "status": 204})
-        # result = {}
-        # result["code"] = "Null"
-        # result["message"] = "Null"
-        # # result["totalCount"] = len(marketers)
-        # # result["pagedData"] = results
-        #
-        # resp = {
-        #     "result": result,
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "موردی برای متغیرهای داده شده یافت نشد.",
-        #         "code": "30003",
-        #     },
-        # }
-        # return JSONResponse(status_code=200, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 200})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
@@ -351,7 +208,6 @@ async def search_marketer_ref_code(
 
 @marketer_ref_code.delete(
     "/delete-marketer_ref_code",
-    # dependencies=[Depends(JWTBearer())],
     tags=["Factor - MarketerRefCode"],
 )
 @authorize(
@@ -380,45 +236,15 @@ async def delete_marketer_ref_code(
     Returns:
         _type_: _description_
     """
-    # role_perm = get_role_permission(request)
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Delete",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Factor.Delete",
-        "MarketerAdmin.Factor.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
-    # database = get_database()
-
     coll = database["MarketerRefCode"]
     if args.MarketerID:
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 400})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "IDP مارکتر را وارد کنید.",
-        #         "code": "30030",
-        #     },
-        # }
-        # return JSONResponse(status_code=400, content=resp)
     query_result = coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {"message": "موردی در دیتابیس یافت نشد.", "code": "30001"},
-        # }
-        # return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     result = [
         f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."
     ]

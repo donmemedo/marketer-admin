@@ -11,6 +11,7 @@ from src.auth.authentication import get_role_permission
 from src.tools.database import get_database
 from src.schemas.client_marketer import *
 from src.tools.utils import *
+from src.tools.queries import *
 from pymongo import MongoClient
 from khayyam import JalaliDatetime as jd
 from pymongo import MongoClient
@@ -53,20 +54,6 @@ async def get_marketer_profile(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
-
     marketers_coll = brokerage["marketers"]
     results = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
     if not args.IdpID:
@@ -80,16 +67,7 @@ async def get_marketer_profile(
             results.append(marketer_entity(marketers[i]))
 
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 204})
-        # resp = {
-        #     "result": [],
-        #     "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        #     "error": {
-        #         "message": "موردی با IDP داده شده یافت نشد.",
-        #         "code": "30004",
-        #     },
-        # }
-        # return JSONResponse(status_code=204, content=resp)
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
@@ -140,19 +118,6 @@ async def cal_marketer_cost(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
@@ -174,26 +139,13 @@ async def cal_marketer_cost(
         marketer_total = {}
         marketer_fullname = get_marketer_name(marketer)
         query = {"Referer": {"$regex": marketer_fullname}}
-
         fields = {"PAMCode": 1}
-
         customers_records = customers_coll.find(query, fields)
-
         trade_codes = [
             c.get("PAMCode") for c in customers_records
-        ]  # + [c.get("PAMCode") for c in firms_records]
-
-        from_gregorian_date = to_gregorian_(args.from_date)
-        to_gregorian_date = to_gregorian_(args.to_date)
-        to_gregorian_date = datetime.strptime(
-            to_gregorian_date, "%Y-%m-%d"
-        ) + timedelta(days=1)
-        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-        # #######
-        # from_gregorian_date = args.from_date
-        # to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-        # ######
+        ]
+        from_gregorian_date = args.from_date
+        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
         buy_pipeline = [
             {
@@ -271,7 +223,6 @@ async def cal_marketer_cost(
         sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
 
         buy_dict = {"vol": 0, "fee": 0}
-
         sell_dict = {"vol": 0, "fee": 0}
 
         if buy_agg_result:
@@ -455,19 +406,6 @@ async def factor_print(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
@@ -507,11 +445,6 @@ async def factor_print(
                 to_gregorian_date, "%Y-%m-%d"
             ) + timedelta(days=1)
             to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-            # #######
-            # from_gregorian_date = args.from_date
-            # to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-            # ######
 
             res = {
                 "TotalFee": marketer[dd + "TF"],

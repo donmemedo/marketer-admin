@@ -16,6 +16,7 @@ from pymongo import MongoClient
 from src.auth.authorization import authorize
 from src.tools.database import get_database
 from src.tools.utils import get_marketer_name, to_gregorian_
+from src.tools.queries import *
 
 
 client_volume_and_fee = APIRouter(prefix="/client/volume-and-fee")
@@ -51,120 +52,22 @@ async def get_user_total_trades(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
     factors_coll = brokerage["factors"]
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-    # #######
-    # from_gregorian_date = args.from_date
-    # to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-    # ######
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
 
     pipeline = [
-        {
-            "$match": {
-                "$and": [
-                    {"TradeCode": args.trade_code},
-                    {"TradeDate": {"$gte": from_gregorian_date}},
-                    {"TradeDate": {"$lte": to_gregorian_date}},
-                ]
-            }
-        },
-        {
-            "$project": {
-                "Price": 1,
-                "Volume": 1,
-                "Total": {"$multiply": ["$Price", "$Volume"]},
-                "TotalCommission": 1,
-                "PriorityAcceptance": 1,
-                "TradeItemBroker": 1,
-                "TradeCode": 1,
-                "Commission": {
-                    "$cond": {
-                        "if": {"$eq": ["$TradeType", 1]},
-                        "then": {
-                            "$add": [
-                                "$TotalCommission",
-                                {"$multiply": ["$Price", "$Volume"]},
-                            ]
-                        },
-                        "else": {
-                            "$subtract": [
-                                {"$multiply": ["$Price", "$Volume"]},
-                                "$TotalCommission",
-                            ]
-                        },
-                    }
-                },
-            }
-        },
-        {
-            "$group": {
-                "_id": "$TradeCode",
-                "TotalFee": {"$sum": "$TradeItemBroker"},
-                "TotalPureVolume": {"$sum": "$Commission"},
-                "TotalPriorityAcceptance": {"$sum": "$PriorityAcceptance"},
-            }
-        },
-        {
-            "$project": {
-                "_id": 0,
-                "TradeCode": "$_id",
-                "TotalPureVolume": {
-                    "$add": ["$TotalPriorityAcceptance", "$TotalPureVolume"]
-                },
-                "TotalFee": 1,
-            }
-        },
-        {
-            "$lookup": {
-                "from": "customers",
-                "localField": "TradeCode",
-                "foreignField": "PAMCode",
-                "as": "UserProfile",
-            }
-        },
-        {"$unwind": "$UserProfile"},
-        {
-            "$project": {
-                "TradeCode": 1,
-                "TotalFee": 1,
-                "TotalPureVolume": 1,
-                "FirstName": "$UserProfile.FirstName",
-                "LastName": "$UserProfile.LastName",
-                "Username": "$UserProfile.Username",
-                "Mobile": "$UserProfile.Mobile",
-                "RegisterDate": "$UserProfile.RegisterDate",
-                "BankAccountNumber": "$UserProfile.BankAccountNumber",
-                "FirmTitle": "$UserProfile.FirmTitle",
-                "Telephone": "$UserProfile.Telephone",
-                "FirmRegisterLocation": "$UserProfile.FirmRegisterLocation",
-                "Email": "$UserProfile.Email",
-                "ActivityField": "$UserProfile.ActivityField",
-            }
-        },
+        filter_users_stage([args.trade_code], from_gregorian_date, to_gregorian_date),
+        project_commission_stage(),
+        group_by_total_stage("$TradeCode"),
+        project_pure_stage(),
+        join_customers_stage(),
+        unwind_user_stage(),
+        project_fields_stage()
     ]
-
     res = next(brokerage.trades.aggregate(pipeline=pipeline), None)
     resp = {
         "result": res,
@@ -207,19 +110,6 @@ async def get_marketer_total_trades(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
@@ -251,118 +141,25 @@ async def get_marketer_total_trades(
 
         trade_codes = [
             c.get("PAMCode") for c in customers_records
-        ]  # + [c.get("PAMCode") for c in firms_records]
-
-        from_gregorian_date = to_gregorian_(args.from_date)
-        to_gregorian_date = to_gregorian_(args.to_date)
-        to_gregorian_date = datetime.strptime(
-            to_gregorian_date, "%Y-%m-%d"
-        ) + timedelta(days=1)
-        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-        # #######
-        # from_gregorian_date = args.from_date
-        # to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-        # ######
-
-        buy_pipeline = [
-            {
-                "$match": {
-                    "$and": [
-                        {"TradeCode": {"$in": trade_codes}},
-                        {"TradeDate": {"$gte": from_gregorian_date}},
-                        {"TradeDate": {"$lte": to_gregorian_date}},
-                        {"TradeType": 1},
-                    ]
-                }
-            },
-            {
-                "$project": {
-                    "Price": 1,
-                    "Volume": 1,
-                    "Total": {"$multiply": ["$Price", "$Volume"]},
-                    "TotalCommission": 1,
-                    "TradeItemBroker": 1,
-                    "Buy": {
-                        "$add": [
-                            "$TotalCommission",
-                            {"$multiply": ["$Price", "$Volume"]},
-                        ]
-                    },
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$id",
-                    "TotalFee": {"$sum": "$TradeItemBroker"},
-                    "TotalBuy": {"$sum": "$Buy"},
-                }
-            },
-            {"$project": {"_id": 0, "TotalBuy": 1, "TotalFee": 1}},
         ]
 
-        sell_pipeline = [
-            {
-                "$match": {
-                    "$and": [
-                        {"TradeCode": {"$in": trade_codes}},
-                        {"TradeDate": {"$gte": from_gregorian_date}},
-                        {"TradeDate": {"$lte": to_gregorian_date}},
-                        {"TradeType": 2},
-                    ]
-                }
-            },
-            {
-                "$project": {
-                    "Price": 1,
-                    "Volume": 1,
-                    "Total": {"$multiply": ["$Price", "$Volume"]},
-                    "TotalCommission": 1,
-                    "TradeItemBroker": 1,
-                    "Sell": {
-                        "$subtract": [
-                            {"$multiply": ["$Price", "$Volume"]},
-                            "$TotalCommission",
-                        ]
-                    },
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$id",
-                    "TotalFee": {"$sum": "$TradeItemBroker"},
-                    "TotalSell": {"$sum": "$Sell"},
-                }
-            },
-            {"$project": {"_id": 0, "TotalSell": 1, "TotalFee": 1}},
+        from_gregorian_date = args.from_date
+        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+
+        pipeline = [
+            filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
+            project_commission_stage(),
+            group_by_total_stage("id"),
+            project_pure_stage()
         ]
 
-        buy_agg_result = peek(trades_coll.aggregate(pipeline=buy_pipeline))
-        sell_agg_result = peek(trades_coll.aggregate(pipeline=sell_pipeline))
-
-        buy_dict = {"vol": 0, "fee": 0}
-
-        sell_dict = {"vol": 0, "fee": 0}
-
-        if buy_agg_result:
-            buy_dict["vol"] = buy_agg_result.get("TotalBuy")
-            buy_dict["fee"] = buy_agg_result.get("TotalFee")
-
-        if sell_agg_result:
-            sell_dict["vol"] = sell_agg_result.get("TotalSell")
-            sell_dict["fee"] = sell_agg_result.get("TotalFee")
-
-        marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
-        marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
+        marketer_total = next(brokerage.trades.aggregate(pipeline=pipeline), [])
         marketer_total["FirstName"] = marketer.get("FirstName")
         marketer_total["LastName"] = marketer.get("LastName")
 
         marketer_total["UsersCount"] = customers_coll.count_documents(
             {"Referer": {"$regex": marketer_fullname}}
         )
-        marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
-        marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")
-
         results.append(marketer_total)
 
     result = {}
@@ -415,19 +212,6 @@ async def users_list_by_volume(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    permissions = [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Client.Read",
-        "MarketerAdmin.Client.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-    allowed = check_permissions(role_perm["roles"], permissions)
-    if allowed:
-        pass
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized.")
     marketers_coll = brokerage["marketers"]
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
@@ -438,125 +222,24 @@ async def users_list_by_volume(
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
 
     marketer_fullname = get_marketer_name(query_result)
-
-    from_gregorian_date = to_gregorian_(args.from_date)
-    to_gregorian_date = to_gregorian_(args.to_date)
-    to_gregorian_date = datetime.strptime(to_gregorian_date, "%Y-%m-%d") + timedelta(
-        days=1
-    )
-    to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-    # #######
-    # from_gregorian_date = args.from_date
-    # to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-    # ######
-
-
-    query = {"Referer": {"$regex": marketer_fullname}}
-
-    trade_codes = brokerage.customers.distinct("PAMCode", query)
+    from_gregorian_date = args.from_date
+    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    query = {"RefererTitle": {"$regex": marketer_fullname}}
+    trade_codes = brokerage.customersbackup.distinct("TradeCodes", query)
 
     if args.user_type.value == "active":
         pipeline = [
-            {
-                "$match": {
-                    "$and": [
-                        {"TradeCode": {"$in": trade_codes}},
-                        {"TradeDate": {"$gte": from_gregorian_date}},
-                        {"TradeDate": {"$lte": to_gregorian_date}},
-                    ]
-                }
-            },
-            {
-                "$project": {
-                    "Price": 1,
-                    "Volume": 1,
-                    "Total": {"$multiply": ["$Price", "$Volume"]},
-                    "PriorityAcceptance": 1,
-                    "TotalCommission": 1,
-                    "TradeItemBroker": 1,
-                    "TradeCode": 1,
-                    "Commission": {
-                        "$cond": {
-                            "if": {"$eq": ["$TradeType", 1]},
-                            "then": {
-                                "$add": [
-                                    "$TotalCommission",
-                                    {"$multiply": ["$Price", "$Volume"]},
-                                ]
-                            },
-                            "else": {
-                                "$subtract": [
-                                    {"$multiply": ["$Price", "$Volume"]},
-                                    "$TotalCommission",
-                                ]
-                            },
-                        }
-                    },
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$TradeCode",
-                    "TotalFee": {"$sum": "$TradeItemBroker"},
-                    "TotalPureVolume": {"$sum": "$Commission"},
-                    "TotalPriorityAcceptance": {"$sum": "$PriorityAcceptance"},
-                }
-            },
-            {
-                "$project": {
-                    "_id": 0,
-                    "TradeCode": "$_id",
-                    "TotalPureVolume": {
-                        "$add": ["$TotalPriorityAcceptance", "$TotalPureVolume"]
-                    },
-                    "TotalFee": 1,
-                }
-            },
-            {
-                "$lookup": {
-                    "from": "customers",
-                    "localField": "TradeCode",
-                    "foreignField": "PAMCode",
-                    "as": "UserProfile",
-                }
-            },
-            {"$unwind": "$UserProfile"},
-            {
-                "$project": {
-                    "TradeCode": 1,
-                    "TotalFee": 1,
-                    "TotalPureVolume": 1,
-                    "FirstName": "$UserProfile.FirstName",
-                    "LastName": "$UserProfile.LastName",
-                    "Username": "$UserProfile.Username",
-                    "Mobile": "$UserProfile.Mobile",
-                    "RegisterDate": "$UserProfile.RegisterDate",
-                    "BankAccountNumber": "$UserProfile.BankAccountNumber",
-                    "FirmTitle": "$UserProfile.FirmTitle",
-                    "Telephone": "$UserProfile.Telephone",
-                    "FirmRegisterLocation": "$UserProfile.FirmRegisterLocation",
-                    "Email": "$UserProfile.Email",
-                    "ActivityField": "$UserProfile.ActivityField",
-                }
-            },
-            {"$sort": {args.sort_by.value: args.sort_order.value}},
-            {
-                "$facet": {
-                    "metadata": [{"$count": "total"}],
-                    "items": [
-                        {"$skip": (args.page - 1) * args.size},
-                        {"$limit": args.size},
-                    ],
-                }
-            },
-            {"$unwind": "$metadata"},
-            {
-                "$project": {
-                    "total": "$metadata.total",
-                    "items": 1,
-                }
-            },
+            filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
+            project_commission_stage(),
+            group_by_total_stage("$TradeCode"),
+            project_pure_stage(),
+            join_customers_stage(),
+            unwind_user_stage(),
+            project_fields_stage(),
+            sort_stage(args.sort_by.value, args.sort_order.value),
+            paginate_data(args.page, args.size),
+            unwind_metadata_stage(),
+            project_total_stage()
         ]
 
         active_dict = next(brokerage.trades.aggregate(pipeline=pipeline), {})
@@ -578,67 +261,31 @@ async def users_list_by_volume(
             },
         }
         return JSONResponse(status_code=200, content=resp)
+
     elif args.user_type.value == "inactive":
         active_users_pipeline = [
-            {
-                "$match": {
-                    "$and": [
-                        {"TradeCode": {"$in": trade_codes}},
-                        {"TradeDate": {"$gte": from_gregorian_date}},
-                        {"TradeDate": {"$lte": to_gregorian_date}},
-                    ]
-                }
-            },
-            {"$group": {"_id": "$TradeCode"}},
-            {"$project": {"_id": 0, "TradeCode": "$_id"}},
+            filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
+            group_by_trade_code_stage(),
+            project_by_trade_code_stage()
         ]
 
         active_users_res = brokerage.trades.aggregate(pipeline=active_users_pipeline)
         active_users_set = set(i.get("TradeCode") for i in active_users_res)
 
-        # check wether it is empty or not
-        inactive_uesrs_set = set(trade_codes) - active_users_set
+        # check whether it is empty or not
+        inactive_users_set = set(trade_codes) - active_users_set
 
-        inactive_users_pipline = [
-            {"$match": {"PAMCode": {"$in": list(inactive_uesrs_set)}}},
-            {
-                "$project": {
-                    "_id": 0,
-                    "TradeCode": 1,
-                    "FirstName": 1,
-                    "LastName": 1,
-                    "Username": 1,
-                    "Mobile": 1,
-                    "RegisterDate": 1,
-                    "BankAccountNumber": 1,
-                    "FirmTitle": 1,
-                    "Telephone": 1,
-                    "FirmRegisterDate": 1,
-                    "Email": 1,
-                    "ActivityField": 1,
-                }
-            },
-            {"$sort": {args.sort_by.value: args.sort_order.value}},
-            {
-                "$facet": {
-                    "metadata": [{"$count": "total"}],
-                    "items": [
-                        {"$skip": (args.page - 1) * args.size},
-                        {"$limit": args.size},
-                    ],
-                }
-            },
-            {"$unwind": "$metadata"},
-            {
-                "$project": {
-                    "total": "$metadata.total",
-                    "items": 1,
-                }
-            },
+        inactive_users_pipeline = [
+            match_inactive_users(list(inactive_users_set)),
+            project_inactive_users(),
+            sort_stage(args.sort_by.value, args.sort_order.value),
+            paginate_data(args.page, args.size),
+            unwind_metadata_stage(),
+            project_total_stage()
         ]
 
         inactive_dict = next(
-            brokerage.customers.aggregate(pipeline=inactive_users_pipline), {}
+            brokerage.customers.aggregate(pipeline=inactive_users_pipeline), {}
         )
 
         result = {}
