@@ -161,7 +161,7 @@ async def get_marketer_total_trades(
     for marketer in marketers_list:
         marketer_total = {}
         marketer_fullname = get_marketer_name(marketer)
-        query = {"Referer": {"$regex": marketer_fullname}}
+        query = {"Referer": marketer_fullname}
 
         fields = {"PAMCode": 1}
 
@@ -181,12 +181,12 @@ async def get_marketer_total_trades(
             project_pure_stage()
         ]
 
-        marketer_total = next(brokerage.trades.aggregate(pipeline=pipeline), [])
+        marketer_total = next(brokerage.trades.aggregate(pipeline=pipeline), {})
         marketer_total["FirstName"] = marketer.get("FirstName")
         marketer_total["LastName"] = marketer.get("LastName")
 
         marketer_total["UsersCount"] = customers_coll.count_documents(
-            {"Referer": {"$regex": marketer_fullname}}
+            {"Referer": marketer_fullname}
         )
         results.append(marketer_total)
 
@@ -265,7 +265,7 @@ async def users_list_by_volume(
     marketer_fullname = get_marketer_name(query_result)
     from_gregorian_date = args.from_date
     to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-    query = {"RefererTitle": {"$regex": marketer_fullname}}
+    query = {"RefererTitle": marketer_fullname}
     trade_codes = brokerage.customersbackup.distinct("TradeCodes", query)
 
     if args.user_type.value == "active":
