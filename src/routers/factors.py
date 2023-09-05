@@ -667,4 +667,57 @@ async def calculate_factor(
     # return ResponseOut(timeGenerated=datetime.now(), result=result, error="")
 
 
+@factors.get("/get-all", tags=["Factors"], response_model=None)
+@authorize(
+    [
+        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.All",
+        "MarketerAdmin.Factor.Read",
+        "MarketerAdmin.Factor.All",
+        "MarketerAdmin.Accounting.Read",
+        "MarketerAdmin.Accounting.All",
+    ]
+)
+async def get_marketer_all_factors(
+        request: Request,
+        role_perm: dict = Depends(get_role_permission),
+        args: AllFactors = Depends(AllFactors),
+        brokerage: MongoClient = Depends(get_database),
+):
+    factors_coll = brokerage[settings.FACTORS_COLLECTION]
+    upa = []
+    if args.MarketerID:
+        upa.append({"MarketerID": args.MarketerID})
+    if args.Period:
+        upa.append({"Period": args.Period})
+    if args.FactorStatus:
+        upa.append({"FactorStatus": args.FactorStatus})
+    if args.FactorID:
+        upa.append({"FactorID": args.FactorID})
+
+    results = []
+    filter = {"$and": upa}
+    query_result = list(factors_coll.find(filter, {"_id": False}).skip(args.size * args.page).limit(args.size))
+    if not query_result:
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+    factors = sorted(query_result, key=lambda d: d['Period'], reverse=True)  # list(query_result)
+
+    total_count = factors_coll.count_documents(filter)
+    results = []
+    for factor in factors:
+        results.append({factor.pop("FactorID"): factor})
+        # results.append(factor)
+
+    resp = {
+        "pagedData": results,
+        "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        "error": {
+            "message": "Null",
+            "code": "Null",
+        },
+        "totalCount": total_count
+    }
+    return JSONResponse(status_code=200, content=resp)
+
+
 add_pagination(factors)

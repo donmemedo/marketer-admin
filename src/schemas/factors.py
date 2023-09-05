@@ -117,6 +117,16 @@ class SearchFactorIn:
     page: int = Query(1, alias="PageNumber")
 
 
+@dataclass
+class AllFactors:
+
+    MarketerID: str = Query(None)
+    Period: str = Query(default=None)#str(current_year) + f"{current_month:02}"
+    FactorStatus: int = Query(None, alias="Status")
+    FactorID: str = None
+    ContractID: str = None
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass
