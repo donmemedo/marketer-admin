@@ -651,8 +651,8 @@ async def calculate_factor(
             result.pop("_id")
             results.append(result)
         except:
-            logger.critical(f"فاکتور مربوط به {result['MarketerID']} در دوره {result['Period']} با شماره {result['ID']} موجود است.")
-            result['Error'] = f"فاکتور مربوط به {result['MarketerID']} در دوره {result['Period']} با شماره {result['ID']} موجود است."
+            logger.critical(f"فاکتور مربوط به {result['MarketerID']} در دوره {result['Period']} با شماره {result['FactorID']} موجود است.")
+            result['Error'] = f"فاکتور مربوط به {result['MarketerID']} در دوره {result['Period']} با شماره {result['FactorID']} موجود است."
             result.pop("_id")
             results.append(result)
     resp = {
@@ -684,7 +684,7 @@ async def get_marketer_all_factors(
         args: AllFactors = Depends(AllFactors),
         brokerage: MongoClient = Depends(get_database),
 ):
-    factors_coll = brokerage[settings.FACTORS_COLLECTION]
+    factors_coll = brokerage[settings.FACTOR_COLLECTION]
     upa = []
     if args.MarketerID:
         upa.append({"MarketerID": args.MarketerID})
@@ -697,6 +697,8 @@ async def get_marketer_all_factors(
 
     results = []
     filter = {"$and": upa}
+    if not (args.MarketerID and args.Period and args.FactorStatus and args.FactorID):
+        filter = {}
     query_result = list(factors_coll.find(filter, {"_id": False}).skip(args.size * args.page).limit(args.size))
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
