@@ -18,7 +18,7 @@ from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
 
 
-tbs_data_crawler = APIRouter(prefix="/tbs-data-crawler")
+tbs_data_crawler = APIRouter(prefix="/tbs")
 
 
 class Cookie:
@@ -29,7 +29,7 @@ class Cookie:
 cookie = Cookie()
 
 
-@tbs_data_crawler.post("/cookie", tags=["Cookie"])
+@tbs_data_crawler.post("/cookie", tags=["TBS - Cookie"])
 @authorize(
     [
         "MarketerAdmin.All.Read",
@@ -53,7 +53,7 @@ async def set_cookie(
     return cookie.cookie
 
 
-@tbs_data_crawler.get("/cookie", tags=["Cookie"])
+@tbs_data_crawler.get("/cookie", tags=["TBS - Cookie"])
 @authorize(
     [
         "MarketerAdmin.All.Read",
@@ -74,7 +74,7 @@ async def get_cookie(
     return cookie.cookie
 
 
-@tbs_data_crawler.delete("/trades", tags=["Trades"])
+@tbs_data_crawler.delete("/trades", tags=["TBS - Trades"])
 @authorize(
     [
         "MarketerAdmin.All.Delete",
@@ -113,7 +113,7 @@ async def delete_trades(
         )
 
 
-@tbs_data_crawler.get("/trades", tags=["Trades"])
+@tbs_data_crawler.get("/trades", tags=["TBS - Trades"])
 @authorize(
     [
         "MarketerAdmin.All.Create",
@@ -239,7 +239,7 @@ async def get_trades(
         )
 
 
-@tbs_data_crawler.get("/customers", tags=["Customers"], response_model=None)
+@tbs_data_crawler.get("/customers", tags=["TBS - Customers"], response_model=None)
 @authorize(
     [
         "MarketerAdmin.All.Create",
@@ -412,7 +412,7 @@ async def get_customers(
         )
 
 
-@tbs_data_crawler.get("/reconciliation", tags=["Reconciliation"])
+@tbs_data_crawler.get("/reconciliation", tags=["TBS - Reconciliation"])
 @authorize(
     [
         "MarketerAdmin.All.Read",
