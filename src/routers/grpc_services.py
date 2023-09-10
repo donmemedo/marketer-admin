@@ -75,6 +75,7 @@ async def sync_marketers(
     else:
         print("Validation errors:", val.errors)
     db = get_database()
+    marketer_coll = database["newmarketerstss"]#[settings.MARKETER_COLLECTION]
     ins_results = []
     up_results = []
     for marketer in validate_request['PagedData']:
@@ -86,7 +87,8 @@ async def sync_marketers(
                 else:
                     update["$set"][key] = value
         try:
-            db.newmarketersss.insert_one(update["$set"])
+            update["$set"]["MarketerID"] = update["$set"].pop("Id")
+            marketer_coll.insert_one(update["$set"])
             try:
                 result = f"Marketer {marketer['Title']} with ID {marketer['Id']['value']} is inserted successfully."
                 logger.info(result)
@@ -98,8 +100,9 @@ async def sync_marketers(
         except:
             try:
                 update["$set"].pop("_id")
-                # To-Do: Check if something changes then update.
-                db.newmarketersss.update_one({"Id": update["$set"]["Id"]}, update)
+                # ToDo: Check if something changes then update.
+                # marketer_coll.update_one({"Id": update["$set"]["Id"]}, update)
+                marketer_coll.update_one({"MarketerID": update["$set"]["MarketerID"]}, update)
                 try:
                     result = f"Marketer {marketer['Title']} with ID {marketer['Id']['value']} is updated successfully."
                     logger.info(result)

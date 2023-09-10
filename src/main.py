@@ -22,6 +22,7 @@ from routers.factors import factors
 from routers.grpc_services import grpc_services
 from routers.marketer import marketer, marketer_relation
 from routers.user import user
+from routers.tbs_data_crawler import tbs_data_crawler
 from src.tools.database import get_database
 from src.tools.errors import get_error
 # from routers.subuser import subuser
@@ -104,4 +105,5 @@ app.include_router(user, prefix="")
 app.include_router(database, prefix="")
 app.include_router(factors, prefix="")
 app.include_router(grpc_services, prefix="")
+app.include_router(tbs_data_crawler, prefix="")
 # app.include_router(subuser, prefix="")

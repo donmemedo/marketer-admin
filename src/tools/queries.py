@@ -173,3 +173,14 @@ def project_inactive_users():
             "ActivityField": 1,
         }
     }
+
+
+def filter_trades(trade_codes, from_gregorian_date, to_gregorian_date, trade_type):
+    return {
+        "$and": [
+            {"TradeCode": {"$in": trade_codes}},
+            {"TradeDate": {"$gte": from_gregorian_date}},
+            {"TradeDate": {"$lte": to_gregorian_date}},
+            {"TradeType": trade_type},
+        ]
+    }

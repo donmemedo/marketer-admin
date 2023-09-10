@@ -30,13 +30,11 @@ class Settings(BaseSettings):
     CONTRACT_DEDUCTION_COLLECTION: str = "MarketerContractDeduction"
     REF_CODE_COLLECTION: str = "MarketerRefCode"
 
-
     OPENAPI_URL: str = ""
     ORIGINS: str = "*"
     ROOT_PATH: str = ""
     SWAGGER_TITLE: str = "Marketer Admin"
     VERSION: str = "1.5.3"
-    ROOT_PATH: str = ""
     # Added from Marketer
     JWKS_CONFIGURATION_URL: str = (
         "https://cluster.tech1a.co/.well-known/openid-configuration/jwks"
@@ -58,6 +56,15 @@ class Settings(BaseSettings):
     SPLUNK_HOST: str = "172.24.65.206"
     SPLUNK_PORT: int = 5141
     SPLUNK_INDEX: str = "dev"
+
+    TBS_TRADES_URL: str = "https://tbs.onlinetavana.ir/ClearingSettlement/ClrsReport/StockTradeSummaryAjaxLoadGrid?_dc=1687751713895&action=read"
+    TBS_PORTFOLIOS_URL: str = (
+        "https://tbs.onlinetavana.ir/CustomerManagement/Customer/AjaxReadPortfolio"
+    )
+    TBS_CUSTOMERS_URL: str = "https://tbs.onlinetavana.ir/CustomerManagement/Customer/TseAjaxRead?_dc=1692619454394&action=read"
+    DATE_STRING: str = "%Y-%m-%d"
+    FASTAPI_DOCS: str = "/docs"
+    FASTAPI_REDOC: str = "/redoc"
 
 
 settings = Settings()
