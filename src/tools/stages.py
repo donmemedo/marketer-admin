@@ -22,16 +22,22 @@ plan_three = {
     "2": {"start": 500000000000, "end": 700000000000, "marketer_share": 0.45},
     "3": {"start": 700000000000, "end": math.inf, "marketer_share": 0.5},
 }
-plan_four = {
-    "1": {"start": 0, "end": math.inf, "marketer_share": 0.42632},
-    "2": {"start": 0, "end": math.inf, "marketer_share": 0.35526},
-    "3": {"start": 0, "end": math.inf, "marketer_share": 0.4},
-    "4": {"start": 0, "end": math.inf, "marketer_share": 0.35},
+no_plan = {
+    "NoPlan": {"start": 0, "end": math.inf, "marketer_share": 0.1},
 }
+
+const_one = {"1": {"start": 0, "end": math.inf, "marketer_share": 0.42632}}
+const_two = {"1": {"start": 0, "end": math.inf, "marketer_share": 0.35526}}
+const_three = {"1": {"start": 0, "end": math.inf, "marketer_share": 0.4}}
+const_four = {"1": {"start": 0, "end": math.inf, "marketer_share": 0.35}}
 
 plans = {
     "جدول شماره ۱": plan_one,
     "جدول شماره ۲": plan_two,
     "جدول شماره ۳": plan_three,
-    "": plan_four,
+    "": no_plan,
+    "ثابت شماره ۱": const_one,
+    "ثابت شماره ۲": const_two,
+    "ثابت شماره ۳": const_three,
+    "ثابت شماره ۴": const_four,
 }

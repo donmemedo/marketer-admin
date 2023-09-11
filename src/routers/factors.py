@@ -504,27 +504,21 @@ async def calculate_factor(
     per = args.Period
     if args.MarketerID:
         marketers = [marketer_coll.find_one(
-            # {"IdpId": args.MarketerID}, {"_id": False}
             {"Id": args.MarketerID},
             {"_id": False},
         )]
     else:
         marketerrs = marketer_coll.find(
-            # {"IdpId": {"$exists": True, "$not": {"$size": 0}}}, {"_id": False}
             {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},
             {"_id": False},
         )
         marketers = list(marketerrs)
     results = []
     for marketer in marketers:
-        # query = {"RefererTitle": marketer['Title']}
-        # query = {"Referer": marketer["Title"]}
-        # query = {"Referer": get_marketer_name(marketer)}
         query = {"Referer": marketer["TbsReagentName"]}
         fields = {"PAMCode": 1}
 
         customers_records = customer_coll.find(query, fields)
-        # trade_codes = [c.get("TradeCodes") for c in customers_records]
         trade_codes = [c.get("PAMCode") for c in customers_records]
         gdate = jd.strptime(per, "%Y%m")
         from_gregorian_date = gdate.todatetime().isoformat()
@@ -613,34 +607,24 @@ async def calculate_factor(
         FTF = 0
         for i in followers:
             query = {"Referer": followers[i]["FollowerMarketerName"]}
-
             trade_codes = database.customers.distinct("PAMCode", query)
-            from_gregorian_date = args.from_date
-            to_gregorian_date = (
-                datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
-            ).strftime("%Y-%m-%d")
             pipeline = [
                 filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
                 project_commission_stage(),
                 group_by_total_stage("id"),
                 project_pure_stage(),
             ]
-            fresult = next(database.trades.aggregate(pipeline=pipeline), [])
+            fresult = next(database.trades.aggregate(pipeline=pipeline), {"TotalPureVolume": 0, "TotalFee": 0},)
             FTF = FTF + fresult["TotalFee"] * followers[i]["CommissionCoefficient"]
         additions = FTF
         # ToDo: TotalCMD AutoCalculation
         total_cmd = 0
-        # tmc = 0
-        # if args.Collateral:
-        #     additions = additions + args.Collateral
-        #     tmc = args.Collateral
         if args.Additions:
             additions = additions + args.Additions
         if args.Deductions:
             deductions = deductions + args.Deductions
         payment = final_fee + additions - deductions
         result = {
-            # "Title": get_marketer_name(marketer),#marketer["Title"],
             "MarketerID": marketer["Id"],  # marketer["MarketerID"],
             "Period": args.Period,
             "TotalTurnOver": marketer_total.get("TotalPureVolume"),  # TotalPureVolume
@@ -654,11 +638,9 @@ async def calculate_factor(
             "NextPlanDiff": next_plan,
             "Tax": int(tax),
             "CollateralOfThisMonth": int(collateral),
-            # "SumOfPreviousCollaterals": tmc,
-            "TotalFeeOfFollowers": FTF,
+            "TotalFeeOfFollowers": int(FTF),
             "SumOfAdditions": int(additions),
             "SumOfDeductions": int(deductions),
-            # "FinalFee": int(final_fee),
             "Status": 10,
             "Payment": int(payment),
         }
