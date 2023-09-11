@@ -65,8 +65,12 @@ async def add_marketer(
     for key, value in vars(ami).items():
         if value is not None:
             update["$set"][key] = value
-    update["$set"]["CreateDate"] = datetime.now().isoformat()#jd.today().strftime("%Y-%m-%d")
-    update["$set"]["ModifiedDate"] = datetime.now().isoformat()#jd.today().strftime("%Y-%m-%d")
+    update["$set"][
+        "CreateDate"
+    ] = datetime.now().isoformat()  # jd.today().strftime("%Y-%m-%d")
+    update["$set"][
+        "ModifiedDate"
+    ] = datetime.now().isoformat()  # jd.today().strftime("%Y-%m-%d")
 
     if ami.NationalID is not None:
         try:
@@ -138,7 +142,9 @@ async def modify_marketer(
     for key, value in vars(mmi).items():
         if value is not None:
             update["$set"][key] = value
-    update["$set"]["ModifiedDate"] = datetime.now().isoformat()#jd.today().strftime("%Y-%m-%d")
+    update["$set"][
+        "ModifiedDate"
+    ] = datetime.now().isoformat()  # jd.today().strftime("%Y-%m-%d")
 
     if mmi.NewIdpId is not None:
         # update["$set"]["IdpId"] = mmi.NewIdpId
@@ -304,21 +310,17 @@ async def add_marketers_relations(
         update["$set"]["EndDate"] = mrel.EndDate
         try:
             # update["$set"]["GEndDate"] = (
-                (jd.strptime(
-                update["$set"]["EndDate"], "%Y-%m-%d"
-            ).todatetime())
+            (jd.strptime(update["$set"]["EndDate"], "%Y-%m-%d").todatetime())
         except:
             raise RequestValidationError(
                 TypeError, body={"code": "30017", "status": 412}
             )
     else:
         # update["$set"]["GEndDate"] = (
-            jd.strptime("1500-12-29", "%Y-%m-%d").todatetime()
+        jd.strptime("1500-12-29", "%Y-%m-%d").todatetime()
     try:
         # update["$set"]["GStartDate"] = (
-            (jd.strptime(
-            update["$set"]["StartDate"], "%Y-%m-%d"
-        ).todatetime())
+        (jd.strptime(update["$set"]["StartDate"], "%Y-%m-%d").todatetime())
     except:
         raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
     if marketers_coll.find_one(
@@ -326,7 +328,8 @@ async def add_marketers_relations(
         {"Id": mrel.FollowerMarketerID}
     ) and marketers_coll.find_one(
         # {"IdpId": mrel.LeaderMarketerID}):
-        {"Id": mrel.LeaderMarketerID}):
+        {"Id": mrel.LeaderMarketerID}
+    ):
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
@@ -336,8 +339,12 @@ async def add_marketers_relations(
     # update["$set"]["LeaderMarketerName"] = get_marketer_name(
     #     marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID})
     # )
-    update["$set"]["FollowerMarketerName"] = marketers_coll.find_one({"IdpId": mrel.FollowerMarketerID})['TbsReagentName']
-    update["$set"]["LeaderMarketerName"] = marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID})['TbsReagentName']
+    update["$set"]["FollowerMarketerName"] = marketers_coll.find_one(
+        {"IdpId": mrel.FollowerMarketerID}
+    )["TbsReagentName"]
+    update["$set"]["LeaderMarketerName"] = marketers_coll.find_one(
+        {"IdpId": mrel.LeaderMarketerID}
+    )["TbsReagentName"]
 
     marketers_relations_coll.insert_one(update["$set"])
 
@@ -419,9 +426,7 @@ async def modify_marketers_relations(
         update["$set"]["StartDate"] = mrel.StartDate
         try:
             # update["$set"]["GStartDate"] = (
-            (jd.strptime(
-                update["$set"]["StartDate"], "%Y-%m-%d"
-            ).todatetime())
+            (jd.strptime(update["$set"]["StartDate"], "%Y-%m-%d").todatetime())
         except:
             raise RequestValidationError(
                 TypeError, body={"code": "30018", "status": 412}
@@ -430,16 +435,14 @@ async def modify_marketers_relations(
         update["$set"]["EndDate"] = mrel.EndDate
         try:
             # update["$set"]["GEndDate"] = (
-                (jd.strptime(
-                update["$set"]["EndDate"], "%Y-%m-%d"
-            ).todatetime())
+            (jd.strptime(update["$set"]["EndDate"], "%Y-%m-%d").todatetime())
         except:
             raise RequestValidationError(
                 TypeError, body={"code": "30017", "status": 412}
             )
         # if update["$set"]["GEndDate"] < update["$set"]["GStartDate"]:
         if update["$set"]["EndDate"] < update["$set"]["StartDate"]:
-                raise RequestValidationError(
+            raise RequestValidationError(
                 TypeError, body={"code": "30071", "status": 400}
             )
 
@@ -606,8 +609,12 @@ async def delete_marketers_relations(
     # LeaderMarketerName = get_marketer_name(
     #     marketers_coll.find_one({"IdpId": args.LeaderMarketerID})
     # )
-    FollowerMarketerName = marketers_coll.find_one({"IdpId": args.FollowerMarketerID})['TbsReagentName']
-    LeaderMarketerName = marketers_coll.find_one({"IdpId": args.LeaderMarketerID})['TbsReagentName']
+    FollowerMarketerName = marketers_coll.find_one({"IdpId": args.FollowerMarketerID})[
+        "TbsReagentName"
+    ]
+    LeaderMarketerName = marketers_coll.find_one({"IdpId": args.LeaderMarketerID})[
+        "TbsReagentName"
+    ]
 
     qqq = marketers_relations_coll.find_one(
         {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
@@ -676,7 +683,9 @@ async def users_diff_with_tbs(
         {"Referer": marketer_fullname}, {"PAMCode": 1}
     )
     # firms_records = firms_coll.find({"Referer": marketer_fullname}, {"PAMCode": 1})
-    trade_codes = [c.get("PAMCode") for c in customers_records]# + [c.get("PAMCode") for c in firms_records]
+    trade_codes = [
+        c.get("PAMCode") for c in customers_records
+    ]  # + [c.get("PAMCode") for c in firms_records]
     try:
         to_date = jd(datetime.strptime(args.to_date, "%Y-%m-%d")).date().isoformat()
         from_date = jd(datetime.strptime(args.from_date, "%Y-%m-%d")).date().isoformat()
@@ -730,7 +739,7 @@ async def users_list_by_volume(
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
     # marketer_fullname = get_marketer_name(query_result)
-    marketer_fullname = query_result['TbsReagentName']
+    marketer_fullname = query_result["TbsReagentName"]
 
     from_gregorian_date = args.from_date
     to_gregorian_date = (

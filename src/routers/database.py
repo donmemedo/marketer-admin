@@ -113,7 +113,9 @@ async def get_firms(
     """
     user_id = role_perm["sub"]
     try:
-        firm_collection = brokerage[settings.CUSTOMER_COLLECTION] #brokerage[settings.FIRMS_COLLECTION]
+        firm_collection = brokerage[
+            settings.CUSTOMER_COLLECTION
+        ]  # brokerage[settings.FIRMS_COLLECTION]
     except errors.CollectionInvalid as err:
         logger.error("No Connection to Collection", err)
     try:
@@ -316,7 +318,9 @@ def firm_getter(size=10, date="2023-01-31"):
         date (str, optional): Date. Defaults to "2023-01-31".
     """
     brokerage = get_database()
-    firm_collection = brokerage[settings.CUSTOMER_COLLECTION] #brokerage[settings.FIRMS_COLLECTION]
+    firm_collection = brokerage[
+        settings.CUSTOMER_COLLECTION
+    ]  # brokerage[settings.FIRMS_COLLECTION]
 
     temp_req = requests.get(
         "https://tadbirwrapper.tavana.net/tadbir/GetFirmList",

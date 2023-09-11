@@ -2,19 +2,23 @@ from pydantic import BaseModel
 from datetime import date, datetime
 from typing import List, Any, Optional
 from fastapi import Query
+from dataclasses import dataclass
 
 
-class TradesIn(BaseModel):
-    trade_date: date = Query(default=date.today(),alias="TradeDate")
+@dataclass
+class TradesIn:
+    trade_date: date = Query(default=date.today(), alias="TradeDate")
     cookie: str = Query(alias="Cookie")
 
 
-class PortfolioIn(BaseModel):
+@dataclass
+class PortfolioIn:
     cookie: str = Query(alias="Cookie")
 
 
-class DeleteTradesIn(BaseModel):
-    trade_date: date = Query(default=date.today(),alias="TradeDate")
+@dataclass
+class DeleteTradesIn:
+    trade_date: date = Query(default=date.today(), alias="TradeDate")
 
 
 class ResponseOut(BaseModel):
@@ -23,16 +27,19 @@ class ResponseOut(BaseModel):
     error: str
 
 
-class CustomersIn(BaseModel):
+@dataclass
+class CustomersIn:
     register_date: Optional[date] = Query(alias="RegisterDate", default=None)
     modified_date: Optional[date] = Query(alias="ModifiedDate", default=None)
 
 
-class ReconciliationIn(BaseModel):
+@dataclass
+class ReconciliationIn:
     MarketerID: Optional[str] = Query(alias="MarketerID", default=None)
-    start_date: Optional[date] = Query(alias="StartDate", default=date.today())
-    end_date: Optional[date] = Query(alias="EndDate", default=date.today())
+    start_date: Optional[date] = Query(alias="StartDate", default=None)
+    end_date: Optional[date] = Query(alias="EndDate", default=None)
 
 
-class CookieIn(BaseModel):
+@dataclass
+class CookieIn:
     cookie_value: str

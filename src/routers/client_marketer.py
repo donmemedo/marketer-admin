@@ -18,6 +18,7 @@ from src.tools.database import get_database
 from src.tools.utils import *
 from src.tools.utils import peek, to_gregorian_
 from src.config import settings
+
 client_marketer = APIRouter(prefix="/client/marketer")
 
 
@@ -57,7 +58,9 @@ async def get_marketer_profile(
     if not args.IdpID:
         total_count = marketers_coll.count_documents({})
         query_result = (
-            marketers_coll.find({},{"_id":0}).skip(args.size * args.page).limit(args.size)
+            marketers_coll.find({}, {"_id": 0})
+            .skip(args.size * args.page)
+            .limit(args.size)
         )
         results = []
         # marketers = dict(enumerate(query_result))
@@ -140,14 +143,14 @@ async def cal_marketer_cost(
     marketers_list = list(marketers_query)
     total_count = marketers_coll.count_documents(
         # {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
-          {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}}
+        {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}}
     )
     results = []
     for marketer in marketers_list:
         marketer_total = {}
         # marketer_fullname = get_marketer_name(marketer)
         # query = {"Referer": marketer_fullname}
-        query = {"Referer": marketer['TbsReagentName']}
+        query = {"Referer": marketer["TbsReagentName"]}
         fields = {"PAMCode": 1}
         customers_records = customers_coll.find(query, fields)
         trade_codes = [c.get("PAMCode") for c in customers_records]
@@ -250,7 +253,7 @@ async def cal_marketer_cost(
 
         marketer_total["UsersCount"] = customers_coll.count_documents(
             # {"Referer": marketer_fullname}
-            {"Referer": marketer['TbsReagentName']}
+            {"Referer": marketer["TbsReagentName"]}
         )
         marketer_total["TotalPureVolume"] = buy_dict.get("vol") + sell_dict.get("vol")
         marketer_total["TotalFee"] = buy_dict.get("fee") + sell_dict.get("fee")

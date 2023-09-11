@@ -94,7 +94,6 @@ class ResponseListOut:
 
 @dataclass
 class MarketerRelations:
-
     LeaderMarketerID: str
     FollowerMarketerID: str
     CommissionCoefficient: float
@@ -104,14 +103,12 @@ class MarketerRelations:
 
 @dataclass
 class DelMarketerRelations:
-
     LeaderMarketerID: str
     FollowerMarketerID: str
 
 
 @dataclass
 class SearchMarketerRelations:
-
     LeaderMarketerName: str = None
     LeaderMarketerID: str = None
     FollowerMarketerName: str = None

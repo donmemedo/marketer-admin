@@ -56,7 +56,7 @@ async def get_user_profile(
         # marketer_fullname = get_marketer_name(query_result)
         pipeline = [
             # {"$match": {"$and": [{"Referer": marketer_fullname}]}},
-            {"$match": {"$and": [{"Referer": query_result['TbsReagentName']}]}},
+            {"$match": {"$and": [{"Referer": query_result["TbsReagentName"]}]}},
             {
                 "$project": {
                     "Name": {"$concat": ["$FirstName", " ", "$LastName"]},

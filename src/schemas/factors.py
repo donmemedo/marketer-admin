@@ -73,11 +73,15 @@ class ModifyBaseFactorIn:
     MarketerID: str
     Period: str = str(current_year) + f"{current_month:02}"
     FactorID: str = None
-    TotalTurnOver: int = Query(None, alias="TotalTurnOver")#TotalPureVolume
-    TotalBrokerCommission: int = Query(None, alias="TotalBrokerCommission")#TotalFee
+    TotalTurnOver: int = Query(None, alias="TotalTurnOver")  # TotalPureVolume
+    TotalBrokerCommission: int = Query(None, alias="TotalBrokerCommission")  # TotalFee
     TotalCMD: int = None
-    TotalNetBrokerCommission: int = Query(None, alias="TotalNetBrokerCommission")#PureFee
-    MarketerCommissionIncome: int = Query(None, alias="MarketerCommissionIncome")#MarketerFee
+    TotalNetBrokerCommission: int = Query(
+        None, alias="TotalNetBrokerCommission"
+    )  # PureFee
+    MarketerCommissionIncome: int = Query(
+        None, alias="MarketerCommissionIncome"
+    )  # MarketerFee
     FollowersIncome: int = None
     IsCmdConcluded: bool = False
     MaketerCMDIncome: int = None
@@ -107,7 +111,6 @@ class ResponseListOut:
 
 @dataclass
 class SearchFactorIn:
-
     MarketerID: str = Query(None)
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
     FactorStatus: int = Query(None, alias="Status")
@@ -119,9 +122,8 @@ class SearchFactorIn:
 
 @dataclass
 class AllFactors:
-
     MarketerID: str = Query(None)
-    Period: str = Query(default=None)#str(current_year) + f"{current_month:02}"
+    Period: str = Query(default=None)  # str(current_year) + f"{current_month:02}"
     FactorStatus: int = Query(None, alias="Status")
     FactorID: str = None
     ContractID: str = None
@@ -131,7 +133,6 @@ class AllFactors:
 
 @dataclass
 class DeleteFactorIn:
-
     MarketerID: str = None
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
     ID: str = None
@@ -140,7 +141,6 @@ class DeleteFactorIn:
 
 @dataclass
 class CalFactorIn:
-
     MarketerID: str = Query(None)
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
     # Collateral: int = 0

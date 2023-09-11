@@ -715,7 +715,6 @@ def total_users_cost(
         )
 
     for trade_codes in total_codes:
-
         pipeline = [
             {
                 "$match": {

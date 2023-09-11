@@ -13,9 +13,7 @@ current_year = JalaliDatetime.today().year
 
 from datetime import date
 
-current_date = (
-    date.today().isoformat()
-)
+current_date = date.today().isoformat()
 
 
 @dataclass
@@ -109,7 +107,6 @@ class ResponseListOut:
 
 @dataclass
 class SearchFactorIn:
-
     MarketerID: str = Query("")
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
     FactorStatus: int = Query(None, alias="Status")
@@ -119,7 +116,6 @@ class SearchFactorIn:
 
 @dataclass
 class DeleteFactorIn:
-
     MarketerID: str = None
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
     ID: str = None
@@ -128,7 +124,6 @@ class DeleteFactorIn:
 
 @dataclass
 class CalFactorIn:
-
     MarketerID: str = Query("")
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
 

@@ -102,7 +102,6 @@ class ResponseListOut:
 
 @dataclass
 class SearchFactorIn:
-
     MarketerID: str = Query("")
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
 
