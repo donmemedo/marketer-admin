@@ -126,7 +126,7 @@ class AllFactors:
     Period: str = Query(default=None)  # str(current_year) + f"{current_month:02}"
     FactorStatus: int = Query(None, alias="Status")
     FactorID: str = None
-    ContractID: str = None
+    # ContractID: str = None
     size: int = Query(10, alias="PageSize")
     page: int = Query(0, alias="PageNumber")
 

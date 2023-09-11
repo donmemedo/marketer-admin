@@ -514,7 +514,7 @@ async def calculate_factor(
             {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},
             {"_id": False},
         )
-        marketers = dict(enumerate(marketerrs))
+        marketers = list(marketerrs)
     results = []
     for marketer in marketers:
         # query = {"RefererTitle": marketer['Title']}
@@ -717,7 +717,7 @@ async def get_marketer_all_factors(
 
     results = []
     filter = {"$and": upa}
-    if not (args.MarketerID and args.Period and args.FactorStatus and args.FactorID):
+    if not (args.MarketerID or args.Period or args.FactorStatus or args.FactorID):
         filter = {}
     query_result = list(
         factors_coll.find(filter, {"_id": False})
