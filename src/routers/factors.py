@@ -27,10 +27,10 @@ from src.config import settings
 factors = APIRouter(prefix="/factor")
 
 
-@factors.post(
-    "/base/add",
-    tags=["Factors - Base"],
-)
+# @factors.post(
+#     "/base/add",
+#     tags=["Factors - Base"],
+# )
 @authorize(
     [
         "MarketerAdmin.All.Write",
@@ -103,8 +103,8 @@ async def add_base_factor(
 
 
 @factors.put(
-    "/base/modify",
-    tags=["Factors - Base"],
+    "/base",#/modify",
+    tags=["Factors"],# - Base"],
 )
 @authorize(
     [
@@ -164,10 +164,10 @@ async def modify_base_factor(
     )
 
 
-@factors.post(
-    "/accounting/add",
-    tags=["Factors - Accounting"],
-)
+# @factors.post(
+#     "/accounting/add",
+#     tags=["Factors - Accounting"],
+# )
 @authorize(
     [
         "MarketerAdmin.All.Write",
@@ -241,8 +241,8 @@ async def add_accounting_factor(
 
 
 @factors.put(
-    "/accounting/modify",
-    tags=["Factors - Accounting"],
+    "/accounting",#/modify",
+    tags=["Factors"],# - Accounting"],
 )
 @authorize(
     [
@@ -643,6 +643,34 @@ async def calculate_factor(
             "SumOfDeductions": int(deductions),
             "Status": 10,
             "Payment": int(payment),
+
+            "IsCmdConcluded": False,
+            "MaketerCMDIncome": 0,
+
+            "TaxDeduction": 0,
+            "TaxCoefficient": 0,
+            "CollateralDeduction": 0,
+            "CollateralCoefficient": 0,
+            "InsuranceDeduction": 0,
+            "InsuranceCoefficient": 0,
+            "MarketerTotalIncome": 0,
+            "CalculationCoefficient": 0,
+            "ReturnDuration": 0,
+            "InterimAmountDeduction": 0,
+            "EmployeeSalaryDeduction": 0,
+            "EmployerInsuranceDeduction": 0,
+            "RedemptionDeduction": 0,
+            "OtherDeduction": 0,
+            "OtherDeductionDescription": " ",
+            "CmdPayment": 0,
+            "CollateralReturnPayment": 0,
+            "InsuranceReturnPayment": 0,
+            "OtherPayment": 0,
+            "OtherPaymentDescription": " ",
+
+            "CreateDateTime": jd.now().isoformat(),
+            "UpdateDateTime": jd.now().isoformat(),
+
         }
         try:
             factor_coll.insert_one(result)

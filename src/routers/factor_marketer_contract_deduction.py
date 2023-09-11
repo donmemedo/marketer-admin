@@ -24,7 +24,7 @@ marketer_contract_deduction = APIRouter(prefix="/marketer-contract-deduction")
 
 @marketer_contract_deduction.post(
     "/add",
-    tags=["Factor - MarketerContractDeduction"],
+    tags=["MarketerContractDeduction"],
 )
 @authorize(
     [
@@ -86,7 +86,7 @@ async def add_marketer_contract_deduction(
 
 @marketer_contract_deduction.put(
     "/modify",
-    tags=["Factor - MarketerContractDeduction"],
+    tags=["MarketerContractDeduction"],
 )
 @authorize(
     [
@@ -140,7 +140,7 @@ async def modify_marketer_contract_deduction(
 
 @marketer_contract_deduction.get(
     "/search",
-    tags=["Factor - MarketerContractDeduction"],
+    tags=["MarketerContractDeduction"],
 )
 @authorize(
     [
@@ -229,7 +229,7 @@ async def search_marketer_contract_deduction(
 
 @marketer_contract_deduction.delete(
     "/delete",
-    tags=["Factor - MarketerContractDeduction"],
+    tags=["MarketerContractDeduction"],
 )
 @authorize(
     [

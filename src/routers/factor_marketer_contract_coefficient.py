@@ -24,7 +24,7 @@ marketer_contract_coefficient = APIRouter(prefix="/marketer-contract-coefficient
 
 @marketer_contract_coefficient.post(
     "/add",
-    tags=["Factor - MarketerContractCoefficient"],
+    tags=["MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -85,7 +85,7 @@ async def add_marketer_contract_coefficient(
 
 @marketer_contract_coefficient.put(
     "/modify",
-    tags=["Factor - MarketerContractCoefficient"],
+    tags=["MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -139,7 +139,7 @@ async def modify_marketer_contract_coefficient(
 
 @marketer_contract_coefficient.get(
     "/search",
-    tags=["Factor - MarketerContractCoefficient"],
+    tags=["MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -209,7 +209,7 @@ async def search_marketer_contract_coefficient(
 
 @marketer_contract_coefficient.delete(
     "/delete",
-    tags=["Factor - MarketerContractCoefficient"],
+    tags=["MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -260,7 +260,7 @@ async def delete_marketer_contract_coefficient(
 
 @marketer_contract_coefficient.put(
     "/modify-status",
-    tags=["Factor - MarketerContractCoefficient"],
+    tags=["MarketerContractCoefficient"],
 )
 @authorize(
     [

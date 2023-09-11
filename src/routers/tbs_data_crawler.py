@@ -29,7 +29,7 @@ class Cookie:
 cookie = Cookie()
 
 
-@tbs_data_crawler.post("/cookie", tags=["TBS - Cookie"])
+# @tbs_data_crawler.post("/cookie", tags=["TBS - Cookie"])
 @authorize(
     [
         "MarketerAdmin.All.Read",
@@ -53,7 +53,7 @@ async def set_cookie(
     return cookie.cookie
 
 
-@tbs_data_crawler.get("/cookie", tags=["TBS - Cookie"])
+# @tbs_data_crawler.get("/cookie", tags=["TBS - Cookie"])
 @authorize(
     [
         "MarketerAdmin.All.Read",
@@ -113,7 +113,7 @@ async def delete_trades(
         )
 
 
-@tbs_data_crawler.get("/trades", tags=["TBS - Trades"])
+# @tbs_data_crawler.get("/trades", tags=["TBS - Trades"])
 @authorize(
     [
         "MarketerAdmin.All.Create",
@@ -239,7 +239,7 @@ async def get_trades(
         )
 
 
-@tbs_data_crawler.get("/customers", tags=["TBS - Customers"], response_model=None)
+# @tbs_data_crawler.get("/customers", tags=["TBS - Customers"], response_model=None)
 @authorize(
     [
         "MarketerAdmin.All.Create",

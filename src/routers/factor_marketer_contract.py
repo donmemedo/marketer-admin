@@ -24,7 +24,7 @@ marketer_contract = APIRouter(prefix="/marketer-contract")
 
 @marketer_contract.post(
     "/add",
-    tags=["Factor - MarketerContract"],
+    tags=["MarketerContract"],
 )
 @authorize(
     [
@@ -90,7 +90,7 @@ async def add_marketer_contract(
 
 @marketer_contract.put(
     "/modify",
-    tags=["Factor - MarketerContract"],
+    tags=["MarketerContract"],
 )
 @authorize(
     [
@@ -144,7 +144,7 @@ async def modify_marketer_contract(
 
 @marketer_contract.get(
     "/search",
-    tags=["Factor - MarketerContract"],
+    tags=["MarketerContract"],
 )
 @authorize(
     [
@@ -234,7 +234,7 @@ async def search_marketer_contract(
 
 @marketer_contract.delete(
     "/delete",
-    tags=["Factor - MarketerContract"],
+    tags=["MarketerContract"],
 )
 @authorize(
     [
@@ -283,7 +283,7 @@ async def delete_marketer_contract(
 
 @marketer_contract.put(
     "/modify-status",
-    tags=["Factor - MarketerContract"],
+    tags=["MarketerContract"],
 )
 @authorize(
     [
