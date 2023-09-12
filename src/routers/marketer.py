@@ -24,10 +24,10 @@ marketer = APIRouter(prefix="/marketer")
 marketer_relation = APIRouter(prefix="/marketer-relation")
 
 
-@marketer.post(
-    "/add",
-    tags=["Marketer"],
-)
+# @marketer.post(
+#     "/add",
+#     tags=["Marketer"],
+# )
 @authorize(
     [
         "MarketerAdmin.All.Create",
@@ -97,10 +97,10 @@ async def add_marketer(
     )
 
 
-@marketer.put(
-    "/modify",
-    tags=["Marketer"],
-)
+# @marketer.put(
+#     "/modify",
+#     tags=["Marketer"],
+# )
 @authorize(
     [
         "MarketerAdmin.All.Write",
@@ -340,10 +340,10 @@ async def add_marketers_relations(
     #     marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID})
     # )
     update["$set"]["FollowerMarketerName"] = marketers_coll.find_one(
-        {"IdpId": mrel.FollowerMarketerID}
+        {"Id": mrel.FollowerMarketerID}
     )["TbsReagentName"]
     update["$set"]["LeaderMarketerName"] = marketers_coll.find_one(
-        {"IdpId": mrel.LeaderMarketerID}
+        {"Id": mrel.LeaderMarketerID}
     )["TbsReagentName"]
 
     marketers_relations_coll.insert_one(update["$set"])
@@ -631,11 +631,11 @@ async def delete_marketers_relations(
     )
 
 
-@marketer.get(
-    "/users-diff-marketer",
-    tags=["Marketer"],
-    response_model=None,
-)
+# @marketer.get(
+#     "/users-diff-marketer",
+#     tags=["Marketer"],
+#     response_model=None,
+# )
 @authorize(
     [
         "MarketerAdmin.All.Read",

@@ -18,7 +18,7 @@ from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
 
 
-tbs_data_crawler = APIRouter(prefix="/tbs")
+tbs_data_crawler = APIRouter()#prefix="/tbs")
 
 
 class Cookie:
@@ -74,7 +74,7 @@ async def get_cookie(
     return cookie.cookie
 
 
-@tbs_data_crawler.delete("/trades", tags=["TBS - Trades"])
+@tbs_data_crawler.delete("/trades", tags=["TBS"])# - Trades"])
 @authorize(
     [
         "MarketerAdmin.All.Delete",
@@ -412,7 +412,7 @@ async def get_customers(
         )
 
 
-@tbs_data_crawler.get("/reconciliation", tags=["TBS - Reconciliation"])
+@tbs_data_crawler.get("/reconciliation", tags=["TBS"])# - Reconciliation"])
 @authorize(
     [
         "MarketerAdmin.All.Read",
