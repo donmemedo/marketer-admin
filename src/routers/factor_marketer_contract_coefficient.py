@@ -182,7 +182,10 @@ async def search_marketer_contract_coefficient(
         upa.append({"ContractID": {"$regex": args.ContractID}})
     if args.Title:
         upa.append({"Title": {"$regex": args.Title}})
-    query = {"$and": upa}
+    if upa:
+        query = {"$and": upa}
+    else:
+        query = {}
 
     query_result = coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))

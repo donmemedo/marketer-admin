@@ -54,10 +54,12 @@ class UsersTotalPureIn:
 
 @dataclass
 class MarketersProfileIn:
-    first_name: str = Query("")
-    last_name: str = Query("")
-    mobile: int = Query("")
-    register_date: str = Query("")
+    # first_name: str = Query("")
+    Title: str = Query(default=None)
+    UniqueId: str = Query(default=None)
+    # last_name: str = Query("")
+    Mobile: str = Query(default=None)
+    # register_date: str = Query("")
 
 
 @dataclass

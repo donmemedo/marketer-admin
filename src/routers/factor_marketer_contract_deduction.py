@@ -201,7 +201,10 @@ async def search_marketer_contract_deduction(
         upa.append({"Title": {"$regex": args.Title}})
     if args.ReturnDuration:
         upa.append({"ReturnDuration": {"$gte": args.ReturnDuration}})
-    query = {"$and": upa}
+    if upa:
+        query = {"$and": upa}
+    else:
+        query = {}
 
     query_result = coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))

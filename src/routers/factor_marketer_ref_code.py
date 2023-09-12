@@ -191,7 +191,11 @@ async def search_marketer_ref_code(
         upa.append({"Type": {"$regex": args.Type}})
     if args.Title:
         upa.append({"Title": {"$regex": args.Title}})
-    query = {"$and": upa}
+    if upa:
+        query = {"$and": upa}
+    else:
+        query = {}
+
 
     query_result = coll.find(query, {"_id": False})
     marketers = dict(enumerate(query_result))

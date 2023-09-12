@@ -82,7 +82,7 @@ class ModifyBaseFactorIn:
     MarketerCommissionIncome: int = Query(
         None, alias="MarketerCommissionIncome"
     )  # MarketerFee
-    FollowersIncome: int = None
+    TotalFeeOfFollowers: int = None
     IsCmdConcluded: bool = False
     MaketerCMDIncome: int = None
     CreateDateTime: str = None

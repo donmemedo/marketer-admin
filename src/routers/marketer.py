@@ -201,28 +201,28 @@ async def search_user_profile(
     """
     user_id = role_perm["sub"]
     marketer_coll = brokerage[settings.MARKETER_COLLECTION]
-    query = {
-        "$and": [
-            {"FirstName": {"$regex": args.first_name}},
-            {"LastName": {"$regex": args.last_name}},
-            {"CreateDate": {"$regex": args.register_date}},
-        ]
-    }
+    upa = []
 
-    filter = {
-        "FirstName": {"$regex": args.first_name},
-        "LastName": {"$regex": args.last_name},
-        "RegisterDate": {"$regex": args.register_date},
-    }
+    if args.UniqueId:
+        upa.append({"UniqueId": args.UniqueId})
+    if args.Mobile:
+        upa.append({"Mobile": args.Mobile})
+    if args.Title:
+        upa.append({"Title": {"$regex": args.Title}})
+    if upa:
+        query = {"$and": upa}
+    else:
+        query = {}
+
     results = []
     try:
         query_result = marketer_coll.find_one(query, {"_id": False})
     except:
         raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
     query_result = marketer_coll.find(query, {"_id": False})
-    marketers = dict(enumerate(query_result))
+    marketers = list(query_result)
     for i in range(len(marketers)):
-        results.append(marketer_entity(marketers[i]))
+        results.append(marketers[i])
     if not results:
         raise RequestValidationError(TypeError, body={"code": "30008", "status": 200})
     return ResponseListOut(
@@ -509,7 +509,11 @@ async def search_marketers_relations(
 
     marketers_relations_coll = database[settings.RELATIONS_COLLECTION]
     upa = []
-    query = {"$and": upa}
+    if upa:
+        query = {"$and": upa}
+    else:
+        query = {}
+
 
     if args.LeaderMarketerName:
         upa.append({"LeaderMarketerName": {"$regex": args.LeaderMarketerName}})
