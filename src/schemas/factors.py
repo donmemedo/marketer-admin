@@ -121,6 +121,14 @@ class SearchFactorIn:
 
 
 @dataclass
+class DeleteFactorIn:
+    MarketerID: str = Query(None)
+    Period: str = None
+    FactorID: str = None
+    ContractID: str = None
+
+
+@dataclass
 class AllFactors:
     MarketerID: str = Query(None)
     Period: str = Query(default=None)  # str(current_year) + f"{current_month:02}"

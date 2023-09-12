@@ -408,7 +408,7 @@ async def search_factor(
 )
 async def delete_factor(
     request: Request,
-    args: SearchFactorIn = Depends(SearchFactorIn),
+    args: SearchFactorIn = Depends(DeleteFactorIn),
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -425,7 +425,7 @@ async def delete_factor(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    factor_coll = database["MarketerFactor"]
+    factor_coll = database[settings.FACTOR_COLLECTION]
     if args.FactorID:
         filter = {"FactorID": args.FactorID}
     elif args.ContractID and args.Period:
