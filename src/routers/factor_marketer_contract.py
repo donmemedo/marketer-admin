@@ -124,9 +124,9 @@ async def modify_marketer_contract(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContract"]
-    if mmci.MarketerID is None:
+    if mmci.ContractID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    filter = {"MarketerID": mmci.MarketerID}
+    filter = {"ContractID": mmci.ContractID}
     update = {"$set": {}}
     for key, value in vars(mmci).items():
         if value is not None:
@@ -134,7 +134,7 @@ async def modify_marketer_contract(
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsDeleted"] = False
     coll.update_one(filter, update)
-    query_result = coll.find_one({"MarketerID": mmci.MarketerID}, {"_id": False})
+    query_result = coll.find_one({"ContractID": mmci.ContractID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     return ResponseListOut(

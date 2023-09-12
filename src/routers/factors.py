@@ -619,10 +619,10 @@ async def calculate_factor(
         additions = FTF
         # ToDo: TotalCMD AutoCalculation
         total_cmd = 0
-        if args.Additions:
-            additions = additions + args.Additions
-        if args.Deductions:
-            deductions = deductions + args.Deductions
+        # if args.Additions:
+        #     additions = additions + args.Additions
+        # if args.Deductions:
+        #     deductions = deductions + args.Deductions
         payment = final_fee + additions - deductions
         result = {
             "MarketerID": marketer["Id"],  # marketer["MarketerID"],

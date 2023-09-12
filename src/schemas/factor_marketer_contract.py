@@ -20,7 +20,7 @@ current_date = (
 @dataclass
 class ModifyMarketerContractIn:
     MarketerID: str
-    # ContractID: str = None
+    ContractID: str = None
     CalculationBaseType: str = None
     CoefficientBaseType: str = None
     ContractNumber: str = None
