@@ -4,7 +4,7 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime
-
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -66,14 +66,18 @@ async def add_marketer_contract_deduction(
         if value is not None:
             update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
+    update["$set"]["Title"] = marketers_coll.find_one({"MarketerID": mmcd.MarketerID}, {"_id": False})["TbsReagentName"]
+    update["$set"]["ID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())
 
     try:
-        marketer_name = get_marketer_name(
-            marketers_coll.find_one({"IdpID": mmcd.MarketerID}, {"_id": False})
-        )
-        coll.insert_one({"MarketerID": mmcd.MarketerID, "Title": marketer_name})
-        coll.update_one(filter, update)
+        # marketer_name = get_marketer_name(
+        #     marketers_coll.find_one({"IdpID": mmcd.MarketerID}, {"_id": False})
+        # )
+        # marketer_name = marketers_coll.find_one({"MarketerID": mmcd.MarketerID}, {"_id": False})["TbsReagentName"]
+        # coll.insert_one({"MarketerID": mmcd.MarketerID, "Title": marketer_name})
+        coll.insert_one(update["$set"])
+        # coll.update_one(filter, update)
     except:
         raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
     query_result = coll.find_one({"MarketerID": mmcd.MarketerID}, {"_id": False})

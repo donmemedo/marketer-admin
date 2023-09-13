@@ -302,10 +302,10 @@ async def modify_accounting_factor(
     )
 
 
-@factors.get(
-    "/search",
-    tags=["Factors"],
-)
+# @factors.get(
+#     "/search",
+#     tags=["Factors"],
+# )
 @authorize(
     [
         "MarketerAdmin.All.Read",
@@ -627,6 +627,7 @@ async def calculate_factor(
         result = {
             "MarketerID": marketer["MarketerID"],  # marketer["MarketerID"],
             "Period": args.Period,
+            "Title": marketer["TbsReagentName"],
             "TotalTurnOver": marketer_total.get("TotalPureVolume"),  # TotalPureVolume
             "TotalBrokerCommission": marketer_total.get("TotalFee"),
             "TotalNetBrokerCommission": int(pure_fee),

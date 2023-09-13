@@ -20,7 +20,7 @@ current_date = (
 @dataclass
 class ModifyMarketerContractDeductionIn:
     MarketerID: str
-    ID: str = None
+    # ID: str = None
     CollateralCoefficient: float = None
     ContractID: str = None
     TaxCoefficient: float = None
@@ -33,17 +33,17 @@ class ModifyMarketerContractDeductionIn:
 class SearchMarketerContractDeductionIn:
     MarketerID: str = Query(None)
     ID: str = None
-    CollateralCoefficient: float = None
+    # CollateralCoefficient: float = None
     ContractID: str = None
-    TaxCoefficient: float = None
-    InsuranceCoefficient: float = None
+    # TaxCoefficient: float = None
+    # InsuranceCoefficient: float = None
     ReturnDuration: int = None
     Title: str = Query(None)
 
 
 @dataclass
 class DelMarketerContractDeductiontIn:
-    MarketerID: str
+    ContractID: str
 
 
 @dataclass

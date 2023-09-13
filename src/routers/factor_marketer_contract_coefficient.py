@@ -3,6 +3,7 @@
 Returns:
     _type_: _description_
 """
+import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Request
@@ -65,14 +66,19 @@ async def add_marketer_contract_coefficient(
         if value is not None:
             update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
+    update["$set"]["ID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsCmdConcluded"] = False
     try:
-        marketer_name = get_marketer_name(
-            marketers_coll.find_one({"IdpID": mmcci.MarketerID}, {"_id": False})
-        )
-        coll.insert_one({"MarketerID": mmcci.MarketerID, "Title": marketer_name})
-        coll.update_one(filter, update)
+        # marketer_name = get_marketer_name(
+        #     marketers_coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})
+        # )
+        marketer_name = marketers_coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})["TbsReagentName"]
+
+        # coll.insert_one({"MarketerID": mmcci.MarketerID})#, "Title": marketer_name})
+        # coll.update_one(filter, update)
+        coll.insert_one(update["$set"])
+        # coll.update_one(filter, update)
     except:
         raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
     query_result = coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})
@@ -193,7 +199,7 @@ async def search_marketer_contract_coefficient(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
