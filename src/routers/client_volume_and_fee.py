@@ -120,21 +120,21 @@ async def get_marketer_total_trades(
 
     marketers_query = (
         marketers_coll.find(
-            # {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-            # {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+            # {"MarketerID": {"$exists": True, "$not": {"$size": 0}}},
+            # {"FirstName": 1, "LastName": 1, "_id": 0, "MarketerID": 1},
             {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},
-            {"TbsReagentName": 1, "ReagentRefLink": 1, "_id": 0, "Id": 1},
+            {"TbsReagentName": 1, "ReagentRefLink": 1, "_id": 0, "MarketerID": 1},
         )
-        .skip(args.size * args.page)
+        .skip(args.size * (args.page - 1))
         .limit(args.size)
     )
     if args.IdpID:
-        # marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
-        marketers_query = marketers_coll.find({"Id": args.IdpID}, {"_id": False})
+        # marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
+        marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
     total_count = marketers_coll.count_documents(
-        # {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+        # {"MarketerID": {"$exists": True, "$not": {"$size": 0}}}
         {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}}
     )
 
@@ -158,7 +158,7 @@ async def get_marketer_total_trades(
         pipeline = [
             filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
             project_commission_stage(),
-            group_by_total_stage("id"),
+            group_by_total_stage("MarketerID"),
             project_pure_stage(),
         ]
 
@@ -227,8 +227,8 @@ async def users_list_by_volume(
     trades_coll = brokerage[settings.TRADES_COLLECTION]
     factors_coll = brokerage[settings.FACTOR_COLLECTION]
 
-    # query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
-    query_result = marketers_coll.find_one({"Id": args.IdpID}, {"_id": False})
+    # query_result = marketers_coll.find_one({"MarketerID": args.IdpID}, {"_id": False})
+    query_result = marketers_coll.find_one({"MarketerID": args.IdpID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
 

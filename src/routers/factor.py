@@ -521,10 +521,10 @@ async def calculate_factor(
     contded_coll = database["MarketerContractDeduction"]
     per = args.Period
     if args.MarketerID:
-        marketers = marketer_coll.find_one({"IdpId": args.MarketerID}, {"_id": False})
+        marketers = marketer_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     else:
         marketerrs = marketer_coll.find(
-            {"IdpId": {"$exists": True, "$not": {"$size": 0}}}, {"_id": False}
+            {"MarketerID": {"$exists": True, "$not": {"$size": 0}}}, {"_id": False}
         )
         marketers = dict(enumerate(marketerrs))
     results = []
@@ -668,7 +668,7 @@ async def calculate_factor(
         deductions = collateral  # salary + insurance + tax + collateral
         payment = final_fee - deductions + FTF
         result = {
-            "IdpID": marketer["IdpId"],
+            "IdpID": marketer["MarketerID"],
             "FullName": get_marketer_name(marketer),
             "TotalPureVolume": marketer_total.get("TotalPureVolume"),
             "TotalFee": marketer_total.get("TotalFee"),

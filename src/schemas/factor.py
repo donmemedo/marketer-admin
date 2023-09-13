@@ -131,7 +131,7 @@ class CalFactorIn:
 @dataclass
 class Pages:
     size: int = Query(10, alias="PageSize")
-    page: int = Query(0, alias="PageNumber")
+    page: int = Query(1, alias="PageNumber")
 
 
 class SortField(str, Enum):

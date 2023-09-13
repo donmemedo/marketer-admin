@@ -51,8 +51,8 @@ async def get_user_profile(
     user_id = role_perm["sub"]
     marketers_coll = brokerage[settings.MARKETER_COLLECTION]
     if args.IdpID:
-        # query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
-        query_result = marketers_coll.find_one({"Id": args.IdpID}, {"_id": False})
+        # query_result = marketers_coll.find_one({"MarketerID": args.IdpID}, {"_id": False})
+        query_result = marketers_coll.find_one({"MarketerID": args.IdpID}, {"_id": False})
         # marketer_fullname = get_marketer_name(query_result)
         pipeline = [
             # {"$match": {"$and": [{"Referer": marketer_fullname}]}},

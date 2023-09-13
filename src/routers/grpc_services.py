@@ -62,7 +62,7 @@ async def sync_marketers(
     auth_token = request.headers.get("authorization")
     metadata.append(("authorization", auth_token))
     sync_request = marketer_pb2.SearchMarketerRPCRequest(
-        PageSize=args.size, PageNumber=args.page
+        PageSize=args.size, PageNumber=args.page - 1
     )
 
     try:
@@ -91,13 +91,13 @@ async def sync_marketers(
                 else:
                     update["$set"][key] = value
         try:
-            update["$set"]["MarketerID"] = update["$set"].pop("Id")
+            update["$set"]["MarketerID"] = update["$set"].pop("MarketerID")
             marketer_coll.insert_one(update["$set"])
             try:
-                result = f"Marketer {marketer['Title']} with ID {marketer['Id']['value']} is inserted successfully."
+                result = f"Marketer {marketer['Title']} with ID {marketer['MarketerID']['value']} is inserted successfully."
                 logger.info(result)
             except:
-                result = f"Marketer with ID {marketer['Id']['value']} is inserted successfully."
+                result = f"Marketer with ID {marketer['MarketerID']['value']} is inserted successfully."
                 logger.info(result)
 
             ins_results.append(marketer)
@@ -105,15 +105,15 @@ async def sync_marketers(
             try:
                 update["$set"].pop("_id")
                 # ToDo: Check if something changes then update.
-                # marketer_coll.update_one({"Id": update["$set"]["Id"]}, update)
+                # marketer_coll.update_one({"MarketerID": update["$set"]["MarketerID"]}, update)
                 marketer_coll.update_one(
                     {"MarketerID": update["$set"]["MarketerID"]}, update
                 )
                 try:
-                    result = f"Marketer {marketer['Title']} with ID {marketer['Id']['value']} is updated successfully."
+                    result = f"Marketer {marketer['Title']} with ID {marketer['MarketerID']['value']} is updated successfully."
                     logger.info(result)
                 except:
-                    result = f"Marketer with ID {marketer['Id']['value']} is updated successfully."
+                    result = f"Marketer with ID {marketer['MarketerID']['value']} is updated successfully."
                     logger.info(result)
 
                 up_results.append(marketer)

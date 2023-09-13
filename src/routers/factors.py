@@ -80,9 +80,9 @@ async def add_base_factor(
     update["$set"]["UpdateBy"] = user_id
     try:
         # marketer_name = get_marketer_name(
-        #     marketers_coll.find_one({"IdpId": mfi.MarketerID}, {"_id": False})
+        #     marketers_coll.find_one({"MarketerID": mfi.MarketerID}, {"_id": False})
         # )
-        marketer_name = marketers_coll.find_one({"Id": mfi.MarketerID}, {"_id": False})[
+        marketer_name = marketers_coll.find_one({"MarketerID": mfi.MarketerID}, {"_id": False})[
             "TbsReagentName"
         ]
 
@@ -222,7 +222,7 @@ async def add_accounting_factor(
     update["$set"]["CreateBy"] = user_id
     update["$set"]["UpdateBy"] = user_id
     try:
-        marketer_name = marketers_coll.find_one({"Id": mfi.MarketerID}, {"_id": False})[
+        marketer_name = marketers_coll.find_one({"MarketerID": mfi.MarketerID}, {"_id": False})[
             "TbsReagentName"
         ]
 
@@ -278,7 +278,7 @@ async def modify_accounting_factor(
     if ((mfi.MarketerID and mfi.Period) or mfi.FactorID) is None:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 412})
     if mfi.FactorID:
-        filter = {"ID": mfi.FactorID}
+        filter = {"FactorID": mfi.FactorID}
     else:
         filter = {"$and": [{"MarketerID": mfi.MarketerID}, {"Period": mfi.Period}]}
     update = {"$set": {}}
@@ -362,7 +362,7 @@ async def search_factor(
     query_result = dict(
         enumerate(
             factor_coll.find(filter, {"_id": False})
-            .skip(args.size * args.page)
+            .skip(args.size * (args.page - 1))
             .limit(args.size)
         )
     )
@@ -732,7 +732,7 @@ async def get_marketer_all_factors(
         filter = {}
     query_result = list(
         factors_coll.find(filter, {"_id": False})
-        .skip(args.size * args.page)
+        .skip(args.size * (args.page - 1))
         .limit(args.size)
     )
     if not query_result:

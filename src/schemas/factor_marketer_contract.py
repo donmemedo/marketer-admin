@@ -20,7 +20,7 @@ current_date = (
 @dataclass
 class ModifyMarketerContractIn:
     MarketerID: str
-    ContractID: str = None
+    # ContractID: str = None
     CalculationBaseType: str = None
     CoefficientBaseType: str = None
     ContractNumber: str = None
@@ -109,7 +109,7 @@ class SearchFactorIn:
 @dataclass
 class Pages:
     size: int = Query(10, alias="PageSize")
-    page: int = Query(0, alias="PageNumber")
+    page: int = Query(1, alias="PageNumber")
 
 
 class SortField(str, Enum):

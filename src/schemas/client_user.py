@@ -37,7 +37,7 @@ current_date = (
 @dataclass
 class UserSearchIn:
     name: str = Query("", alias="Name")
-    page_index: int = Query(0, alias="PageNumber")
+    page_index: int = Query(1, alias="PageNumber")
     page_size: int = Query(5, alias="PageSize")
 
 
@@ -98,7 +98,7 @@ class MarketerInvitationIn:
 @dataclass
 class Pages:
     size: int = Query(10, alias="PageSize")
-    page: int = Query(0, alias="PageNumber")
+    page: int = Query(1, alias="PageNumber")
 
 
 class UserTypeEnum(str, Enum):
@@ -139,5 +139,5 @@ class FactorIn:
 class GetUserSearchIn:
     IdpID: Optional[str] = Query("")
     name: str = Query("", alias="Name")
-    page_index: int = Query(0, alias="PageNumber")
+    page_index: int = Query(1, alias="PageNumber")
     page_size: int = Query(5, alias="PageSize")

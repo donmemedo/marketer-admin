@@ -33,17 +33,17 @@ class ModifyMarketerContractCoefficientIn:
 class SearchMarketerContractCoefficientIn:
     MarketerID: str = Query("")
     ID: str = None
-    CoefficientPercentage: float = None
+    # CoefficientPercentage: float = None
     ContractID: str = None
-    HighThreshold: int = None
-    LowThreshold: int = None
-    StepNumber: int = None
+    # HighThreshold: int = None
+    # LowThreshold: int = None
+    # StepNumber: int = None
     Title: str = Query("")
 
 
 @dataclass
 class DelMarketerMarketerContractCoefficientIn:
-    MarketerID: str
+    ContractID: str
 
 
 @dataclass
@@ -105,7 +105,7 @@ class SearchFactorIn:
 @dataclass
 class Pages:
     size: int = Query(10, alias="PageSize")
-    page: int = Query(0, alias="PageNumber")
+    page: int = Query(1, alias="PageNumber")
 
 
 class SortField(str, Enum):

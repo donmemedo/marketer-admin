@@ -75,11 +75,13 @@ async def add_marketer_contract(
     update["$set"]["IsDeleted"] = False
 
     try:
-        marketer_name = get_marketer_name(
-            marketers_coll.find_one({"IdpID": mmci.MarketerID}, {"_id": False})
-        )
-        coll.insert_one({"MarketerID": mmci.MarketerID, "Title": marketer_name})
-        coll.update_one(filter, update)
+        # marketer_name = get_marketer_name(
+        #     marketers_coll.find_one({"IdpID": mmci.MarketerID}, {"_id": False})
+        # )
+        #
+        # coll.insert_one({"MarketerID": mmci.MarketerID, "Title": marketer_name})
+        # coll.update_one(filter, update)
+        coll.insert_one(update["$set"])
     except:
         raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
     query_result = coll.find_one({"MarketerID": mmci.MarketerID}, {"_id": False})
@@ -277,7 +279,7 @@ async def delete_marketer_contract(
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     result = [f"مورد مربوط به ماکتر {query_result.get('Title')} پاک شد."]
-    coll.delete_one({"MarketerID": args.ContractID})
+    coll.delete_one({"ContractID": args.ContractID})
     resp = {
         "result": result,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),

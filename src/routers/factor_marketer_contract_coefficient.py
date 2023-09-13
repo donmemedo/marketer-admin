@@ -250,15 +250,15 @@ async def delete_marketer_contract_coefficient(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContractCoefficient"]
-    if args.MarketerID:
+    if args.ContractID:
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 400})
-    query_result = coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
+    query_result = coll.find_one({"MarketerID": args.ContractID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     result = [f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."]
-    coll.delete_one({"MarketerID": args.MarketerID})
+    coll.delete_one({"ContractID": args.ContractID})
     resp = {
         "result": result,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -301,15 +301,15 @@ async def modify_marketer_contract_coefficient_status(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContractCoefficient"]
-    if dmcci.MarketerID is None:
+    if dmcci.ContractID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    filter = {"MarketerID": dmcci.MarketerID}
-    query_result = coll.find_one({"MarketerID": dmcci.MarketerID}, {"_id": False})
+    filter = {"ContractID": dmcci.ContractID}
+    query_result = coll.find_one({"ContractID": dmcci.ContractID}, {"_id": False})
     status = query_result.get("IsCmdConcluded")
     update = {"$set": {}}
     update["$set"]["IsCmdConcluded"] = bool(status ^ 1)
     coll.update_one(filter, update)
-    query_result = coll.find_one({"MarketerID": dmcci.MarketerID}, {"_id": False})
+    query_result = coll.find_one({"ContractID": dmcci.ContractID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     return ResponseListOut(

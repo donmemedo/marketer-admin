@@ -432,7 +432,7 @@ async def reconciliation(
     customer_coll = db[settings.CUSTOMER_COLLECTION]
 
     if args.MarketerID:
-        marketers = marketer_coll.find_one({"Id": args.MarketerID}, {"_id": False})
+        marketers = marketer_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     else:
         marketerrs = marketer_coll.find(
             {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},

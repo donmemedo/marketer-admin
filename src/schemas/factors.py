@@ -72,7 +72,7 @@ class ModifyAccountingFactorIn:
 class ModifyBaseFactorIn:
     MarketerID: str
     Period: str = str(current_year) + f"{current_month:02}"
-    FactorID: str = None
+    # FactorID: str = None
     TotalTurnOver: int = Query(None, alias="TotalTurnOver")  # TotalPureVolume
     TotalBrokerCommission: int = Query(None, alias="TotalBrokerCommission")  # TotalFee
     TotalCMD: int = None
@@ -117,7 +117,7 @@ class SearchFactorIn:
     FactorID: str = None
     ContractID: str = None
     size: int = Query(10, alias="PageSize")
-    page: int = Query(0, alias="PageNumber")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass
@@ -136,7 +136,7 @@ class AllFactors:
     FactorID: str = None
     # ContractID: str = None
     size: int = Query(10, alias="PageSize")
-    page: int = Query(0, alias="PageNumber")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass
@@ -159,7 +159,7 @@ class CalFactorIn:
 @dataclass
 class Pages:
     size: int = Query(10, alias="PageSize")
-    page: int = Query(0, alias="PageNumber")
+    page: int = Query(1, alias="PageNumber")
 
 
 class SortField(str, Enum):

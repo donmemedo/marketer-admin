@@ -53,13 +53,13 @@ async def get_marketer_profile(
     """
     user_id = role_perm["sub"]
     marketers_coll = brokerage[settings.MARKETER_COLLECTION]
-    # results = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
-    results = marketers_coll.find_one({"Id": args.IdpID}, {"_id": False})
+    # results = marketers_coll.find_one({"MarketerID": args.IdpID}, {"_id": False})
+    results = marketers_coll.find_one({"MarketerID": args.IdpID}, {"_id": False})
     if not args.IdpID:
         total_count = marketers_coll.count_documents({})
         query_result = (
             marketers_coll.find({}, {"_id": 0})
-            .skip(args.size * args.page)
+            .skip(args.size * (args.page -1) )
             .limit(args.size)
         )
         results = []
@@ -126,23 +126,23 @@ async def cal_marketer_cost(
     trades_coll = brokerage[settings.TRADES_COLLECTION]
     marketers_query = (
         # marketers_coll.find(
-        #     {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-        #     {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+        #     {"MarketerID": {"$exists": True, "$not": {"$size": 0}}},
+        #     {"FirstName": 1, "LastName": 1, "_id": 0, "MarketerID": 1},
         # )
         marketers_coll.find(
             {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},
-            {"TbsReagentName": 1, "ReagentRefLink": 1, "_id": 0, "Id": 1},
+            {"TbsReagentName": 1, "ReagentRefLink": 1, "_id": 0, "MarketerID": 1},
         )
-        .skip(args.size * args.page)
+        .skip(args.size * (args.page - 1))
         .limit(args.size)
     )
     if args.IdpID:
-        # marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
-        marketers_query = marketers_coll.find({"Id": args.IdpID}, {"_id": False})
+        # marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
+        marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
     total_count = marketers_coll.count_documents(
-        # {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+        # {"MarketerID": {"$exists": True, "$not": {"$size": 0}}}
         {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}}
     )
     results = []
@@ -427,21 +427,21 @@ async def factor_print(
 
     marketers_query = (
         marketers_coll.find(
-            # {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-            # {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+            # {"MarketerID": {"$exists": True, "$not": {"$size": 0}}},
+            # {"FirstName": 1, "LastName": 1, "_id": 0, "MarketerID": 1},
             {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},
-            {"TbsReagentName": 1, "ReagentRefLink": 1, "_id": 0, "Id": 1},
+            {"TbsReagentName": 1, "ReagentRefLink": 1, "_id": 0, "MarketerID": 1},
         )
-        .skip(args.size * args.page)
+        .skip(args.size * (args.page - 1))
         .limit(args.size)
     )
     if args.IdpID:
-        # marketers_query = marketers_coll.find({"IdpId": args.IdpID}, {"_id": False})
-        marketers_query = marketers_coll.find({"Id": args.IdpID}, {"_id": False})
+        # marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
+        marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
 
     marketers_list = list(marketers_query)
     total_count = marketers_coll.count_documents(
-        # {"IdpId": {"$exists": True, "$not": {"$size": 0}}}
+        # {"MarketerID": {"$exists": True, "$not": {"$size": 0}}}
         {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}}
     )
     results = []

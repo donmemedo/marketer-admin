@@ -48,7 +48,7 @@ async def search_marketer_user(
     customer_coll = brokerage["customers"]
     firms_coll = brokerage["firms"]
     marketers_coll = brokerage["marketers"]
-    query_result = marketers_coll.find({"IdpId": marketer_id})
+    query_result = marketers_coll.find({"MarketerID": marketer_id})
     marketer_dict = peek(query_result)
     marketer_fullname = (
         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
@@ -89,7 +89,7 @@ async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn
     customer_coll = brokerage["customers"]
     firms_coll = brokerage["firms"]
     marketers_coll = brokerage["marketers"]
-    query_result = marketers_coll.find({"IdpId": marketer_id})
+    query_result = marketers_coll.find({"MarketerID": marketer_id})
 
     marketer_dict = peek(query_result)
 
@@ -135,7 +135,7 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
     customer_coll = brokerage["customers"]
     marketers_coll = brokerage["marketers"]
 
-    query_result = marketers_coll.find({"IdpId": marketer_id})
+    query_result = marketers_coll.find({"MarketerID": marketer_id})
 
     marketer_dict = peek(query_result)
 
@@ -180,7 +180,7 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
     marketers_coll = brokerage["marketers"]
-    query_result = marketers_coll.find({"IdpId": marketer_id})
+    query_result = marketers_coll.find({"MarketerID": marketer_id})
     marketer_dict = peek(query_result)
     marketer_fullname = (
         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
@@ -240,7 +240,7 @@ async def marketer_subuser_lists(
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     firms_coll = database["firms"]
-    query_result = marketers_coll.find({"IdpId": marketer_id})
+    query_result = marketers_coll.find({"MarketerID": marketer_id})
     marketer_dict = peek(query_result)
     marketer_fullname = (
         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
@@ -515,8 +515,8 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     firms_coll = database["firms"]
     marketers_coll = database["marketers"]
     marketers_query = marketers_coll.find(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-        {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+        {"MarketerID": {"$exists": True, "$not": {"$size": 0}}},
+        {"FirstName": 1, "LastName": 1, "_id": 0, "MarketerID": 1},
     )
     marketers_list = list(marketers_query)
 
@@ -684,8 +684,8 @@ def total_users_cost(
     firms_coll = database["firms"]
     marketers_coll = database["marketers"]
     marketers_query = marketers_coll.find(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-        {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+        {"MarketerID": {"$exists": True, "$not": {"$size": 0}}},
+        {"FirstName": 1, "LastName": 1, "_id": 0, "MarketerID": 1},
     )
     marketers_list = list(marketers_query)
     results = []

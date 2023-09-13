@@ -56,8 +56,8 @@ async def add_marketer(
     marketer_coll = database[settings.MARKETER_COLLECTION]
     if ami.CurrentIdpId is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    # filter = {"IdpId": ami.CurrentIdpId}
-    filter = {"Id": ami.CurrentIdpId}
+    # filter = {"MarketerID": ami.CurrentIdpId}
+    filter = {"MarketerID": ami.CurrentIdpId}
     query_result = marketer_coll.find_one(filter, {"_id": False})
     if query_result:
         raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
@@ -80,8 +80,8 @@ async def add_marketer(
             raise RequestValidationError(
                 TypeError, body={"code": "30066", "status": 412}
             )
-    # update["$set"]["IdpId"] = ami.CurrentIdpId
-    update["$set"]["Id"] = ami.CurrentIdpId
+    # update["$set"]["MarketerID"] = ami.CurrentIdpId
+    update["$set"]["MarketerID"] = ami.CurrentIdpId
     update["$set"].pop("CurrentIdpId")
     try:
         marketer_coll.insert_one(update["$set"])
@@ -131,11 +131,11 @@ async def modify_marketer(
     admins_coll = database[settings.FACTOR_COLLECTION]
     if mmi.CurrentIdpId is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    # filter = {"IdpId": mmi.CurrentIdpId}
-    filter = {"Id": mmi.CurrentIdpId}
+    # filter = {"MarketerID": mmi.CurrentIdpId}
+    filter = {"MarketerID": mmi.CurrentIdpId}
     idpid = mmi.CurrentIdpId
-    # query_result = marketer_coll.find_one({"IdpId": idpid}, {"_id": False})
-    query_result = marketer_coll.find_one({"Id": idpid}, {"_id": False})
+    # query_result = marketer_coll.find_one({"MarketerID": idpid}, {"_id": False})
+    query_result = marketer_coll.find_one({"MarketerID": idpid}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
     update = {"$set": {}}
@@ -147,8 +147,8 @@ async def modify_marketer(
     ] = datetime.now().isoformat()  # jd.today().strftime("%Y-%m-%d")
 
     if mmi.NewIdpId is not None:
-        # update["$set"]["IdpId"] = mmi.NewIdpId
-        update["$set"]["Id"] = mmi.NewIdpId
+        # update["$set"]["MarketerID"] = mmi.NewIdpId
+        update["$set"]["MarketerID"] = mmi.NewIdpId
         idpid = mmi.NewIdpId
 
     if mmi.NationalID is not None:
@@ -160,8 +160,8 @@ async def modify_marketer(
                 TypeError, body={"code": "30066", "status": 412}
             )
     marketer_coll.update_one(filter, update)
-    # query_result = marketer_coll.find_one({"IdpId": idpid}, {"_id": False})
-    query_result = marketer_coll.find_one({"Id": idpid}, {"_id": False})
+    # query_result = marketer_coll.find_one({"MarketerID": idpid}, {"_id": False})
+    query_result = marketer_coll.find_one({"MarketerID": idpid}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     return ResponseListOut(
@@ -219,17 +219,25 @@ async def search_user_profile(
         query_result = marketer_coll.find_one(query, {"_id": False})
     except:
         raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
-    query_result = marketer_coll.find(query, {"_id": False})
+    query_result = marketer_coll.find(query, {"_id": False}).skip(args.size * (args.page - 1)).limit(args.size)
+
     marketers = list(query_result)
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
         raise RequestValidationError(TypeError, body={"code": "30008", "status": 200})
-    return ResponseListOut(
-        result=results,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+    resp = {
+        "result": {
+            "totalCount": len(marketers),
+            "pagedData": results
+        },
+        "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        "error": {
+            "message": "Null",
+            "code": "Null",
+        },
+    }
+    return JSONResponse(status_code=200, content=resp)
 
 
 @marketer_relation.post(
@@ -324,26 +332,26 @@ async def add_marketers_relations(
     except:
         raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
     if marketers_coll.find_one(
-        # {"IdpId": mrel.FollowerMarketerID}
-        {"Id": mrel.FollowerMarketerID}
+        # {"MarketerID": mrel.FollowerMarketerID}
+        {"MarketerID": mrel.FollowerMarketerID}
     ) and marketers_coll.find_one(
-        # {"IdpId": mrel.LeaderMarketerID}):
-        {"Id": mrel.LeaderMarketerID}
+        # {"MarketerID": mrel.LeaderMarketerID}):
+        {"MarketerID": mrel.LeaderMarketerID}
     ):
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
     # update["$set"]["FollowerMarketerName"] = get_marketer_name(
-    #     marketers_coll.find_one({"IdpId": mrel.FollowerMarketerID})
+    #     marketers_coll.find_one({"MarketerID": mrel.FollowerMarketerID})
     # )
     # update["$set"]["LeaderMarketerName"] = get_marketer_name(
-    #     marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID})
+    #     marketers_coll.find_one({"MarketerID": mrel.LeaderMarketerID})
     # )
     update["$set"]["FollowerMarketerName"] = marketers_coll.find_one(
-        {"Id": mrel.FollowerMarketerID}
+        {"MarketerID": mrel.FollowerMarketerID}
     )["TbsReagentName"]
     update["$set"]["LeaderMarketerName"] = marketers_coll.find_one(
-        {"Id": mrel.LeaderMarketerID}
+        {"MarketerID": mrel.LeaderMarketerID}
     )["TbsReagentName"]
 
     marketers_relations_coll.insert_one(update["$set"])
@@ -608,15 +616,15 @@ async def delete_marketers_relations(
         raise RequestValidationError(TypeError, body={"code": "30012", "status": 409})
     results = []
     # FollowerMarketerName = get_marketer_name(
-    #     marketers_coll.find_one({"IdpId": args.FollowerMarketerID})
+    #     marketers_coll.find_one({"MarketerID": args.FollowerMarketerID})
     # )
     # LeaderMarketerName = get_marketer_name(
-    #     marketers_coll.find_one({"IdpId": args.LeaderMarketerID})
+    #     marketers_coll.find_one({"MarketerID": args.LeaderMarketerID})
     # )
-    FollowerMarketerName = marketers_coll.find_one({"IdpId": args.FollowerMarketerID})[
+    FollowerMarketerName = marketers_coll.find_one({"MarketerID": args.FollowerMarketerID})[
         "TbsReagentName"
     ]
-    LeaderMarketerName = marketers_coll.find_one({"IdpId": args.LeaderMarketerID})[
+    LeaderMarketerName = marketers_coll.find_one({"MarketerID": args.LeaderMarketerID})[
         "TbsReagentName"
     ]
 
@@ -680,7 +688,7 @@ async def users_diff_with_tbs(
     marketers_coll = database["marketers"]
     if args.IdpID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    query_result = marketers_coll.find({"IdpId": args.IdpID})
+    query_result = marketers_coll.find({"MarketerID": args.IdpID})
     marketer_dict = peek(query_result)
     marketer_fullname = get_marketer_name(marketer_dict)
     customers_records = customers_coll.find(
@@ -736,9 +744,9 @@ async def users_list_by_volume(
 ):
     if not args.IdpID:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    # query_result = brokerage.marketers.find_one({"IdpId": args.IdpID})
+    # query_result = brokerage.marketers.find_one({"MarketerID": args.IdpID})
     marketer_col = brokerage[settings.MARKETER_COLLECTION]
-    query_result = marketer_col.find_one({"Id": args.IdpID})
+    query_result = marketer_col.find_one({"MarketerID": args.IdpID})
 
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
