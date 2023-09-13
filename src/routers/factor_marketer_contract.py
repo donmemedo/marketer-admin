@@ -195,8 +195,8 @@ async def search_marketer_contract(
     # ?CoefficientBaseType: str = None
     if args.MarketerID:
         upa.append({"MarketerID": args.MarketerID})
-    if args.ID:
-        upa.append({"ID": args.ID})
+    if args.ContractID:
+        upa.append({"ContractID": args.ContractID})
     if args.ContractNumber:
         upa.append({"ContractNumber": args.ContractNumber})
     if args.ContractType:
@@ -219,7 +219,7 @@ async def search_marketer_contract(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
