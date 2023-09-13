@@ -743,17 +743,19 @@ async def get_marketer_all_factors(
     total_count = factors_coll.count_documents(filter)
     results = []
     for factor in factors:
-        results.append({factor.pop("FactorID"): factor})
-        # results.append(factor)
+        # results.append({factor.pop("FactorID"): factor})
+        results.append(factor)
 
     resp = {
-        "pagedData": results,
+        "result":{
+            "totalCount": total_count,
+            "pagedData": results,
+        },
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         "error": {
             "message": "Null",
             "code": "Null",
         },
-        "totalCount": total_count,
     }
     return JSONResponse(status_code=200, content=resp)
 
