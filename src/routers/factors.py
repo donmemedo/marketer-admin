@@ -504,7 +504,7 @@ async def calculate_factor(
     per = args.Period
     if args.MarketerID:
         marketers = [marketer_coll.find_one(
-            {"Id": args.MarketerID},
+            {"MarketerID": args.MarketerID},
             {"_id": False},
         )]
     else:
@@ -546,7 +546,7 @@ async def calculate_factor(
         b = plans
         try:
             cbt = contract_coll.find_one(
-                {"MarketerID": marketer["Id"]}, {"_id": False}
+                {"MarketerID": marketer["MarketerID"]}, {"_id": False}
             )["CalculationBaseType"]
         except:
             cbt = ""
@@ -625,7 +625,7 @@ async def calculate_factor(
         #     deductions = deductions + args.Deductions
         payment = final_fee + additions - deductions
         result = {
-            "MarketerID": marketer["Id"],  # marketer["MarketerID"],
+            "MarketerID": marketer["MarketerID"],  # marketer["MarketerID"],
             "Period": args.Period,
             "TotalTurnOver": marketer_total.get("TotalPureVolume"),  # TotalPureVolume
             "TotalBrokerCommission": marketer_total.get("TotalFee"),

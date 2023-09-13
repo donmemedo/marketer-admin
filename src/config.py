@@ -19,8 +19,8 @@ class Settings(BaseSettings):
 
     MONGO_DATABASE: str = "brokerage"
     CUSTOMER_COLLECTION: str = "customers"
-    MARKETER_COLLECTION: str = "newmarketersss"
-    FACTOR_COLLECTION: str = "napfactorsss"
+    MARKETER_COLLECTION: str = "MarketerTable"
+    FACTOR_COLLECTION: str = "MarketerFactor"
     FIRMS_COLLECTION: str = "firms"
     TRADES_COLLECTION: str = "trades"
     RELATIONS_COLLECTION: str = "mrelations"
