@@ -145,7 +145,7 @@ class UserTypeEnum(str, Enum):
 
 @dataclass
 class UsersListIn(Pages):
-    IdpID: str = Query(alias="IdpID")
+    IdpID: str = Query(alias="MarketerID")
     sort_by: SortField = Query(SortField.REGISTRATION_DATE, alias="SortBy")
     sort_order: SortOrder = Query(SortOrder.ASCENDING, alias="SortOrder")
     user_type: UserTypeEnum = Query(UserTypeEnum.active, alias="UserType")
