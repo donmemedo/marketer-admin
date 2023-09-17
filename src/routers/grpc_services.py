@@ -91,7 +91,7 @@ async def sync_marketers(
                 else:
                     update["$set"][key] = value
         try:
-            update["$set"]["MarketerID"] = update["$set"].pop("MarketerID")
+            update["$set"]["MarketerID"] = update["$set"].pop("Id")
             marketer_coll.insert_one(update["$set"])
             try:
                 result = f"Marketer {marketer['Title']} with ID {marketer['MarketerID']['value']} is inserted successfully."

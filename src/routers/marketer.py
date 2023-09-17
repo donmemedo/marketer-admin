@@ -348,12 +348,15 @@ async def add_marketers_relations(
     # update["$set"]["LeaderMarketerName"] = get_marketer_name(
     #     marketers_coll.find_one({"MarketerID": mrel.LeaderMarketerID})
     # )
-    update["$set"]["FollowerMarketerName"] = marketers_coll.find_one(
-        {"MarketerID": mrel.FollowerMarketerID}
-    )["TbsReagentName"]
-    update["$set"]["LeaderMarketerName"] = marketers_coll.find_one(
-        {"MarketerID": mrel.LeaderMarketerID}
-    )["TbsReagentName"]
+    try:
+        update["$set"]["FollowerMarketerName"] = marketers_coll.find_one(
+            {"MarketerID": mrel.FollowerMarketerID}
+        )["TbsReagentName"]
+        update["$set"]["LeaderMarketerName"] = marketers_coll.find_one(
+            {"MarketerID": mrel.LeaderMarketerID}
+        )["TbsReagentName"]
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
 
     marketers_relations_coll.insert_one(update["$set"])
 
@@ -623,12 +626,15 @@ async def delete_marketers_relations(
     # LeaderMarketerName = get_marketer_name(
     #     marketers_coll.find_one({"MarketerID": args.LeaderMarketerID})
     # )
-    FollowerMarketerName = marketers_coll.find_one({"MarketerID": args.FollowerMarketerID})[
-        "TbsReagentName"
-    ]
-    LeaderMarketerName = marketers_coll.find_one({"MarketerID": args.LeaderMarketerID})[
-        "TbsReagentName"
-    ]
+    try:
+        FollowerMarketerName = marketers_coll.find_one({"MarketerID": args.FollowerMarketerID})[
+            "TbsReagentName"
+        ]
+        LeaderMarketerName = marketers_coll.find_one({"MarketerID": args.LeaderMarketerID})[
+            "TbsReagentName"
+        ]
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
 
     qqq = marketers_relations_coll.find_one(
         {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
