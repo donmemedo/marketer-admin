@@ -194,6 +194,7 @@ async def search_marketer_contract_coefficient(
         query = {}
 
     query_result = coll.find(query, {"_id": False})
+    total_count = coll.count_documents(query)
     marketers = dict(enumerate(query_result))
     results = []
     for i in range(len(marketers)):
@@ -203,7 +204,7 @@ async def search_marketer_contract_coefficient(
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
-    result["totalCount"] = len(marketers)
+    result["totalCount"] = total_count #len(marketers)
     result["pagedData"] = results
     resp = {
         "result": result,

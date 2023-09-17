@@ -208,7 +208,7 @@ async def search_user_profile(
     if args.Mobile:
         upa.append({"Mobile": args.Mobile})
     if args.Title:
-        upa.append({"Title": {"$regex": args.Title}})
+        upa.append({"TbsReagentName": {"$regex": args.Title}})
     if upa:
         query = {"$and": upa}
     else:
@@ -220,6 +220,7 @@ async def search_user_profile(
     except:
         raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
     query_result = marketer_coll.find(query, {"_id": False}).skip(args.size * (args.page - 1)).limit(args.size)
+    total_count = marketer_coll.count_documents(query)
 
     marketers = list(query_result)
     for i in range(len(marketers)):
@@ -228,7 +229,7 @@ async def search_user_profile(
         raise RequestValidationError(TypeError, body={"code": "30008", "status": 200})
     resp = {
         "result": {
-            "totalCount": len(marketers),
+            "totalCount": total_count,# len(marketers),
             "pagedData": results
         },
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -540,6 +541,7 @@ async def search_marketers_relations(
     except:
         raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
     query_result = marketers_relations_coll.find(query, {"_id": False})
+    total_count = marketers_relations_coll.count_documents(query)
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
         results.append(marketers[i])
@@ -548,7 +550,7 @@ async def search_marketers_relations(
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
-    result["totalCount"] = len(marketers)
+    result["totalCount"] = total_count #len(marketers)
     result["pagedData"] = results
     return ResponseListOut(
         result=result,
