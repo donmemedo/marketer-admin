@@ -55,7 +55,7 @@ class UsersTotalPureIn:
 @dataclass
 class MarketersProfileIn:
     # first_name: str = Query("")
-    Title: str = Query(default=None)
+    Title: str = Query(default=None, alias="TbsReagentName")
     UniqueId: str = Query(default=None)
     # last_name: str = Query("")
     Mobile: str = Query(default=None)
