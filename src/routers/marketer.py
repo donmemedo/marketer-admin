@@ -504,27 +504,24 @@ async def search_marketers_relations(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    try:
-        StartDate = jd(datetime.strptime(args.StartDate, "%Y-%m-%d")).date().isoformat()
-        from_gregorian_date = (
-            jd.strptime(StartDate, "%Y-%m-%d").todatetime().isoformat()
-        )
-    except:
-        raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
-    try:
-        EndDate = jd(datetime.strptime(args.EndDate, "%Y-%m-%d")).date().isoformat()
-        to_gregorian_date = (
-            jd.strptime(EndDate, "%Y-%m-%d").todatetime() + timedelta(days=1)
-        ).isoformat()
-    except:
-        raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
+    if args.StartDate or args.EndDate:
+        try:
+            StartDate = jd(datetime.strptime(args.StartDate, "%Y-%m-%d")).date().isoformat()
+            from_gregorian_date = (
+                jd.strptime(StartDate, "%Y-%m-%d").todatetime().isoformat()
+            )
+        except:
+            raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
+        try:
+            EndDate = jd(datetime.strptime(args.EndDate, "%Y-%m-%d")).date().isoformat()
+            to_gregorian_date = (
+                jd.strptime(EndDate, "%Y-%m-%d").todatetime() + timedelta(days=1)
+            ).isoformat()
+        except:
+            raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
 
     marketers_relations_coll = database[settings.RELATIONS_COLLECTION]
     upa = []
-    if upa:
-        query = {"$and": upa}
-    else:
-        query = {}
 
 
     if args.LeaderMarketerName:
@@ -535,8 +532,14 @@ async def search_marketers_relations(
         upa.append({"LeaderMarketerID": args.LeaderMarketerID})
     if args.FollowerMarketerID:
         upa.append({"FollowerMarketerID": args.FollowerMarketerID})
-    upa.append({"StartDate": {"$gte": args.StartDate}})
-    upa.append({"EndDate": {"$lte": args.EndDate}})
+    if args.StartDate:
+        upa.append({"StartDate": {"$gte": args.StartDate}})
+    if args.EndDate:
+        upa.append({"EndDate": {"$lte": args.EndDate}})
+    if upa:
+        query = {"$and": upa}
+    else:
+        query = {}
 
     results = []
     try:
