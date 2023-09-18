@@ -38,7 +38,7 @@ marketer_contract = APIRouter(prefix="/marketer-contract")
 )
 async def add_marketer_contract(
     request: Request,
-    mmci: ModifyMarketerContractIn,
+    mmci: AddMarketerContractIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
