@@ -1,11 +1,13 @@
 """_summary_
 """
+import datetime
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from khayyam import JalaliDatetime as jd
-
+import asyncio
 from auth.permissions import permissions
 from auth.registration import get_token, set_permissions
 from config import settings
@@ -50,6 +52,20 @@ async def startup_events():
     get_database()
     token = await get_token()
     await set_permissions(permissions, token)
+    loop = asyncio.get_event_loop()
+    loop.create_task(periodic())
+
+
+async def periodic():
+    while True:
+        db = get_database()
+        try:
+            db.dbhealthcheck.insert_one({"Time": datetime.datetime.now().isoformat()})
+            logger.info(f"Database Connection is OK in {datetime.datetime.now().isoformat()}")
+        except:
+            logger.critical(f"Database Connection is FAILED in {datetime.datetime.now().isoformat()}")
+
+        await asyncio.sleep(300)
 
 
 @app.get("/health-check", tags=["Deafult"])

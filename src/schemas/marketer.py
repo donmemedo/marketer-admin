@@ -124,7 +124,7 @@ class SearchMarketerRelations:
 
 @dataclass
 class Pages:
-    size: int = Query(10, alias="PageSize")
+    size: int = Query(1000, alias="PageSize")
     page: int = Query(1, alias="PageNumber")
 
 

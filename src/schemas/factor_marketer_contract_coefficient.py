@@ -31,14 +31,14 @@ class ModifyMarketerContractCoefficientIn:
 
 @dataclass
 class SearchMarketerContractCoefficientIn:
-    MarketerID: str = Query("")
+    MarketerID: str = None
     ID: str = None
     # CoefficientPercentage: float = None
     ContractID: str = None
     # HighThreshold: int = None
     # LowThreshold: int = None
     # StepNumber: int = None
-    Title: str = Query("")
+    Title: str = None
 
 
 @dataclass

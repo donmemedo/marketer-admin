@@ -78,7 +78,7 @@ async def sync_marketers(
         print("Data is valid")
     else:
         print("Validation errors:", val.errors)
-    db = get_database()
+    # db = get_database()
     marketer_coll = database[settings.MARKETER_COLLECTION]
     ins_results = []
     up_results = []
@@ -118,7 +118,9 @@ async def sync_marketers(
 
                 up_results.append(marketer)
             except:
-                logger.info("Insertion or Update is unsuccessful.")
+                response = f"Insertion or Update is unsuccessful because of Database Connection Failure in {datetime.now().isoformat()}"
+                logger.critical(response)
+                return JSONResponse(status_code=500, content=response)
     response = {
         "Inserted Marketers": ins_results,
         "Updated Marketers": up_results,

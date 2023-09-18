@@ -178,14 +178,12 @@ async def search_marketer_contract_coefficient(
     user_id = role_perm["sub"]
     coll = database["MarketerContractCoefficient"]
     upa = []
-    if args.CoefficientPercentage:
-        upa.append({"CoefficientPercentage": {"$gte": args.CoefficientPercentage}})
-    if args.HighThreshold:
-        upa.append({"HighThreshold": {"$lte": args.HighThreshold}})
-    if args.LowThreshold:
-        upa.append({"LowThreshold": {"$gte": args.LowThreshold}})
+    if args.MarketerID:
+        upa.append({"MarketerID": args.MarketerID})
+    if args.ID:
+        upa.append({"ID": args.ID})
     if args.ContractID:
-        upa.append({"ContractID": {"$regex": args.ContractID}})
+        upa.append({"ContractID": args.ContractID})
     if args.Title:
         upa.append({"Title": {"$regex": args.Title}})
     if upa:
