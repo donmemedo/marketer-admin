@@ -94,11 +94,15 @@ async def sync_marketers(
             update["$set"]["MarketerID"] = update["$set"].pop("Id")
             marketer_coll.insert_one(update["$set"])
             try:
-                result = f"Marketer {marketer['Title']} with ID {marketer['MarketerID']['value']} is inserted successfully."
+                result = f"Marketer {marketer['TbsReagentName']} with ID {marketer['Id']['value']} is inserted successfully."
                 logger.info(result)
             except:
-                result = f"Marketer with ID {marketer['MarketerID']['value']} is inserted successfully."
-                logger.info(result)
+                try:
+                    result = f"Marketer {marketer['Title']} with ID {marketer['Id']['value']} is inserted successfully."
+                    logger.info(result)
+                except:
+                    result = f"Marketer with ID {marketer['Id']['value']} is inserted successfully."
+                    logger.info(result)
 
             ins_results.append(marketer)
         except:
@@ -110,11 +114,15 @@ async def sync_marketers(
                     {"MarketerID": update["$set"]["MarketerID"]}, update
                 )
                 try:
-                    result = f"Marketer {marketer['Title']} with ID {marketer['MarketerID']['value']} is updated successfully."
+                    result = f"Marketer {marketer['TbsReagentName']} with ID {marketer['Id']['value']} is updated successfully."
                     logger.info(result)
                 except:
-                    result = f"Marketer with ID {marketer['MarketerID']['value']} is updated successfully."
-                    logger.info(result)
+                    try:
+                        result = f"Marketer {marketer['Title']} with ID {marketer['Id']['value']} is updated successfully."
+                        logger.info(result)
+                    except:
+                        result = f"Marketer with ID {marketer['Id']['value']} is updated successfully."
+                        logger.info(result)
 
                 up_results.append(marketer)
             except:
