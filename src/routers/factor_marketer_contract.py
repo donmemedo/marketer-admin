@@ -67,6 +67,22 @@ async def add_marketer_contract(
     for key, value in vars(mmci).items():
         if value is not None:
             update["$set"][key] = value
+    if mmci.StartDate or mmci.EndDate:
+        try:
+            StartDate = (
+                jd(datetime.strptime(mmci.StartDate, "%Y-%m-%d")).date().isoformat()
+            )
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30018", "status": 412}
+            )
+        try:
+            EndDate = jd(datetime.strptime(mmci.EndDate, "%Y-%m-%d")).date().isoformat()
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30017", "status": 412}
+            )
+
     update["$set"]["CreateDateTime"] = str(datetime.now())
     update["$set"]["ContractID"] = uuid.uuid1().hex
     update["$set"]["CoefficientBaseType"] = CoefficientBaseType[
@@ -106,12 +122,6 @@ async def add_marketer_contract(
         },
     }
     return JSONResponse(status_code=200, content=resp)
-
-    # return ResponseListOut(
-    #     result=query_result,
-    #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-    #     error="",
-    # )
 
 
 @marketer_contract.put(
@@ -155,6 +165,22 @@ async def modify_marketer_contract(
     for key, value in vars(mmci).items():
         if value is not None:
             update["$set"][key] = value
+    if mmci.StartDate or mmci.EndDate:
+        try:
+            StartDate = (
+                jd(datetime.strptime(mmci.StartDate, "%Y-%m-%d")).date().isoformat()
+            )
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30018", "status": 412}
+            )
+        try:
+            EndDate = jd(datetime.strptime(mmci.EndDate, "%Y-%m-%d")).date().isoformat()
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30017", "status": 412}
+            )
+
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsDeleted"] = False
     coll.update_one(filter, update)
