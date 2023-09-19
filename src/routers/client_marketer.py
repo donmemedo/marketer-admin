@@ -59,7 +59,7 @@ async def get_marketer_profile(
         total_count = marketers_coll.count_documents({})
         query_result = (
             marketers_coll.find({}, {"_id": 0})
-            .skip(args.size * (args.page -1) )
+            .skip(args.size * (args.page - 1))
             .limit(args.size)
         )
         results = []
@@ -138,7 +138,9 @@ async def cal_marketer_cost(
     )
     if args.IdpID:
         # marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
-        marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
+        marketers_query = marketers_coll.find(
+            {"MarketerID": args.IdpID}, {"_id": False}
+        )
 
     marketers_list = list(marketers_query)
     total_count = marketers_coll.count_documents(
@@ -437,7 +439,9 @@ async def factor_print(
     )
     if args.IdpID:
         # marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
-        marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
+        marketers_query = marketers_coll.find(
+            {"MarketerID": args.IdpID}, {"_id": False}
+        )
 
     marketers_list = list(marketers_query)
     total_count = marketers_coll.count_documents(

@@ -7,14 +7,14 @@ plan_one = {
     "4": {"start": 600000000000, "end": math.inf, "marketer_share": 0.5},
 }
 plan_two = {
-    "0": {"start": 0, "end": 30000000000, "marketer_share": 0},
-    "1": {"start": 30000000000, "end": 50000000000, "marketer_share": 0.1},
-    "2": {"start": 50000000000, "end": 100000000000, "marketer_share": 0.15},
-    "3": {"start": 100000000000, "end": 150000000000, "marketer_share": 0.2},
-    "4": {"start": 150000000000, "end": 200000000000, "marketer_share": 0.25},
-    "5": {"start": 200000000000, "end": 300000000000, "marketer_share": 0.3},
-    "6": {"start": 300000000000, "end": 400000000000, "marketer_share": 0.35},
-    "7": {"start": 400000000000, "end": math.inf, "marketer_share": 0.4},
+    "payeh": {"start": 0, "end": 30000000000, "marketer_share": 0},
+    "morvarid": {"start": 30000000000, "end": 50000000000, "marketer_share": 0.1},
+    "firouzeh": {"start": 50000000000, "end": 100000000000, "marketer_share": 0.15},
+    "aghigh": {"start": 100000000000, "end": 150000000000, "marketer_share": 0.2},
+    "yaghout": {"start": 150000000000, "end": 200000000000, "marketer_share": 0.25},
+    "zomorod": {"start": 200000000000, "end": 300000000000, "marketer_share": 0.3},
+    "tala": {"start": 300000000000, "end": 400000000000, "marketer_share": 0.35},
+    "almas": {"start": 400000000000, "end": math.inf, "marketer_share": 0.4},
 }
 plan_three = {
     "0": {"start": 0, "end": 30000000000, "marketer_share": 0},
@@ -35,9 +35,23 @@ plans = {
     "جدول شماره ۱": plan_one,
     "جدول شماره ۲": plan_two,
     "جدول شماره ۳": plan_three,
-    "": no_plan,
+    "نامشخص": no_plan,
     "ثابت شماره ۱": const_one,
     "ثابت شماره ۲": const_two,
     "ثابت شماره ۳": const_three,
     "ثابت شماره ۴": const_four,
 }
+ContractType = {"Agency": "نمایندگی", "Independent": "مستقل"}
+
+CalculationBaseType = {
+    "PlanOne": "جدول شماره ۱",
+    "PlanTwo": "جدول شماره ۲",
+    "PlanThree": "جدول شماره ۳",
+    "NoPlan": "نامشخص",
+    "ConstOne": "ثابت شماره ۱",
+    "ConstTwo": "ثابت شماره ۲",
+    "ConstThree": "ثابت شماره ۳",
+    "ConstFour": "ثابت شماره ۴",
+}
+
+CoefficientBaseType = {"Plan": "پلکان", "Const": "ثابت"}

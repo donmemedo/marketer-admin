@@ -196,8 +196,11 @@ async def search_marketer_ref_code(
     else:
         query = {}
 
-
-    query_result = coll.find(query, {"_id": False})
+    query_result = (
+        coll.find(query, {"_id": False})
+        .skip(args.size * (args.page - 1))
+        .limit(args.size)
+    )
     total_count = coll.count_documents(query)
     marketers = dict(enumerate(query_result))
     results = []
@@ -208,7 +211,7 @@ async def search_marketer_ref_code(
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
-    result["totalCount"] = total_count #len(marketers)
+    result["totalCount"] = total_count  # len(marketers)
     result["pagedData"] = results
 
     resp = {

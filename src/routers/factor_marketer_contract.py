@@ -17,15 +17,14 @@ from src.auth.authorization import authorize
 from src.schemas.factor_marketer_contract import *
 from src.tools.database import get_database
 from src.tools.utils import get_marketer_name, check_permissions
+from src.tools.stages import *
 import uuid
+
 # marketer_contract = APIRouter(prefix="/factor/marketer-contract")
 marketer_contract = APIRouter(prefix="/marketer-contract")
 
 
-@marketer_contract.post(
-    "/add",
-    tags=["MarketerContract"],
-)
+@marketer_contract.post("/add", tags=["MarketerContract"], response_model=None)
 @authorize(
     [
         "MarketerAdmin.All.Write",
@@ -70,26 +69,49 @@ async def add_marketer_contract(
             update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
     update["$set"]["ContractID"] = uuid.uuid1().hex
+    update["$set"]["CoefficientBaseType"] = CoefficientBaseType[
+        mmci.CoefficientBaseType.value
+    ]
+    update["$set"]["CalculationBaseType"] = CalculationBaseType[
+        mmci.CalculationBaseType.value
+    ]
+    update["$set"]["ContractType"] = ContractType[mmci.ContractType.value]
+    try:
+        update["$set"]["Title"] = marketers_coll.find_one(
+            {"IdpID": mmci.MarketerID}, {"_id": False}
+        )["TbsReagentName"]
+    except:
+        try:
+            update["$set"]["Title"] = marketers_coll.find_one(
+                {"IdpID": mmci.MarketerID}, {"_id": False}
+            )["Title"]
+        except:
+            update["$set"]["Title"] = "بی‌نام"
 
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsDeleted"] = False
 
     try:
-        # marketer_name = get_marketer_name(
-        #     marketers_coll.find_one({"IdpID": mmci.MarketerID}, {"_id": False})
-        # )
-        #
-        # coll.insert_one({"MarketerID": mmci.MarketerID, "Title": marketer_name})
-        # coll.update_one(filter, update)
         coll.insert_one(update["$set"])
     except:
         raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
     query_result = coll.find_one({"MarketerID": mmci.MarketerID}, {"_id": False})
-    return ResponseListOut(
-        result=query_result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+
+    resp = {
+        "result": query_result,
+        "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        "error": {
+            "message": "Null",
+            "code": "Null",
+        },
+    }
+    return JSONResponse(status_code=200, content=resp)
+
+    # return ResponseListOut(
+    #     result=query_result,
+    #     timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    #     error="",
+    # )
 
 
 @marketer_contract.put(
@@ -202,7 +224,15 @@ async def search_marketer_contract(
     if args.ContractNumber:
         upa.append({"ContractNumber": args.ContractNumber})
     if args.ContractType:
-        upa.append({"ContractType": {"$regex": args.ContractType}})
+        upa.append({"ContractType": ContractType[args.ContractType.value]})
+    if args.CalculationBaseType:
+        upa.append(
+            {"CalculationBaseType": CalculationBaseType[args.CalculationBaseType.value]}
+        )
+    if args.CoefficientBaseType:
+        upa.append(
+            {"CoefficientBaseType": CoefficientBaseType[args.CoefficientBaseType.value]}
+        )
     if args.Description:
         upa.append({"Description": {"$regex": args.Description}})
     if args.EndDate:
@@ -215,7 +245,11 @@ async def search_marketer_contract(
         query = {"$and": upa}
     else:
         query = {}
-    query_result = coll.find(query, {"_id": False})
+    query_result = (
+        coll.find(query, {"_id": False})
+        .skip(args.size * (args.page - 1))
+        .limit(args.size)
+    )
     total_count = coll.count_documents(query)
     marketers = dict(enumerate(query_result))
     results = []
@@ -226,7 +260,7 @@ async def search_marketer_contract(
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
-    result["totalCount"] = total_count# len(marketers)
+    result["totalCount"] = total_count  # len(marketers)
     result["pagedData"] = results
 
     resp = {

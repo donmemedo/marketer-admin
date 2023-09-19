@@ -521,7 +521,9 @@ async def calculate_factor(
     contded_coll = database["MarketerContractDeduction"]
     per = args.Period
     if args.MarketerID:
-        marketers = marketer_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
+        marketers = marketer_coll.find_one(
+            {"MarketerID": args.MarketerID}, {"_id": False}
+        )
     else:
         marketerrs = marketer_coll.find(
             {"MarketerID": {"$exists": True, "$not": {"$size": 0}}}, {"_id": False}

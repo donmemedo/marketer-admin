@@ -61,9 +61,13 @@ async def periodic():
         db = get_database()
         try:
             db.dbhealthcheck.insert_one({"Time": datetime.datetime.now().isoformat()})
-            logger.info(f"Database Connection is OK in {datetime.datetime.now().isoformat()}")
+            logger.info(
+                f"Database Connection is OK in {datetime.datetime.now().isoformat()}"
+            )
         except:
-            logger.critical(f"Database Connection is FAILED in {datetime.datetime.now().isoformat()}")
+            logger.critical(
+                f"Database Connection is FAILED in {datetime.datetime.now().isoformat()}"
+            )
 
         await asyncio.sleep(300)
 

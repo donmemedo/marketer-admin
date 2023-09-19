@@ -18,7 +18,7 @@ from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
 
 
-tbs_data_crawler = APIRouter()#prefix="/tbs")
+tbs_data_crawler = APIRouter()  # prefix="/tbs")
 
 
 class Cookie:
@@ -74,7 +74,7 @@ async def get_cookie(
     return cookie.cookie
 
 
-@tbs_data_crawler.delete("/trades", tags=["TBS"])# - Trades"])
+@tbs_data_crawler.delete("/trades", tags=["TBS"])  # - Trades"])
 @authorize(
     [
         "MarketerAdmin.All.Delete",
@@ -412,7 +412,7 @@ async def get_customers(
         )
 
 
-@tbs_data_crawler.get("/reconciliation", tags=["TBS"])# - Reconciliation"])
+@tbs_data_crawler.get("/reconciliation", tags=["TBS"])  # - Reconciliation"])
 @authorize(
     [
         "MarketerAdmin.All.Read",
@@ -432,7 +432,9 @@ async def reconciliation(
     customer_coll = db[settings.CUSTOMER_COLLECTION]
 
     if args.MarketerID:
-        marketers = marketer_coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
+        marketers = marketer_coll.find_one(
+            {"MarketerID": args.MarketerID}, {"_id": False}
+        )
     else:
         marketerrs = marketer_coll.find(
             {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},

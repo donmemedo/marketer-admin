@@ -15,7 +15,9 @@ class Settings(BaseSettings):
 
     API_PREFIX: str = ""
     DOCS_URL: str = ""
-    MONGO_CONNECTION_STRING: str = "mongodb://root:root@172.24.65.105:30001/?timeoutMS=2000"
+    MONGO_CONNECTION_STRING: str = (
+        "mongodb://root:root@172.24.65.105:30001/?timeoutMS=2000"
+    )
 
     MONGO_DATABASE: str = "brokerage"
     CUSTOMER_COLLECTION: str = "customers"

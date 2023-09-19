@@ -82,9 +82,9 @@ async def add_base_factor(
         # marketer_name = get_marketer_name(
         #     marketers_coll.find_one({"MarketerID": mfi.MarketerID}, {"_id": False})
         # )
-        marketer_name = marketers_coll.find_one({"MarketerID": mfi.MarketerID}, {"_id": False})[
-            "TbsReagentName"
-        ]
+        marketer_name = marketers_coll.find_one(
+            {"MarketerID": mfi.MarketerID}, {"_id": False}
+        )["TbsReagentName"]
 
         factor_coll.insert_one(
             {"MarketerID": mfi.MarketerID, "Period": mfi.Period, "Title": marketer_name}
@@ -103,8 +103,8 @@ async def add_base_factor(
 
 
 @factors.put(
-    "/base",#/modify",
-    tags=["Factors"],# - Base"],
+    "/base",  # /modify",
+    tags=["Factors"],  # - Base"],
 )
 @authorize(
     [
@@ -222,9 +222,9 @@ async def add_accounting_factor(
     update["$set"]["CreateBy"] = user_id
     update["$set"]["UpdateBy"] = user_id
     try:
-        marketer_name = marketers_coll.find_one({"MarketerID": mfi.MarketerID}, {"_id": False})[
-            "TbsReagentName"
-        ]
+        marketer_name = marketers_coll.find_one(
+            {"MarketerID": mfi.MarketerID}, {"_id": False}
+        )["TbsReagentName"]
 
         factor_coll.insert_one(
             {"MarketerID": mfi.MarketerID, "Period": mfi.Period, "Title": marketer_name}
@@ -241,8 +241,8 @@ async def add_accounting_factor(
 
 
 @factors.put(
-    "/accounting",#/modify",
-    tags=["Factors"],# - Accounting"],
+    "/accounting",  # /modify",
+    tags=["Factors"],  # - Accounting"],
 )
 @authorize(
     [
@@ -503,10 +503,12 @@ async def calculate_factor(
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
     per = args.Period
     if args.MarketerID:
-        marketers = [marketer_coll.find_one(
-            {"MarketerID": args.MarketerID},
-            {"_id": False},
-        )]
+        marketers = [
+            marketer_coll.find_one(
+                {"MarketerID": args.MarketerID},
+                {"_id": False},
+            )
+        ]
     else:
         marketerrs = marketer_coll.find(
             {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},
@@ -545,13 +547,14 @@ async def calculate_factor(
         tpv = marketer_total.get("TotalPureVolume")
         b = plans
         try:
+            # ToDo:MarketerID must Change to ContractID because some Marketers may have multiple contracts
             cbt = contract_coll.find_one(
                 {"MarketerID": marketer["MarketerID"]}, {"_id": False}
             )["CalculationBaseType"]
         except:
             cbt = ""
         for plan in plans[cbt]:
-            plans[cbt][plan]["start"]
+            # plans[cbt][plan]["start"]
             if plans[cbt][plan]["start"] <= tpv < plans[cbt][plan]["end"]:
                 marketer_fee = pure_fee * plans[cbt][plan]["marketer_share"]
                 plan_name = plan
@@ -614,7 +617,10 @@ async def calculate_factor(
                 group_by_total_stage("id"),
                 project_pure_stage(),
             ]
-            fresult = next(database.trades.aggregate(pipeline=pipeline), {"TotalPureVolume": 0, "TotalFee": 0},)
+            fresult = next(
+                database.trades.aggregate(pipeline=pipeline),
+                {"TotalPureVolume": 0, "TotalFee": 0},
+            )
             FTF = FTF + fresult["TotalFee"] * followers[i]["CommissionCoefficient"]
         additions = FTF
         # ToDo: TotalCMD AutoCalculation
@@ -644,10 +650,8 @@ async def calculate_factor(
             "SumOfDeductions": int(deductions),
             "Status": 10,
             "Payment": int(payment),
-
             "IsCmdConcluded": False,
             "MaketerCMDIncome": 0,
-
             "TaxDeduction": 0,
             "TaxCoefficient": 0,
             "CollateralDeduction": 0,
@@ -668,10 +672,8 @@ async def calculate_factor(
             "InsuranceReturnPayment": 0,
             "OtherPayment": 0,
             "OtherPaymentDescription": " ",
-
             "CreateDateTime": jd.now().isoformat(),
             "UpdateDateTime": jd.now().isoformat(),
-
         }
         try:
             factor_coll.insert_one(result)
@@ -748,7 +750,7 @@ async def get_marketer_all_factors(
         results.append(factor)
 
     resp = {
-        "result":{
+        "result": {
             "totalCount": total_count,
             "pagedData": results,
         },

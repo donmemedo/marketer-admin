@@ -66,7 +66,9 @@ async def add_marketer_contract_deduction(
         if value is not None:
             update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
-    update["$set"]["Title"] = marketers_coll.find_one({"MarketerID": mmcd.MarketerID}, {"_id": False})["TbsReagentName"]
+    update["$set"]["Title"] = marketers_coll.find_one(
+        {"MarketerID": mmcd.MarketerID}, {"_id": False}
+    )["TbsReagentName"]
     update["$set"]["ID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())
 
@@ -210,7 +212,11 @@ async def search_marketer_contract_deduction(
     else:
         query = {}
 
-    query_result = coll.find(query, {"_id": False})
+    query_result = (
+        coll.find(query, {"_id": False})
+        .skip(args.size * (args.page - 1))
+        .limit(args.size)
+    )
     total_count = coll.count_documents(query)
     marketers = dict(enumerate(query_result))
     results = []
@@ -221,7 +227,7 @@ async def search_marketer_contract_deduction(
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
-    result["totalCount"] = total_count #len(marketers)
+    result["totalCount"] = total_count  # len(marketers)
     result["pagedData"] = results
 
     resp = {

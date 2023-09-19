@@ -130,7 +130,9 @@ async def get_marketer_total_trades(
     )
     if args.IdpID:
         # marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
-        marketers_query = marketers_coll.find({"MarketerID": args.IdpID}, {"_id": False})
+        marketers_query = marketers_coll.find(
+            {"MarketerID": args.IdpID}, {"_id": False}
+        )
 
     marketers_list = list(marketers_query)
     total_count = marketers_coll.count_documents(

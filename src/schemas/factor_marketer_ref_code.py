@@ -61,6 +61,8 @@ class SearchMarketerRefCodeIn:
     RefCode: str = None
     Type: str = None
     Title: str = Query(None)
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass

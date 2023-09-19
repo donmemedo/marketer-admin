@@ -62,7 +62,10 @@ async def sync_marketers(
     auth_token = request.headers.get("authorization")
     metadata.append(("authorization", auth_token))
     sync_request = marketer_pb2.SearchMarketerRPCRequest(
-        PageSize=args.size, PageNumber=args.page - 1
+        # ToDo: When FrontEnd giving these args then change
+        # PageSize=args.size, PageNumber=args.page - 1
+        PageSize=10000,
+        PageNumber=0,
     )
 
     try:

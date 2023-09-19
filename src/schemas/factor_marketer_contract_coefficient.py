@@ -39,6 +39,8 @@ class SearchMarketerContractCoefficientIn:
     # LowThreshold: int = None
     # StepNumber: int = None
     Title: str = None
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass
@@ -100,6 +102,8 @@ class ResponseListOut:
 class SearchFactorIn:
     MarketerID: str = Query("")
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass

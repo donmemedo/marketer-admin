@@ -73,7 +73,9 @@ async def add_marketer_contract_coefficient(
         # marketer_name = get_marketer_name(
         #     marketers_coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})
         # )
-        marketer_name = marketers_coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})["TbsReagentName"]
+        marketer_name = marketers_coll.find_one(
+            {"MarketerID": mmcci.MarketerID}, {"_id": False}
+        )["TbsReagentName"]
 
         # coll.insert_one({"MarketerID": mmcci.MarketerID})#, "Title": marketer_name})
         # coll.update_one(filter, update)
@@ -191,7 +193,11 @@ async def search_marketer_contract_coefficient(
     else:
         query = {}
 
-    query_result = coll.find(query, {"_id": False})
+    query_result = (
+        coll.find(query, {"_id": False})
+        .skip(args.size * (args.page - 1))
+        .limit(args.size)
+    )
     total_count = coll.count_documents(query)
     marketers = dict(enumerate(query_result))
     results = []
@@ -202,7 +208,7 @@ async def search_marketer_contract_coefficient(
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
-    result["totalCount"] = total_count #len(marketers)
+    result["totalCount"] = total_count  # len(marketers)
     result["pagedData"] = results
     resp = {
         "result": result,

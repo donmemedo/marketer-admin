@@ -219,7 +219,11 @@ async def search_user_profile(
         query_result = marketer_coll.find_one(query, {"_id": False})
     except:
         raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
-    query_result = marketer_coll.find(query, {"_id": False}).skip(args.size * (args.page - 1)).limit(args.size)
+    query_result = (
+        marketer_coll.find(query, {"_id": False})
+        .skip(args.size * (args.page - 1))
+        .limit(args.size)
+    )
     total_count = marketer_coll.count_documents(query)
 
     marketers = list(query_result)
@@ -228,10 +232,7 @@ async def search_user_profile(
     if not results:
         raise RequestValidationError(TypeError, body={"code": "30008", "status": 200})
     resp = {
-        "result": {
-            "totalCount": total_count,# len(marketers),
-            "pagedData": results
-        },
+        "result": {"totalCount": total_count, "pagedData": results},  # len(marketers),
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         "error": {
             "message": "Null",
@@ -506,23 +507,28 @@ async def search_marketers_relations(
     user_id = role_perm["sub"]
     if args.StartDate or args.EndDate:
         try:
-            StartDate = jd(datetime.strptime(args.StartDate, "%Y-%m-%d")).date().isoformat()
+            StartDate = (
+                jd(datetime.strptime(args.StartDate, "%Y-%m-%d")).date().isoformat()
+            )
             from_gregorian_date = (
                 jd.strptime(StartDate, "%Y-%m-%d").todatetime().isoformat()
             )
         except:
-            raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
+            raise RequestValidationError(
+                TypeError, body={"code": "30018", "status": 412}
+            )
         try:
             EndDate = jd(datetime.strptime(args.EndDate, "%Y-%m-%d")).date().isoformat()
             to_gregorian_date = (
                 jd.strptime(EndDate, "%Y-%m-%d").todatetime() + timedelta(days=1)
             ).isoformat()
         except:
-            raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
+            raise RequestValidationError(
+                TypeError, body={"code": "30017", "status": 412}
+            )
 
     marketers_relations_coll = database[settings.RELATIONS_COLLECTION]
     upa = []
-
 
     if args.LeaderMarketerName:
         upa.append({"LeaderMarketerName": {"$regex": args.LeaderMarketerName}})
@@ -546,7 +552,11 @@ async def search_marketers_relations(
         query_result = marketers_relations_coll.find_one(query, {"_id": False})
     except:
         raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
-    query_result = marketers_relations_coll.find(query, {"_id": False})
+    query_result = (
+        marketers_relations_coll.find(query, {"_id": False})
+        .skip(args.size * (args.page - 1))
+        .limit(args.size)
+    )
     total_count = marketers_relations_coll.count_documents(query)
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
@@ -556,7 +566,7 @@ async def search_marketers_relations(
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
-    result["totalCount"] = total_count #len(marketers)
+    result["totalCount"] = total_count  # len(marketers)
     result["pagedData"] = results
     return ResponseListOut(
         result=result,
@@ -630,12 +640,12 @@ async def delete_marketers_relations(
     #     marketers_coll.find_one({"MarketerID": args.LeaderMarketerID})
     # )
     try:
-        FollowerMarketerName = marketers_coll.find_one({"MarketerID": args.FollowerMarketerID})[
-            "TbsReagentName"
-        ]
-        LeaderMarketerName = marketers_coll.find_one({"MarketerID": args.LeaderMarketerID})[
-            "TbsReagentName"
-        ]
+        FollowerMarketerName = marketers_coll.find_one(
+            {"MarketerID": args.FollowerMarketerID}
+        )["TbsReagentName"]
+        LeaderMarketerName = marketers_coll.find_one(
+            {"MarketerID": args.LeaderMarketerID}
+        )["TbsReagentName"]
     except:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
 
