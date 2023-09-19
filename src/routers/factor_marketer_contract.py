@@ -94,12 +94,12 @@ async def add_marketer_contract(
     update["$set"]["ContractType"] = ContractType[mmci.ContractType.value]
     try:
         update["$set"]["Title"] = marketers_coll.find_one(
-            {"IdpID": mmci.MarketerID}, {"_id": False}
+            {"MarketerID": mmci.MarketerID}, {"_id": False}
         )["TbsReagentName"]
     except:
         try:
             update["$set"]["Title"] = marketers_coll.find_one(
-                {"IdpID": mmci.MarketerID}, {"_id": False}
+                {"MarketerID": mmci.MarketerID}, {"_id": False}
             )["Title"]
         except:
             update["$set"]["Title"] = "بی‌نام"
