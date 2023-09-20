@@ -163,7 +163,7 @@ async def modify_marketer(
     # query_result = marketer_coll.find_one({"MarketerID": idpid}, {"_id": False})
     query_result = marketer_coll.find_one({"MarketerID": idpid}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -230,7 +230,7 @@ async def search_user_profile(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30008", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
     resp = {
         "result": {"totalCount": total_count, "pagedData": results},  # len(marketers),
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -413,7 +413,7 @@ async def modify_marketers_relations(
         ]
     }
     if marketers_relations_coll.find_one(query) is None:
-        raise RequestValidationError(TypeError, body={"code": "30019", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30019", "status": 404})
     if mrel.CommissionCoefficient is None:
         raise RequestValidationError(TypeError, body={"code": "30010", "status": 412})
     update = {"$set": {}}
@@ -562,7 +562,7 @@ async def search_marketers_relations(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30008", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
@@ -629,7 +629,7 @@ async def delete_marketers_relations(
     )
 
     if not q:
-        raise RequestValidationError(TypeError, body={"code": "30052", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30052", "status": 404})
     if not q.get("LeaderMarketerID") == args.LeaderMarketerID:
         raise RequestValidationError(TypeError, body={"code": "30012", "status": 409})
     results = []
@@ -770,7 +770,7 @@ async def users_list_by_volume(
     query_result = marketer_col.find_one({"MarketerID": args.IdpID})
 
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
     # marketer_fullname = get_marketer_name(query_result)
     marketer_fullname = query_result["TbsReagentName"]
 

@@ -365,7 +365,7 @@ def users_total(
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
-        raise RequestValidationError(TypeError, body={"code": "30028", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30028", "status": 404})
     return ResponseOut(
         result=aggre_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),

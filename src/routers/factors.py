@@ -374,7 +374,7 @@ async def search_factor(
             results.append(query_result[i])
         except:
             raise RequestValidationError(
-                TypeError, body={"code": "30001", "status": 200}
+                TypeError, body={"code": "30001", "status": 404}
             )
     if args.MarketerID:
         last_result = results
@@ -446,7 +446,7 @@ async def delete_factor(
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
     query_result = factor_coll.find_one(filter, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     if args.FactorID:
         result = [f"فاکتور شماره  {args.FactorID} پاک شد."]
     else:
