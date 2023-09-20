@@ -88,7 +88,7 @@ async def get_user_trades(
         results.append(trades[i])
 
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "300", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -438,7 +438,7 @@ async def users_diff_with_tbs(
         else:
             result.append(q)
     if not result:
-        raise RequestValidationError(TypeError, body={"code": "30013", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30013", "status": 404})
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),

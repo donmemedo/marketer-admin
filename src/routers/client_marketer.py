@@ -70,7 +70,7 @@ async def get_marketer_profile(
             results.append(marketer)
 
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"

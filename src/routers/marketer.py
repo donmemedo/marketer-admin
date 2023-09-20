@@ -89,7 +89,7 @@ async def add_marketer(
         raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
     query_result = marketer_coll.find_one(filter, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30051", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30051", "status": 412})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -741,7 +741,7 @@ async def users_diff_with_tbs(
             else:
                 result.append(q)
     if not result:
-        raise RequestValidationError(TypeError, body={"code": "30013", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30013", "status": 404})
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
