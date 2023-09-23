@@ -94,7 +94,12 @@ async def sync_marketers(
                 else:
                     update["$set"][key] = value
         try:
+            update["$set"]["MarketerID"] = update["$set"].pop("UserId")
+        except:
             update["$set"]["MarketerID"] = update["$set"].pop("Id")
+
+        try:
+            # update["$set"]["MarketerID"] = update["$set"].pop("Id")
             marketer_coll.insert_one(update["$set"])
             try:
                 result = f"Marketer {marketer['TbsReagentName']} with ID {marketer['Id']['value']} is inserted successfully."
