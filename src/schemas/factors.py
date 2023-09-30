@@ -72,7 +72,7 @@ class ModifyAccountingFactorIn:
 class ModifyBaseFactorIn:
     MarketerID: str
     Period: str = str(current_year) + f"{current_month:02}"
-    # FactorID: str = None
+    FactorID: str = None
     TotalTurnOver: int = Query(None, alias="TotalTurnOver")  # TotalPureVolume
     TotalBrokerCommission: int = Query(None, alias="TotalBrokerCommission")  # TotalFee
     TotalCMD: int = None
@@ -85,8 +85,8 @@ class ModifyBaseFactorIn:
     TotalFeeOfFollowers: int = None
     IsCmdConcluded: bool = False
     MaketerCMDIncome: int = None
-    CreateDateTime: str = None
-    UpdateDateTime: str = None
+    # CreateDateTime: str = None
+    # UpdateDateTime: str = None
 
 
 @dataclass

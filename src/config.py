@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     ORIGINS: str = "*"
     ROOT_PATH: str = ""
     SWAGGER_TITLE: str = "Marketer Admin"
-    VERSION: str = "1.5.3"
+    VERSION: str = "1.5.4"
     # Added from Marketer
     JWKS_CONFIGURATION_URL: str = (
         "https://cluster.tech1a.co/.well-known/openid-configuration/jwks"
