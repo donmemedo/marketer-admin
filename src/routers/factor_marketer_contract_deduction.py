@@ -66,9 +66,17 @@ async def add_marketer_contract_deduction(
         if value is not None:
             update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
-    update["$set"]["Title"] = marketers_coll.find_one(
+    marketer = marketers_coll.find_one(
         {"MarketerID": mmcd.MarketerID}, {"_id": False}
-    )["TbsReagentName"]
+    )
+    if marketer:
+        try:
+            update["$set"]["Title"] = marketer["TbsReagentName"]
+        except:
+            update["$set"]["Title"] = marketer["Title"]
+    else:
+        raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
+
     update["$set"]["ID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())
 
