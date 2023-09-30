@@ -509,6 +509,8 @@ async def calculate_factor(
                 {"_id": False},
             )
         ]
+        if marketers == [None]:
+            raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
     else:
         marketerrs = marketer_coll.find(
             {"TbsReagentName": {"$exists": True, "$not": {"$size": 0}}},
