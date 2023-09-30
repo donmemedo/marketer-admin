@@ -60,9 +60,9 @@ async def add_marketer_contract(
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmci.MarketerID}
     update = {"$set": {}}
-    update["$set"]["StartDate"] = jd.today().strftime("%Y-%m-%d")
+    update["$set"]["StartDate"] = date.today().strftime("%Y-%m-%d")
     update["$set"]["EndDate"] = (
-        jd.today().replace(year=jd.today().year + 1).strftime("%Y-%m-%d")
+        date.today().replace(year=date.today().year + 1).strftime("%Y-%m-%d")
     )
     for key, value in vars(mmci).items():
         if value is not None:
