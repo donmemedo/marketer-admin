@@ -408,7 +408,7 @@ async def search_factor(
 )
 async def delete_factor(
     request: Request,
-    args: SearchFactorIn = Depends(DeleteFactorIn),
+    args: DeleteFactorIn = Depends(DeleteFactorIn),
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):

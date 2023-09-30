@@ -143,7 +143,7 @@ class AllFactors:
 class DeleteFactorIn:
     MarketerID: str = None
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
-    ID: str = None
+    FactorID: str = None
     ContractID: str = None
 
 
