@@ -511,13 +511,17 @@ async def calculate_factor(
         ]
     else:
         marketerrs = marketer_coll.find(
-            {"TbsReagentId": {"$exists": True, "$not": {"$size": 0}}},
+            {"TbsReagentName": {"$exists": True, "$not": {"$size": 0}}},
             {"_id": False},
         )
         marketers = list(marketerrs)
     results = []
     for marketer in marketers:
-        query = {"Referer": marketer["TbsReagentName"]}
+        try:
+            query = {"Referer": marketer["TbsReagentName"]}
+        except:
+            logger.error(f"مارکتر با شناسه {marketer['MarketerID']} معرف/بازاریاب نیست.")
+            break
         fields = {"PAMCode": 1}
 
         customers_records = customer_coll.find(query, fields)
@@ -546,13 +550,17 @@ async def calculate_factor(
         marketer_fee = 0
         tpv = marketer_total.get("TotalPureVolume")
         b = plans
-        try:
-            # ToDo:MarketerID must Change to ContractID because some Marketers may have multiple contracts
-            cbt = contract_coll.find_one(
-                {"MarketerID": marketer["MarketerID"]}, {"_id": False}
-            )["CalculationBaseType"]
-        except:
-            cbt = ""
+        # ToDo:MarketerID must Change to ContractID because some Marketers may have multiple contracts
+        contract_values = contract_coll.find_one(
+            {"MarketerID": marketer["MarketerID"]}, {"_id": False}
+        )
+        if contract_values:
+            try:
+                cbt = contract_values["CalculationBaseType"]
+            except:
+                cbt = "نامشخص"
+        else:
+            raise RequestValidationError(TypeError, body={"code": "30031", "status": 404})
         for plan in plans[cbt]:
             # plans[cbt][plan]["start"]
             if plans[cbt][plan]["start"] <= tpv < plans[cbt][plan]["end"]:
