@@ -16,7 +16,7 @@ from src.schemas.tbs_data_crawler import *
 from khayyam import JalaliDatetime
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
-
+from fastapi.exceptions import RequestValidationError
 
 tbs_data_crawler = APIRouter()  # prefix="/tbs")
 
@@ -441,6 +441,8 @@ async def reconciliation(
             {"_id": False},
         )
         marketers = dict(enumerate(marketerrs))
+    if not marketers:
+        raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
     results = []
     dates = next(
         temp_trades_coll.aggregate(
