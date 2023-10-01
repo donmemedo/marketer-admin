@@ -34,8 +34,8 @@ class ModifyConstIn:
 
 @dataclass
 class ModifyAccountingFactorIn:
-    MarketerID: str
-    Period: str = str(current_year) + f"{current_month:02}"
+    # MarketerID: str
+    # Period: str = str(current_year) + f"{current_month:02}"
     FactorID: str = None
     Plan: str = None
     TaxDeduction: int = Query(None, alias="TaxDeduction")
@@ -70,8 +70,8 @@ class ModifyAccountingFactorIn:
 
 @dataclass
 class ModifyBaseFactorIn:
-    MarketerID: str
-    Period: str = str(current_year) + f"{current_month:02}"
+    # MarketerID: str
+    # Period: str = str(current_year) + f"{current_month:02}"
     FactorID: str = None
     TotalTurnOver: int = Query(None, alias="TotalTurnOver")  # TotalPureVolume
     TotalBrokerCommission: int = Query(None, alias="TotalBrokerCommission")  # TotalFee
@@ -141,10 +141,10 @@ class AllFactors:
 
 @dataclass
 class DeleteFactorIn:
-    MarketerID: str = None
-    Period: Optional[str] = str(current_year) + f"{current_month:02}"
+    # MarketerID: str = None
+    # Period: Optional[str] = str(current_year) + f"{current_month:02}"
     FactorID: str = None
-    ContractID: str = None
+    # ContractID: str = None
 
 
 @dataclass

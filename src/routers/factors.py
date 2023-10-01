@@ -137,12 +137,13 @@ async def modify_base_factor(
     user_id = role_perm["sub"]
     factor_coll = database[settings.FACTOR_COLLECTION]  # ["MarketerFactor"]
     marketers_coll = database[settings.MARKETER_COLLECTION]  # ["MarketerTable"]
-    if ((mfi.MarketerID and mfi.Period) or mfi.FactorID) is None:
-        raise RequestValidationError(TypeError, body={"code": "30030", "status": 412})
-    if mfi.FactorID:
-        filter = {"FactorID": mfi.FactorID}
-    else:
-        filter = {"$and": [{"MarketerID": mfi.MarketerID}, {"Period": mfi.Period}]}
+    # if ((mfi.MarketerID and mfi.Period) or
+    if mfi.FactorID is None:
+        raise RequestValidationError(TypeError, body={"code": "30033", "status": 412})
+    # if mfi.FactorID:
+    filter = {"FactorID": mfi.FactorID}
+    # else:
+    #     filter = {"$and": [{"MarketerID": mfi.MarketerID}, {"Period": mfi.Period}]}
     update = {"$set": {}}
     for key, value in vars(mfi).items():
         if value is not None:
@@ -275,12 +276,13 @@ async def modify_accounting_factor(
     user_id = role_perm["sub"]
     factor_coll = database[settings.FACTOR_COLLECTION]  # ["MarketerFactor"]
     marketers_coll = database[settings.MARKETER_COLLECTION]  # ["MarketerTable"]
-    if ((mfi.MarketerID and mfi.Period) or mfi.FactorID) is None:
+    # if ((mfi.MarketerID and mfi.Period) or
+    if mfi.FactorID is None:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 412})
-    if mfi.FactorID:
-        filter = {"FactorID": mfi.FactorID}
-    else:
-        filter = {"$and": [{"MarketerID": mfi.MarketerID}, {"Period": mfi.Period}]}
+    # if mfi.FactorID:
+    filter = {"FactorID": mfi.FactorID}
+    # else:
+    #     filter = {"$and": [{"MarketerID": mfi.MarketerID}, {"Period": mfi.Period}]}
     update = {"$set": {}}
     for key, value in vars(mfi).items():
         if value is not None:
@@ -428,31 +430,31 @@ async def delete_factor(
     factor_coll = database[settings.FACTOR_COLLECTION]
     if args.FactorID:
         filter = {"FactorID": args.FactorID}
-    elif args.ContractID and args.Period:
-        filter = {
-            "$and": [
-                {"ContractID": args.ContractID},
-                {"Period": args.Period},
-            ]
-        }
-    elif args.MarketerID and args.Period:
-        filter = {
-            "$and": [
-                {"MarketerID": args.MarketerID},
-                {"Period": args.Period},
-            ]
-        }
+    # elif args.ContractID and args.Period:
+    #     filter = {
+    #         "$and": [
+    #             {"ContractID": args.ContractID},
+    #             {"Period": args.Period},
+    #         ]
+    #     }
+    # elif args.MarketerID and args.Period:
+    #     filter = {
+    #         "$and": [
+    #             {"MarketerID": args.MarketerID},
+    #             {"Period": args.Period},
+    #         ]
+    #     }
     else:
-        raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
+        raise RequestValidationError(TypeError, body={"code": "30033", "status": 400})
     query_result = factor_coll.find_one(filter, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
-    if args.FactorID:
-        result = [f"فاکتور شماره  {args.FactorID} پاک شد."]
-    else:
-        result = [
-            f"از ماکتر {query_result.get('Title')}فاکتور مربوط به دوره {args.Period} پاک شد."
-        ]
+    # if args.FactorID:
+    #     result = [f"فاکتور شماره  {args.FactorID} پاک شد."]
+    # else:
+    result = [
+        f"از مارکتر {query_result.get('Title')} فاکتور مربوط به دوره {query_result.get('Period')} پاک شد."
+    ]
     factor_coll.delete_one(filter)
     return ResponseListOut(
         result=result,
