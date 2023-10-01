@@ -58,9 +58,9 @@ async def add_marketer_contract_deduction(
     user_id = role_perm["sub"]
     coll = database["MarketerContractDeduction"]
     marketers_coll = database["MarketerTable"]
-    if mmcd.MarketerID is None:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    filter = {"MarketerID": mmcd.MarketerID}
+    if mmcd.ContractID is None:
+        raise RequestValidationError(TypeError, body={"code": "30034", "status": 412})
+    filter = {"ContractID": mmcd.ContractID}
     update = {"$set": {}}
     for key, value in vars(mmcd).items():
         if value is not None:
@@ -89,8 +89,8 @@ async def add_marketer_contract_deduction(
         coll.insert_one(update["$set"])
         # coll.update_one(filter, update)
     except:
-        raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
-    query_result = coll.find_one({"MarketerID": mmcd.MarketerID}, {"_id": False})
+        raise RequestValidationError(TypeError, body={"code": "30032", "status": 409})
+    query_result = coll.find_one({"ContractID": mmcd.ContractID}, {"_id": False})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -133,16 +133,16 @@ async def modify_marketer_contract_deduction(
     user_id = role_perm["sub"]
     coll = database["MarketerContractDeduction"]
     marketers_coll = database["MarketerTable"]
-    if mmcd.MarketerID is None:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    filter = {"MarketerID": mmcd.MarketerID}
+    if mmcd.ContractID is None:
+        raise RequestValidationError(TypeError, body={"code": "30034", "status": 412})
+    filter = {"ContractID": mmcd.ContractID}
     update = {"$set": {}}
     for key, value in vars(mmcd).items():
         if value is not None:
             update["$set"][key] = value
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     coll.update_one(filter, update)
-    query_result = coll.find_one({"MarketerID": mmcd.MarketerID}, {"_id": False})
+    query_result = coll.find_one({"ContractID": mmcd.ContractID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     return ResponseListOut(
@@ -296,11 +296,11 @@ async def delete_marketer_contract_deduction(
     if args.ContractID:
         pass
     else:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 400})
+        raise RequestValidationError(TypeError, body={"code": "30034", "status": 400})
     query_result = coll.find_one({"ContractID": args.ContractID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
-    result = [f"مورد مربوط به ماکتر {query_result.get('TbsRegeantName')} پاک شد."]
+    result = [f"مورد مربوط به قرارداد {query_result.get('ContractID')} پاک شد."]
     coll.delete_one({"ContractID": args.ContractID})
     resp = {
         "result": result,
