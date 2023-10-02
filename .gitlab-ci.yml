@@ -8,9 +8,9 @@ variables:
     SMS_MESSAGE_Deploy_Asiatech: $IMAGE_NAME-->Deployed->Asiatech
     SMS_MESSAGE_Deploy_Pro: $IMAGE_NAME-->Deployed->Production
     REGISTRY_HOST: $DOCKER_PRIVATE_REGISTRY_IP:$DOCKER_PRIVATE_REGISTRY_PORT
-    NAMESPACE_Dev: dev-oms
-    NAMESPACE_Stg: stg-oms
-    NAMESPACE_Pro: pro-oms
+    NAMESPACE_Dev: dev-marketer
+    NAMESPACE_Stg: stg-marketer
+    NAMESPACE_Pro: pro-marketer
     TECH1A_DEV_HOST: dev$IMAGE_NAME.$TECH1A_HOST
     TECH1A_STG_HOST: stg$IMAGE_NAME.$TECH1A_HOST
     TECH1A_ASIATECH_HOST: $IMAGE_NAME.$ASIATECH_HOST
