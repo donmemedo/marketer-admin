@@ -39,7 +39,7 @@ marketer_contract_coefficient = APIRouter(prefix="/marketer-contract-coefficient
 )
 async def add_marketer_contract_coefficient(
     request: Request,
-    mmcci: ModifyMarketerContractCoefficientIn,
+    mmcci: AddMarketerContractCoefficientIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -69,6 +69,17 @@ async def add_marketer_contract_coefficient(
     update["$set"]["ID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsCmdConcluded"] = False
+    if mmcci.MarketerID:
+        marketer = marketers_coll.find_one(
+        {"MarketerID": mmcci.MarketerID}, {"_id": False}
+        )
+        if marketer:
+            try:
+                update["$set"]["Title"] = marketer["TbsReagentName"]
+            except:
+                update["$set"]["Title"] = marketer["Title"]
+        else:
+            raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
     try:
         coll.insert_one(update["$set"])
     except:
@@ -300,10 +311,11 @@ async def modify_marketer_contract_coefficient_status(
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"ContractID": dmcci.ContractID}
     query_result = coll.find_one({"ContractID": dmcci.ContractID}, {"_id": False})
-    status = query_result.get("IsCmdConcluded")
-    update = {"$set": {}}
-    update["$set"]["IsCmdConcluded"] = bool(status ^ 1)
-    coll.update_one(filter, update)
+    if query_result:
+        status = query_result.get("IsCmdConcluded")
+        update = {"$set": {}}
+        update["$set"]["IsCmdConcluded"] = bool(status ^ 1)
+        coll.update_one(filter, update)
     query_result = coll.find_one({"ContractID": dmcci.ContractID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})

@@ -150,6 +150,7 @@ async def modify_base_factor(
             update["$set"][key] = value
     update["$set"]["UpdateDateTime"] = jd.now().isoformat()
     update["$set"]["UpdateBy"] = user_id
+    # update["$set"]["Status"] = 20
 
     try:
         factor_coll.update_one(filter, update)
@@ -504,6 +505,8 @@ async def calculate_factor(
     else:
         raise RequestValidationError(TypeError, body={"code": "30030", "status": 400})
     per = args.Period
+    if len(per) != 6:
+        raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
     if args.MarketerID:
         marketers = [
             marketer_coll.find_one(
@@ -530,7 +533,10 @@ async def calculate_factor(
 
         customers_records = customer_coll.find(query, fields)
         trade_codes = [c.get("PAMCode") for c in customers_records]
-        gdate = jd.strptime(per, "%Y%m")
+        try:
+            gdate = jd.strptime(per, "%Y%m")
+        except:
+            raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
         from_gregorian_date = gdate.todatetime().isoformat()
         to_gregorian_date = (
             datetime.strptime(

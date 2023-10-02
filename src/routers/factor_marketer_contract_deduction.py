@@ -38,7 +38,7 @@ marketer_contract_deduction = APIRouter(prefix="/marketer-contract-deduction")
 )
 async def add_marketer_contract_deduction(
     request: Request,
-    mmcd: ModifyMarketerContractDeductionIn,
+    mmcd: AddMarketerContractDeductionIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -66,16 +66,17 @@ async def add_marketer_contract_deduction(
         if value is not None:
             update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
-    marketer = marketers_coll.find_one(
+    if mmcd.MarketerID:
+        marketer = marketers_coll.find_one(
         {"MarketerID": mmcd.MarketerID}, {"_id": False}
-    )
-    if marketer:
-        try:
-            update["$set"]["Title"] = marketer["TbsReagentName"]
-        except:
-            update["$set"]["Title"] = marketer["Title"]
-    else:
-        raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
+        )
+        if marketer:
+            try:
+                update["$set"]["Title"] = marketer["TbsReagentName"]
+            except:
+                update["$set"]["Title"] = marketer["Title"]
+        else:
+            raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
 
     update["$set"]["ID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())

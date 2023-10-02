@@ -18,9 +18,21 @@ current_date = (
 
 
 @dataclass
-class ModifyMarketerContractCoefficientIn:
-    MarketerID: str
+class AddMarketerContractCoefficientIn:
+    MarketerID: str = None
     # ID: str = None
+    CoefficientPercentage: float = None
+    ContractID: str = None
+    HighThreshold: int = None
+    LowThreshold: int = None
+    StepNumber: int = None
+    Title: str = None
+
+
+@dataclass
+class ModifyMarketerContractCoefficientIn:
+    # MarketerID: str
+    # MCCID: str = None
     CoefficientPercentage: float = None
     ContractID: str = None
     HighThreshold: int = None

@@ -18,8 +18,20 @@ current_date = (
 
 
 @dataclass
+class AddMarketerContractDeductionIn:
+    MarketerID: str = None
+    # ID: str = None
+    CollateralCoefficient: float = None
+    ContractID: str = None
+    TaxCoefficient: float = None
+    InsuranceCoefficient: float = None
+    ReturnDuration: int = None
+    Title: str = None
+
+
+@dataclass
 class ModifyMarketerContractDeductionIn:
-    MarketerID: str
+    # MarketerID: str
     # ID: str = None
     CollateralCoefficient: float = None
     ContractID: str = None

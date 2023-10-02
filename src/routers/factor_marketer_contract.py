@@ -59,6 +59,10 @@ async def add_marketer_contract(
     if mmci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmci.MarketerID}
+    if marketers_coll.find_one(filter, {"_id": False}):
+        pass
+    else:
+        raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
     update = {"$set": {}}
     update["$set"]["StartDate"] = date.today().strftime("%Y-%m-%d")
     update["$set"]["EndDate"] = (
@@ -387,10 +391,11 @@ async def modify_marketer_contract_status(
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"ContractID": dmci.ContractID}
     query_result = coll.find_one({"ContractID": dmci.ContractID}, {"_id": False})
-    status = query_result.get("IsDeleted")
-    update = {"$set": {}}
-    update["$set"]["IsDeleted"] = bool(status ^ 1)
-    coll.update_one(filter, update)
+    if query_result:
+        status = query_result.get("IsDeleted")
+        update = {"$set": {}}
+        update["$set"]["IsDeleted"] = bool(status ^ 1)
+        coll.update_one(filter, update)
     query_result = coll.find_one({"ContractID": dmci.ContractID}, {"_id": False})
     if not query_result:
         raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
