@@ -4,22 +4,22 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, date
-from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi.responses import JSONResponse
-from khayyam import JalaliDatetime as jd
-from fastapi.exceptions import RequestValidationError
-from src.tools.utils import check_permissions
-from src.auth.authentication import get_role_permission
-from src.tools.database import get_database
-from src.schemas.database import ResponseListOut, CollectionRestore
-from src.config import settings
-from src.tools.logger import logger
+
 import requests
+from fastapi import APIRouter, Depends, Request
+from fastapi.exceptions import RequestValidationError
+from khayyam import JalaliDatetime as jd
 from pymongo import MongoClient, errors
+
+from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
+from src.config import settings
+from src.schemas.database import ResponseListOut, CollectionRestore
+from src.tools.database import get_database
+from src.tools.logger import logger
 
-
-database = APIRouter(prefix="/database")
+# database = APIRouter(prefix="/database")
+database = APIRouter(prefix="")
 
 
 @database.put(
@@ -113,7 +113,9 @@ async def get_firms(
     """
     user_id = role_perm["sub"]
     try:
-        firm_collection = brokerage[settings.FIRMS_COLLECTION]
+        firm_collection = brokerage[
+            settings.CUSTOMER_COLLECTION
+        ]  # brokerage[settings.FIRMS_COLLECTION]
     except errors.CollectionInvalid as err:
         logger.error("No Connection to Collection", err)
     try:
@@ -179,9 +181,7 @@ async def get_trades(
     trade_getter(date=coll_ress.date)
     logger.info(f"Updating Trades Database was requested by {user_id}")
     logger.info(
-        "Ending Time of getting List of Trades in %s is: %s",
-        given_date,
-        jd.now()
+        "Ending Time of getting List of Trades in %s is: %s", given_date, jd.now()
     )
     return ResponseListOut(
         result=[],
@@ -234,9 +234,7 @@ async def delete_trades(
     trades_collection.delete_many({"TradeDate": {"$regex": str(args.date)}})
     logger.info(f"Updating Trades Database was requested by {user_id}")
     logger.info(
-        "Ending Time of deleting List of Trades in %s is: %s",
-        given_date,
-        jd.now()
+        "Ending Time of deleting List of Trades in %s is: %s", given_date, jd.now()
     )
     return ResponseListOut(
         result=[],
@@ -320,7 +318,9 @@ def firm_getter(size=10, date="2023-01-31"):
         date (str, optional): Date. Defaults to "2023-01-31".
     """
     brokerage = get_database()
-    firm_collection = brokerage[settings.FIRMS_COLLECTION]
+    firm_collection = brokerage[
+        settings.CUSTOMER_COLLECTION
+    ]  # brokerage[settings.FIRMS_COLLECTION]
 
     temp_req = requests.get(
         "https://tadbirwrapper.tavana.net/tadbir/GetFirmList",

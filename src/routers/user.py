@@ -4,19 +4,20 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, Request, HTTPException
-from fastapi_pagination import add_pagination
-from fastapi.responses import JSONResponse
-from khayyam import JalaliDatetime as jd
 from fastapi.exceptions import RequestValidationError
-from src.tools.database import get_database
-from src.tools.utils import to_gregorian_, peek, check_permissions
-from src.tools.queries import *
-from src.schemas.user import *
-from pymongo import MongoClient, errors
+from fastapi.responses import JSONResponse
+from fastapi_pagination import add_pagination
+from khayyam import JalaliDatetime as jd
+from pymongo import MongoClient
+
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
-
+from src.schemas.user import *
+from src.tools.database import get_database
+from src.tools.queries import *
+from src.tools.utils import to_gregorian_, check_permissions
 
 user = APIRouter(prefix="/user")
 
@@ -69,8 +70,9 @@ async def get_user_trades(
         raise RequestValidationError(TypeError, body={"code": "30025", "status": 400})
     results = []
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     trades_coll = database["trades"]
     query = {
@@ -86,7 +88,7 @@ async def get_user_trades(
         results.append(trades[i])
 
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "300", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -135,22 +137,24 @@ def users_list_by_volume(
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
     customers_coll = database["customers"]
-    firms_coll = database["firms"]
+    # firms_coll = database["firms"]
 
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
-    query = {"$and": [{"Referer": ""}]}
+    query = {}  # {"$and": [{"Referer": ""}]}
     if args.marketername:
         query = {"Referer": {"$regex": args.marketername}}
     fields = {"PAMCode": 1}
     customers_records = customers_coll.find(query, fields)
-    firms_records = firms_coll.find(query, fields)
-    trade_codes = [c.get("PAMCode") for c in customers_records] + [
-        c.get("PAMCode") for c in firms_records
-    ]
+    # firms_records = firms_coll.find(query, fields)
+    trade_codes = [
+        c.get("PAMCode") for c in customers_records
+    ]  # + [c.get("PAMCode") for c in firms_records]
     pipeline = [
         filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
         project_commission_stage(),
@@ -162,7 +166,7 @@ def users_list_by_volume(
         sort_stage(args.sort_by.value, args.sort_order.value),
         paginate_data(args.page, args.size),
         unwind_metadata_stage(),
-        project_total_stage()
+        project_total_stage(),
     ]
 
     active_dict = next(database.trades.aggregate(pipeline=pipeline), {})
@@ -227,22 +231,23 @@ def users_total(
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
     customers_coll = database["customers"]
-    firms_coll = database["firms"]
+    # firms_coll = database["firms"]
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
-
-    query = {"$and": [{"Referer": ""}]}
+    query = {}  # {"$and": [{"Referer": ""}]}
 
     fields = {"PAMCode": 1}
 
     customers_records = customers_coll.find(query, fields)
-    firms_records = firms_coll.find(query, fields)
-    trade_codes = [c.get("PAMCode") for c in customers_records] + [
-        c.get("PAMCode") for c in firms_records
-    ]
+    # firms_records = firms_coll.find(query, fields)
+    trade_codes = [
+        c.get("PAMCode") for c in customers_records
+    ]  # + [c.get("PAMCode") for c in firms_records]
 
     pipeline = [
         {
@@ -360,7 +365,7 @@ def users_total(
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
-        raise RequestValidationError(TypeError, body={"code": "30028", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30028", "status": 404})
     return ResponseOut(
         result=aggre_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -409,8 +414,8 @@ async def users_diff_with_tbs(
     else:
         raise HTTPException(status_code=401, detail="Not authorized.")
     try:
-        to_date = jd(datetime.strptime(args.to_date,'%Y-%m-%d')).date().isoformat()
-        from_date = jd(datetime.strptime(args.from_date,'%Y-%m-%d')).date().isoformat()
+        to_date = jd(datetime.strptime(args.to_date, "%Y-%m-%d")).date().isoformat()
+        from_date = jd(datetime.strptime(args.from_date, "%Y-%m-%d")).date().isoformat()
     except:
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
 
@@ -433,7 +438,7 @@ async def users_diff_with_tbs(
         else:
             result.append(q)
     if not result:
-        raise RequestValidationError(TypeError, body={"code": "30013", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30013", "status": 404})
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -460,8 +465,9 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     database = get_database()
     trades_coll = database["trades"]
     from_gregorian_date = from_date
-    to_gregorian_date = (datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-
+    to_gregorian_date = (
+        datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     pipeline = [
         {

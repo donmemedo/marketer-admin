@@ -3,28 +3,28 @@
 Returns:
     _type_: _description_
 """
-from datetime import datetime, timedelta
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.schemas.factor_marketer_contract import *
-from src.tools.database import get_database
-from fastapi.exceptions import RequestValidationError
-from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
-from src.tools.logger import logger
-from pymongo import MongoClient, errors
+from pymongo import MongoClient
+
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
+from src.schemas.factor_marketer_contract import *
+from src.tools.database import get_database
+from src.tools.utils import get_marketer_name, check_permissions
+from src.tools.stages import *
+import uuid
+
+# marketer_contract = APIRouter(prefix="/factor/marketer-contract")
+marketer_contract = APIRouter(prefix="/marketer-contract")
 
 
-marketer_contract = APIRouter(prefix="/factor/marketer-contract")
-
-
-@marketer_contract.post(
-    "/add-marketer-contract",
-    tags=["Factor - MarketerContract"],
-)
+@marketer_contract.post("/add", tags=["MarketerContract"], response_model=None)
 @authorize(
     [
         "MarketerAdmin.All.Write",
@@ -37,7 +37,7 @@ marketer_contract = APIRouter(prefix="/factor/marketer-contract")
 )
 async def add_marketer_contract(
     request: Request,
-    mmci: ModifyMarketerContractIn,
+    mmci: AddMarketerContractIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -59,35 +59,78 @@ async def add_marketer_contract(
     if mmci.MarketerID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"MarketerID": mmci.MarketerID}
+    if marketers_coll.find_one(filter, {"_id": False}):
+        pass
+    else:
+        raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
     update = {"$set": {}}
-    update["$set"]["StartDate"] = jd.today().strftime("%Y-%m-%d")
-    update["$set"]["EndDate"] = jd.today().replace(year=jd.today().year + 1).strftime("%Y-%m-%d")
+    update["$set"]["StartDate"] = date.today().strftime("%Y-%m-%d")
+    update["$set"]["EndDate"] = (
+        date.today().replace(year=date.today().year + 1).strftime("%Y-%m-%d")
+    )
     for key, value in vars(mmci).items():
         if value is not None:
             update["$set"][key] = value
+    if mmci.StartDate or mmci.EndDate:
+        try:
+            StartDate = (
+                jd(datetime.strptime(mmci.StartDate, "%Y-%m-%d")).date().isoformat()
+            )
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30018", "status": 412}
+            )
+        try:
+            EndDate = jd(datetime.strptime(mmci.EndDate, "%Y-%m-%d")).date().isoformat()
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30017", "status": 412}
+            )
+
     update["$set"]["CreateDateTime"] = str(datetime.now())
+    update["$set"]["ContractID"] = uuid.uuid1().hex
+    update["$set"]["CoefficientBaseType"] = CoefficientBaseType[
+        mmci.CoefficientBaseType.value
+    ]
+    update["$set"]["CalculationBaseType"] = CalculationBaseType[
+        mmci.CalculationBaseType.value
+    ]
+    update["$set"]["ContractType"] = ContractType[mmci.ContractType.value]
+    try:
+        update["$set"]["Title"] = marketers_coll.find_one(
+            {"MarketerID": mmci.MarketerID}, {"_id": False}
+        )["TbsReagentName"]
+    except:
+        try:
+            update["$set"]["Title"] = marketers_coll.find_one(
+                {"MarketerID": mmci.MarketerID}, {"_id": False}
+            )["Title"]
+        except:
+            update["$set"]["Title"] = "بی‌نام"
+
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsDeleted"] = False
 
     try:
-        marketer_name = get_marketer_name(
-            marketers_coll.find_one({"IdpID": mmci.MarketerID}, {"_id": False})
-        )
-        coll.insert_one({"MarketerID": mmci.MarketerID, "Title": marketer_name})
-        coll.update_one(filter, update)
+        coll.insert_one(update["$set"])
     except:
         raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
     query_result = coll.find_one({"MarketerID": mmci.MarketerID}, {"_id": False})
-    return ResponseListOut(
-        result=query_result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
+
+    resp = {
+        "result": query_result,
+        "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        "error": {
+            "message": "Null",
+            "code": "Null",
+        },
+    }
+    return JSONResponse(status_code=200, content=resp)
 
 
 @marketer_contract.put(
-    "/modify-marketer-contract",
-    tags=["Factor - MarketerContract"],
+    "/modify",
+    tags=["MarketerContract"],
 )
 @authorize(
     [
@@ -119,19 +162,35 @@ async def modify_marketer_contract(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContract"]
-    if mmci.MarketerID is None:
+    if mmci.ContractID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    filter = {"MarketerID": mmci.MarketerID}
+    filter = {"ContractID": mmci.ContractID}
     update = {"$set": {}}
     for key, value in vars(mmci).items():
         if value is not None:
             update["$set"][key] = value
+    if mmci.StartDate or mmci.EndDate:
+        try:
+            StartDate = (
+                jd(datetime.strptime(mmci.StartDate, "%Y-%m-%d")).date().isoformat()
+            )
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30018", "status": 412}
+            )
+        try:
+            EndDate = jd(datetime.strptime(mmci.EndDate, "%Y-%m-%d")).date().isoformat()
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30017", "status": 412}
+            )
+
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsDeleted"] = False
     coll.update_one(filter, update)
-    query_result = coll.find_one({"MarketerID": mmci.MarketerID}, {"_id": False})
+    query_result = coll.find_one({"ContractID": mmci.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -140,8 +199,8 @@ async def modify_marketer_contract(
 
 
 @marketer_contract.get(
-    "/search-marketer-contract",
-    tags=["Factor - MarketerContract"],
+    "/search",
+    tags=["MarketerContract"],
 )
 @authorize(
     [
@@ -182,31 +241,56 @@ async def search_marketer_contract(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
     coll = database["MarketerContract"]
-    upa=[]
-    for key, value in vars(args).items():
-        if value is not None:
-            upa.append({key: value})
+    upa = []
+    # for key, value in vars(args).items():
+    #     if value is not None:
+    #         upa.append({key: value})
+    # ?CalculationBaseType: str = None
+    # ?CoefficientBaseType: str = None
+    if args.MarketerID:
+        upa.append({"MarketerID": args.MarketerID})
+    if args.ContractID:
+        upa.append({"ContractID": args.ContractID})
+    if args.ContractNumber:
+        upa.append({"ContractNumber": args.ContractNumber})
+    if args.ContractType:
+        upa.append({"ContractType": ContractType[args.ContractType.value]})
+    if args.CalculationBaseType:
+        upa.append(
+            {"CalculationBaseType": CalculationBaseType[args.CalculationBaseType.value]}
+        )
+    if args.CoefficientBaseType:
+        upa.append(
+            {"CoefficientBaseType": CoefficientBaseType[args.CoefficientBaseType.value]}
+        )
     if args.Description:
-        upa.append({"Description":{"$regex": args.Description}})
+        upa.append({"Description": {"$regex": args.Description}})
     if args.EndDate:
-        upa.append({"EndDate":{"$regex": args.EndDate}})
+        upa.append({"EndDate": {"$lte": args.EndDate}})
     if args.StartDate:
-        upa.append({"StartDate":{"$regex": args.StartDate}})
+        upa.append({"StartDate": {"$gte": args.StartDate}})
     if args.Title:
-        upa.append({"Title":{"$regex": args.Title}})
-    query = {
-        "$and": upa}
-    query_result = coll.find(query, {"_id": False})
+        upa.append({"Title": {"$regex": args.Title}})
+    if upa:
+        query = {"$and": upa}
+    else:
+        query = {}
+    query_result = (
+        coll.find(query, {"_id": False})
+        .skip(args.size * (args.page - 1))
+        .limit(args.size)
+    )
+    total_count = coll.count_documents(query)
     marketers = dict(enumerate(query_result))
-    results=[]
+    results = []
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
-    result["totalCount"] = len(marketers)
+    result["totalCount"] = total_count  # len(marketers)
     result["pagedData"] = results
 
     resp = {
@@ -221,8 +305,8 @@ async def search_marketer_contract(
 
 
 @marketer_contract.delete(
-    "/delete-marketer-contract",
-    tags=["Factor - MarketerContract"],
+    "/delete",
+    tags=["MarketerContract"],
 )
 @authorize(
     [
@@ -252,17 +336,15 @@ async def delete_marketer_contract(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContract"]
-    if args.MarketerID:
+    if args.ContractID:
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 400})
-    query_result = coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
+    query_result = coll.find_one({"ContractID": args.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
-    result = [
-        f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."
-    ]
-    coll.delete_one({"MarketerID": args.MarketerID})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+    result = [f"مورد مربوط به ماکتر {query_result.get('Title')} پاک شد."]
+    coll.delete_one({"ContractID": args.ContractID})
     resp = {
         "result": result,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -272,8 +354,8 @@ async def delete_marketer_contract(
 
 
 @marketer_contract.put(
-    "/modify-marketer-contract-status",
-    tags=["Factor - MarketerContract"],
+    "/modify-status",
+    tags=["MarketerContract"],
 )
 @authorize(
     [
@@ -305,17 +387,18 @@ async def modify_marketer_contract_status(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContract"]
-    if dmci.MarketerID is None:
+    if dmci.ContractID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    filter = {"MarketerID": dmci.MarketerID}
-    query_result = coll.find_one({"MarketerID": dmci.MarketerID}, {"_id": False})
-    status = query_result.get("IsDeleted")
-    update = {"$set": {}}
-    update["$set"]["IsDeleted"] = bool(status ^ 1)
-    coll.update_one(filter, update)
-    query_result = coll.find_one({"MarketerID": dmci.MarketerID}, {"_id": False})
+    filter = {"ContractID": dmci.ContractID}
+    query_result = coll.find_one({"ContractID": dmci.ContractID}, {"_id": False})
+    if query_result:
+        status = query_result.get("IsDeleted")
+        update = {"$set": {}}
+        update["$set"]["IsDeleted"] = bool(status ^ 1)
+        coll.update_one(filter, update)
+    query_result = coll.find_one({"ContractID": dmci.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),

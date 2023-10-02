@@ -1,19 +1,22 @@
 """_summary_
 """
 from dataclasses import dataclass
-from typing import Optional, Any, List, Dict
 from enum import Enum, IntEnum
-from pydantic import BaseModel
+from typing import Optional, Any, List, Dict
+
 from fastapi import Query
 from khayyam import JalaliDatetime
-
 
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 
 from datetime import date
-current_date = date.today().isoformat()#JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+
+current_date = (
+    date.today().isoformat()
+)  # JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+
 
 @dataclass
 class MarketerIn:
@@ -31,20 +34,20 @@ class ModifyConstIn:
 
 @dataclass
 class ModifyAccountingFactorIn:
-    MarketerID: str
-    Period: str = str(current_year) + f"{current_month:02}"
+    # MarketerID: str
+    # Period: str = str(current_year) + f"{current_month:02}"
+    FactorID: str = None
     Plan: str = None
-    Tax: int = Query(None, alias="TaxDeduction")
+    TaxDeduction: int = Query(None, alias="TaxDeduction")
     TaxCoefficient: float = None
-    Collateral: int = Query(None, alias="CollateralDeduction")
+    CollateralDeduction: int = Query(None, alias="CollateralDeduction")
     CollateralCoefficient: float = None
-    Insurance: int = Query(None, alias="InsuranceDeduction")
+    InsuranceDeduction: int = Query(None, alias="InsuranceDeduction")
     InsuranceCoefficient: float = None
-    FinalFee: int = Query(None, alias="MarketerTotalIncome")
+    MarketerTotalIncome: int = Query(None, alias="MarketerTotalIncome")
     Payment: int = None
-    FactorStatus: int = Query(None, alias="Status")
-    ID: str = None
-    ContractID: str = None
+    Status: int = Query(30, alias="Status")
+    # ContractID: str = None
     CalculationCoefficient: float = None
     TotalCMD: int = None
     IsCmdConcluded: bool = False
@@ -67,19 +70,24 @@ class ModifyAccountingFactorIn:
 
 @dataclass
 class ModifyBaseFactorIn:
-    MarketerID: str
-    Period: str = str(current_year) + f"{current_month:02}"
-    TotalPureVolume: int = Query(None, alias="TotalTurnOver")
-    TotalFee: int = Query(None, alias="TotalBrokerCommission")
+    # MarketerID: str
+    # Period: str = str(current_year) + f"{current_month:02}"
+    FactorID: str = None
+    TotalTurnOver: int = Query(None, alias="TotalTurnOver")  # TotalPureVolume
+    TotalBrokerCommission: int = Query(None, alias="TotalBrokerCommission")  # TotalFee
     TotalCMD: int = None
-    PureFee: int = Query(None, alias="TotalNetBrokerCommission")
-    MarketerFee: int = Query(None, alias="MarketerCommissionIncome")
-    ID: str = None
+    TotalNetBrokerCommission: int = Query(
+        None, alias="TotalNetBrokerCommission"
+    )  # PureFee
+    MarketerCommissionIncome: int = Query(
+        None, alias="MarketerCommissionIncome"
+    )  # MarketerFee
+    TotalFeeOfFollowers: int = None
     IsCmdConcluded: bool = False
     MaketerCMDIncome: int = None
-    FollowersIncome: int = None
-    CreateDateTime: str = None
-    UpdateDateTime: str = None
+    Status: int = Query(20, alias="Status")
+    # CreateDateTime: str = None
+    # UpdateDateTime: str = None
 
 
 @dataclass
@@ -98,38 +106,55 @@ class ResponseOut:
 @dataclass
 class ResponseListOut:
     result: Dict
-    timeGenerated: JalaliDatetime
+    timeGenerated: str
     error: str = Query("nothing")
 
 
 @dataclass
 class SearchFactorIn:
-
     MarketerID: str = Query(None)
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
     FactorStatus: int = Query(None, alias="Status")
-    ID: str = None
+    FactorID: str = None
     ContractID: str = None
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass
 class DeleteFactorIn:
-
-    MarketerID: str = None
-    Period: Optional[str] = str(current_year) + f"{current_month:02}"
-    ID: str = None
+    MarketerID: str = Query(None)
+    Period: str = None
+    FactorID: str = None
     ContractID: str = None
 
 
 @dataclass
+class AllFactors:
+    MarketerID: str = Query(None)
+    Period: str = Query(default=None)  # str(current_year) + f"{current_month:02}"
+    FactorStatus: int = Query(None, alias="Status")
+    FactorID: str = None
+    # ContractID: str = None
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
+
+
+@dataclass
+class DeleteFactorIn:
+    # MarketerID: str = None
+    # Period: Optional[str] = str(current_year) + f"{current_month:02}"
+    FactorID: str = None
+    # ContractID: str = None
+
+
+@dataclass
 class CalFactorIn:
-
-    MarketerID: str = Query("")
+    MarketerID: str = Query(None)
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
-    Collateral: int = 0
-    Additions: int = 0
-    Deductions: int = 0
-
+    # Collateral: int = 0
+    # Additions: int = 0
+    # Deductions: int = 0
 
 
 @dataclass

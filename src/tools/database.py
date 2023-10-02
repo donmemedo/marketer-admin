@@ -3,6 +3,7 @@ Returns:
     _type_: _description_
 """
 from pymongo import MongoClient
+
 from src.config import settings
 
 

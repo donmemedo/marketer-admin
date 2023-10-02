@@ -3,27 +3,29 @@
 Returns:
     _type_: _description_
 """
-from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Request
+import uuid
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from src.schemas.factor_marketer_contract_coefficient import *
-from src.tools.database import get_database
+from pymongo import MongoClient
 
-from src.tools.utils import get_marketer_name, peek, to_gregorian_, check_permissions
-from src.tools.logger import logger
-from pymongo import MongoClient, errors
 from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
-from fastapi.exceptions import RequestValidationError
+from src.schemas.factor_marketer_contract_coefficient import *
+from src.tools.database import get_database
+from src.tools.utils import get_marketer_name
 
-marketer_contract_coefficient = APIRouter(prefix="/factor/marketer-contract-coefficient")
+# marketer_contract_coefficient = APIRouter(prefix="/factor/marketer-contract-coefficient")
+marketer_contract_coefficient = APIRouter(prefix="/marketer-contract-coefficient")
 
 
 @marketer_contract_coefficient.post(
-    "/add-marketer-contract-coefficient",
-    tags=["Factor - MarketerContractCoefficient"],
+    "/add",
+    tags=["MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -37,7 +39,7 @@ marketer_contract_coefficient = APIRouter(prefix="/factor/marketer-contract-coef
 )
 async def add_marketer_contract_coefficient(
     request: Request,
-    mmcci: ModifyMarketerContractCoefficientIn,
+    mmcci: AddMarketerContractCoefficientIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -56,25 +58,33 @@ async def add_marketer_contract_coefficient(
     user_id = role_perm["sub"]
     coll = database["MarketerContractCoefficient"]
     marketers_coll = database["MarketerTable"]
-    if mmcci.MarketerID is None:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    filter = {"MarketerID": mmcci.MarketerID}
+    if mmcci.ContractID is None:
+        raise RequestValidationError(TypeError, body={"code": "30034", "status": 412})
+    filter = {"ContractID": mmcci.ContractID}
     update = {"$set": {}}
     for key, value in vars(mmcci).items():
         if value is not None:
             update["$set"][key] = value
     update["$set"]["CreateDateTime"] = str(datetime.now())
+    update["$set"]["ID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     update["$set"]["IsCmdConcluded"] = False
-    try:
-        marketer_name = get_marketer_name(
-            marketers_coll.find_one({"IdpID": mmcci.MarketerID}, {"_id": False})
+    if mmcci.MarketerID:
+        marketer = marketers_coll.find_one(
+        {"MarketerID": mmcci.MarketerID}, {"_id": False}
         )
-        coll.insert_one({"MarketerID": mmcci.MarketerID, "Title": marketer_name})
-        coll.update_one(filter, update)
+        if marketer:
+            try:
+                update["$set"]["Title"] = marketer["TbsReagentName"]
+            except:
+                update["$set"]["Title"] = marketer["Title"]
+        else:
+            raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
+    try:
+        coll.insert_one(update["$set"])
     except:
-        raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
-    query_result = coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})
+        raise RequestValidationError(TypeError, body={"code": "30032", "status": 409})
+    query_result = coll.find_one({"ContractID": mmcci.ContractID}, {"_id": False})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -83,9 +93,8 @@ async def add_marketer_contract_coefficient(
 
 
 @marketer_contract_coefficient.put(
-    "/modify-marketer-contract-coefficient",
-
-    tags=["Factor - MarketerContractCoefficient"],
+    "/modify",
+    tags=["MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -117,9 +126,9 @@ async def modify_marketer_contract_coefficient(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContractCoefficient"]
-    if mmcci.MarketerID is None:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    filter = {"MarketerID": mmcci.MarketerID}
+    if mmcci.ContractID is None:
+        raise RequestValidationError(TypeError, body={"code": "30034", "status": 412})
+    filter = {"ContractID": mmcci.ContractID}
     update = {"$set": {}}
     for key, value in vars(mmcci).items():
         if value is not None:
@@ -127,9 +136,9 @@ async def modify_marketer_contract_coefficient(
     update["$set"]["IsCmdConcluded"] = False
     update["$set"]["UpdateDateTime"] = str(datetime.now())
     coll.update_one(filter, update)
-    query_result = coll.find_one({"MarketerID": mmcci.MarketerID}, {"_id": False})
+    query_result = coll.find_one({"ContractID": mmcci.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -138,8 +147,8 @@ async def modify_marketer_contract_coefficient(
 
 
 @marketer_contract_coefficient.get(
-    "/search-marketer-contract-coefficient",
-    tags=["Factor - MarketerContractCoefficient"],
+    "/search",
+    tags=["MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -151,7 +160,9 @@ async def modify_marketer_contract_coefficient(
 )
 async def search_marketer_contract_coefficient(
     request: Request,
-    args: SearchMarketerContractCoefficientIn = Depends(SearchMarketerContractCoefficientIn),
+    args: SearchMarketerContractCoefficientIn = Depends(
+        SearchMarketerContractCoefficientIn
+    ),
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -169,34 +180,36 @@ async def search_marketer_contract_coefficient(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContractCoefficient"]
-    upa=[]
-    # for key, value in vars(args).items():
-    #     if value is not None:
-    #         upa.append({key:value})
-    if args.CoefficientPercentage:
-        upa.append({"CoefficientPercentage":{"$gte":args.CoefficientPercentage}})
-    if args.HighThreshold:
-        upa.append({"HighThreshold":{"$lte": args.HighThreshold}})
-    if args.LowThreshold:
-        upa.append({"LowThreshold":{"$gte": args.LowThreshold}})
+    upa = []
+    if args.MarketerID:
+        upa.append({"MarketerID": args.MarketerID})
+    if args.ID:
+        upa.append({"ID": args.ID})
     if args.ContractID:
-        upa.append({"ContractID":{"$regex": args.ContractID}})
+        upa.append({"ContractID": args.ContractID})
     if args.Title:
-        upa.append({"Title":{"$regex": args.Title}})
-    query = {
-        "$and": upa}
+        upa.append({"Title": {"$regex": args.Title}})
+    if upa:
+        query = {"$and": upa}
+    else:
+        query = {}
 
-    query_result = coll.find(query, {"_id": False})
+    query_result = (
+        coll.find(query, {"_id": False})
+        .skip(args.size * (args.page - 1))
+        .limit(args.size)
+    )
+    total_count = coll.count_documents(query)
     marketers = dict(enumerate(query_result))
-    results=[]
+    results = []
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
-    result["totalCount"] = len(marketers)
+    result["totalCount"] = total_count  # len(marketers)
     result["pagedData"] = results
     resp = {
         "result": result,
@@ -210,8 +223,8 @@ async def search_marketer_contract_coefficient(
 
 
 @marketer_contract_coefficient.delete(
-    "/delete-marketer-contract-coefficient",
-    tags=["Factor - MarketerContractCoefficient"],
+    "/delete",
+    tags=["MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -223,7 +236,9 @@ async def search_marketer_contract_coefficient(
 )
 async def delete_marketer_contract_coefficient(
     request: Request,
-    args: DelMarketerMarketerContractCoefficientIn = Depends(DelMarketerMarketerContractCoefficientIn),
+    args: DelMarketerMarketerContractCoefficientIn = Depends(
+        DelMarketerMarketerContractCoefficientIn
+    ),
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -241,17 +256,15 @@ async def delete_marketer_contract_coefficient(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContractCoefficient"]
-    if args.MarketerID:
+    if args.ContractID:
         pass
     else:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 400})
-    query_result = coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
+        raise RequestValidationError(TypeError, body={"code": "30034", "status": 400})
+    query_result = coll.find_one({"ContractID": args.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
-    result = [
-        f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."
-    ]
-    coll.delete_one({"MarketerID": args.MarketerID})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+    result = [f"مورد مربوط به قرارداد {query_result.get('ContractID')} پاک شد."]
+    coll.delete_one({"ContractID": args.ContractID})
     resp = {
         "result": result,
         "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -261,8 +274,8 @@ async def delete_marketer_contract_coefficient(
 
 
 @marketer_contract_coefficient.put(
-    "/modify-marketer-contract-coefficient-status",
-    tags=["Factor - MarketerContractCoefficient"],
+    "/modify-status",
+    tags=["MarketerContractCoefficient"],
 )
 @authorize(
     [
@@ -294,21 +307,23 @@ async def modify_marketer_contract_coefficient_status(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContractCoefficient"]
-    if dmcci.MarketerID is None:
+    if dmcci.ContractID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    filter = {"MarketerID": dmcci.MarketerID}
-    query_result = coll.find_one({"MarketerID": dmcci.MarketerID}, {"_id": False})
-    status = query_result.get("IsCmdConcluded")
-    update = {"$set": {}}
-    update["$set"]["IsCmdConcluded"] = bool(status ^ 1)
-    coll.update_one(filter, update)
-    query_result = coll.find_one({"MarketerID": dmcci.MarketerID}, {"_id": False})
+    filter = {"ContractID": dmcci.ContractID}
+    query_result = coll.find_one({"ContractID": dmcci.ContractID}, {"_id": False})
+    if query_result:
+        status = query_result.get("IsCmdConcluded")
+        update = {"$set": {}}
+        update["$set"]["IsCmdConcluded"] = bool(status ^ 1)
+        coll.update_one(filter, update)
+    query_result = coll.find_one({"ContractID": dmcci.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
+
 
 add_pagination(marketer_contract_coefficient)

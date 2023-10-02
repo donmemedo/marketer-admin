@@ -4,79 +4,41 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi_pagination import add_pagination
 from khayyam import JalaliDatetime as jd
-from fastapi.exceptions import RequestValidationError
-from src.auth.authentication import get_role_permission
-from src.tools.database import get_database
-from src.schemas.marketer import *
-from src.tools.utils import *
-from src.tools.queries import *
 from pymongo import MongoClient
-from src.auth.authorization import authorize
 
+from src.auth.authentication import get_role_permission
+from src.auth.authorization import authorize
+from src.schemas.marketer import *
+from src.tools.database import get_database
+from src.tools.queries import *
+from src.tools.utils import *
+from src.config import settings
 
 marketer = APIRouter(prefix="/marketer")
+marketer_relation = APIRouter(prefix="/marketer-relation")
 
 
-@marketer.get(
-    "/get-marketer",
-    tags=["Marketer"],
-    response_model=None,
-)
+# @marketer.post(
+#     "/add",
+#     tags=["Marketer"],
+# )
 @authorize(
     [
-        "MarketerAdmin.All.Read",
+        "MarketerAdmin.All.Create",
         "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Read",
+        "MarketerAdmin.Marketer.Create",
         "MarketerAdmin.Marketer.All",
     ]
 )
-async def get_marketer_profile(
+async def add_marketer(
     request: Request,
-    args: MarketerIn = Depends(MarketerIn),
-    brokerage: MongoClient = Depends(get_database),
-    role_perm: dict = Depends(get_role_permission),
-):
-    """_summary_
-
-    Args:
-        request (Request): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    user_id = role_perm["sub"]
-    marketers_coll = brokerage["marketers"]
-    if args.IdpID is None:
-        raise RequestValidationError(TypeError, body={"code":"30003","status":412})
-    query_result = marketers_coll.find_one({"IdpId": args.IdpID}, {"_id": False})
-    if not query_result:
-        raise RequestValidationError(TypeError, body={"code":"30004","status":200})
-    return ResponseListOut(
-        result=query_result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
-
-
-@marketer.get(
-    "/marketers",
-    tags=["Marketer"],
-    response_model=None,
-)
-@authorize(
-    [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-)
-async def get_marketer(
-    request: Request,
+    ami: AddMarketerIn,
     database: MongoClient = Depends(get_database),
     role_perm: dict = Depends(get_role_permission),
 ):
@@ -84,33 +46,61 @@ async def get_marketer(
 
     Args:
         request (Request): _description_
-
-    Raises:
-        HTTPException: _description_
+        args (AddMarketerIn, optional): _description_. Defaults to Depends(AddMarketerIn).
 
     Returns:
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    marketers_coll = database["marketers"]
-    results = []
-    query_result = marketers_coll.find({})
-    marketers = dict(enumerate(query_result))
-    for i in range(len(marketers)):
-        results.append(marketer_entity(marketers[i]))
-    if not results:
-        raise RequestValidationError(TypeError, body={"code":"30001","status":200})
+    # admins_coll = database["admins"]
+    marketer_coll = database[settings.MARKETER_COLLECTION]
+    if ami.CurrentIdpId is None:
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+    # filter = {"MarketerID": ami.CurrentIdpId}
+    filter = {"MarketerID": ami.CurrentIdpId}
+    query_result = marketer_coll.find_one(filter, {"_id": False})
+    if query_result:
+        raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
+    update = {"$set": {}}
+    for key, value in vars(ami).items():
+        if value is not None:
+            update["$set"][key] = value
+    update["$set"][
+        "CreateDate"
+    ] = datetime.now().isoformat()  # jd.today().strftime("%Y-%m-%d")
+    update["$set"][
+        "ModifiedDate"
+    ] = datetime.now().isoformat()  # jd.today().strftime("%Y-%m-%d")
+
+    if ami.NationalID is not None:
+        try:
+            ddd = int(ami.NationalID)
+            update["$set"]["Id"] = ami.NationalID
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30066", "status": 412}
+            )
+    # update["$set"]["MarketerID"] = ami.CurrentIdpId
+    update["$set"]["MarketerID"] = ami.CurrentIdpId
+    update["$set"].pop("CurrentIdpId")
+    try:
+        marketer_coll.insert_one(update["$set"])
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30007", "status": 409})
+    query_result = marketer_coll.find_one(filter, {"_id": False})
+    if not query_result:
+        raise RequestValidationError(TypeError, body={"code": "30051", "status": 412})
     return ResponseListOut(
-        result=results,
+        result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
         error="",
     )
 
 
-@marketer.put(
-    "/modify-marketer",
-    tags=["Marketer"],
-)
+# @marketer.put(
+#     "/modify",
+#     tags=["Marketer"],
+# )
 @authorize(
     [
         "MarketerAdmin.All.Write",
@@ -137,237 +127,48 @@ async def modify_marketer(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    marketer_coll = database["marketers"]
-    admins_coll = database["factors"]
+    marketer_coll = database[settings.MARKETER_COLLECTION]
+    admins_coll = database[settings.FACTOR_COLLECTION]
     if mmi.CurrentIdpId is None:
-        raise RequestValidationError(TypeError, body={"code":"30003","status":412})
-    filter = {"IdpId": mmi.CurrentIdpId}
+        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
+    # filter = {"MarketerID": mmi.CurrentIdpId}
+    filter = {"MarketerID": mmi.CurrentIdpId}
     idpid = mmi.CurrentIdpId
+    # query_result = marketer_coll.find_one({"MarketerID": idpid}, {"_id": False})
+    query_result = marketer_coll.find_one({"MarketerID": idpid}, {"_id": False})
+    if not query_result:
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
     update = {"$set": {}}
     for key, value in vars(mmi).items():
         if value is not None:
             update["$set"][key] = value
-    # if check_permissions(
-    #     role_perm["roles"],
-    #     ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
-    # ):
-    #     if mmi.CreateDate is not None:
-    #         update["$set"]["CreateDate"] = mmi.CreateDate
-
-    # if mmi.ModifiedBy is not None:
-    #     update["$set"]["ModifiedBy"] = admins_coll.find_one(
-    #         {"IdpId": user_id}, {"_id": False}
-    #     ).get("FullName")
-    # if check_permissions(
-    #     role_perm["roles"],
-    #     ["MarketerAdmin.All.All", "MarketerAdmin.Marketer.All"],
-    # ):
-    #     if mmi.CreatedBy is not None:
-    #         update["$set"]["CreatedBy"] = mmi.CreatedBy
-
-    update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
+    update["$set"][
+        "ModifiedDate"
+    ] = datetime.now().isoformat()  # jd.today().strftime("%Y-%m-%d")
 
     if mmi.NewIdpId is not None:
-        update["$set"]["IdpId"] = mmi.NewIdpId
+        # update["$set"]["MarketerID"] = mmi.NewIdpId
+        update["$set"]["MarketerID"] = mmi.NewIdpId
         idpid = mmi.NewIdpId
 
     if mmi.NationalID is not None:
         try:
             ddd = int(mmi.NationalID)
-            update["$set"]["Id"] = mmi.NationalID
+            update["$set"]["UniqueId"] = mmi.NationalID
         except:
-            raise RequestValidationError(TypeError, body={"code": "30066", "status": 412})
-    marketer_coll.update_one(filter, update)
-    query_result = marketer_coll.find_one({"IdpId": idpid}, {"_id": False})
-    if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 200})
-    return ResponseListOut(
-        result=query_result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
-
-
-@marketer.post(
-    "/add-marketer",
-    tags=["Marketer"],
-)
-@authorize(
-    [
-        "MarketerAdmin.All.Create",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Create",
-        "MarketerAdmin.Marketer.All",
-    ]
-)
-async def add_marketer(
-    request: Request,
-    ami: AddMarketerIn,
-    database: MongoClient = Depends(get_database),
-    role_perm: dict = Depends(get_role_permission),
-):
-    """_summary_
-
-    Args:
-        request (Request): _description_
-        args (AddMarketerIn, optional): _description_. Defaults to Depends(AddMarketerIn).
-
-    Returns:
-        _type_: _description_
-    """
-    user_id = role_perm["sub"]
-    admins_coll = database["factors"]
-    marketer_coll = database["marketers"]
-    if ami.CurrentIdpId is None:
-        raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    filter = {"IdpId": ami.CurrentIdpId}
-    update = {"$set": {}}
-    for key, value in vars(ami).items():
-        if value is not None:
-            update["$set"][key] = value
-    update["$set"]["CreateDate"] = jd.today().strftime("%Y-%m-%d")
-    update["$set"]["ModifiedDate"] = jd.today().strftime("%Y-%m-%d")
-
-    if ami.NationalID is not None:
-        try:
-            ddd = int(ami.NationalID)
-            update["$set"]["Id"] = ami.NationalID
-        except:
-            raise RequestValidationError(TypeError, body={"code": "30066", "status": 412})
-    update["$set"]["IdpId"] = ami.CurrentIdpId
-    try:
-        marketer_coll.insert_one(update["$set"])
-    except:
-        raise RequestValidationError(TypeError, body={"code": "30066", "status": 409})
-    query_result = marketer_coll.find_one(filter, {"_id": False})
-    if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30051", "status": 200})
-    return ResponseListOut(
-        result=query_result,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
-    )
-
-
-@marketer.get(
-    "/marketer-total",
-    tags=["Marketer"],
-    response_model=None,
-)
-@authorize(
-    [
-        "MarketerAdmin.All.Read",
-        "MarketerAdmin.All.All",
-        "MarketerAdmin.Marketer.Read",
-        "MarketerAdmin.Marketer.All",
-    ]
-)
-async def get_marketer_total_trades(
-    request: Request,
-    args: UsersTotalPureIn = Depends(UsersTotalPureIn),
-    database: MongoClient = Depends(get_database),
-    role_perm: dict = Depends(get_role_permission),
-):
-    """_summary_
-
-    Args:
-        request (Request): _description_
-        args (UsersTotalPureIn, optional): _description_. Defaults to Depends(UsersTotalPureIn).
-
-    Returns:
-        _type_: _description_
-    """
-    user_id = role_perm["sub"]
-    customers_coll = database["customers"]
-    trades_coll = database["trades"]
-    marketers_coll = database["marketers"]
-    firms_coll = database["firms"]
-    totals_coll = database["totals"]
-    marketers_query = marketers_coll.find(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-        {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
-    )
-    marketers_list = list(marketers_query)
-    to_date = jd(datetime.strptime(args.to_date,'%Y-%m-%d')).date().isoformat()
-    from_date = jd(datetime.strptime(args.from_date,'%Y-%m-%d')).date().isoformat()
-    results = []
-    for marketer in marketers_list:
-        response_dict = {}
-        marketer_fullname = get_marketer_name(marketer)
-        query = {"Referer": {"$regex": marketer_fullname}}
-        fields = {"PAMCode": 1}
-        customers_records = customers_coll.find(query, fields)
-        firms_records = firms_coll.find(query, fields)
-        trade_codes = [c.get("PAMCode") for c in customers_records] + [
-            c.get("PAMCode") for c in firms_records
-        ]
-        from_gregorian_date = to_gregorian_(from_date)
-        if not args.to_date:
-            args.to_date = jd.today().date().isoformat()
-        to_gregorian_date = to_gregorian_(to_date)
-        to_gregorian_date = datetime.strptime(
-            to_gregorian_date, "%Y-%m-%d"
-        ) + timedelta(days=1)
-        last_month = jd.strptime(to_date, "%Y-%m-%d").month - 1
-        if last_month < 1:
-            last_month = last_month + 12
-        if last_month < 10:
-            last_month = "0" + str(last_month)
-        last_month_str = str(jd.strptime(to_date, "%Y-%m-%d").year) + str(
-            last_month
-        )
-        if last_month == 12:
-            last_month_str = str(jd.strptime(to_date, "%Y-%m-%d").year - 1) + str(
-                last_month
+            raise RequestValidationError(
+                TypeError, body={"code": "30066", "status": 412}
             )
-        to_gregorian_date = to_gregorian_date.strftime("%Y-%m-%d")
-
-        pipeline = [
-            filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
-            project_commission_stage(),
-            group_by_total_stage("id"),
-            project_pure_stage()
-        ]
-
-        response_dict = next(database.trades.aggregate(pipeline=pipeline), {})
-        try:
-            response_dict["FirstName"] = marketer.get("FirstName")
-        except:
-            response_dict["FirstName"] = ""
-        try:
-            response_dict["LastName"] = marketer.get("LastName")
-        except:
-            response_dict["LastName"] = ""
-        lmtpv = last_month_str + "TPV"
-        lmtf = last_month_str + "TF"
-        try:
-            response_dict["LMTPV"] = totals_coll.find_one(
-                {"MarketerID": marketer.get("IdpId")}
-            )[lmtpv]
-            response_dict["LMTF"] = totals_coll.find_one(
-                {"MarketerID": marketer.get("IdpId")}
-            )[lmtf]
-        except:
-            response_dict["LMTPV"] = 0
-            response_dict["LMTF"] = 0
-        response_dict["UsersCount"] = customers_coll.count_documents(
-            {"Referer": {"$regex": marketer_fullname}}
-        )
-        results.append(response_dict)
-    if args.sorted:
-        results.sort(key=lambda x: x["TotalFee"], reverse=args.asc_desc_TF)
-        results.sort(key=lambda x: x["TotalPureVolume"], reverse=args.asc_desc_TPV)
-        results.sort(key=lambda x: x["LMTF"], reverse=args.asc_desc_LMTF)
-        results.sort(key=lambda x: x["LMTPV"], reverse=args.asc_desc_LMTPV)
-        results.sort(key=lambda x: x["FirstName"], reverse=args.asc_desc_FN)
-        results.sort(key=lambda x: x["LastName"], reverse=args.asc_desc_LN)
-        results.sort(key=lambda x: x["UsersCount"], reverse=args.asc_desc_UC)
-    resp = {
-        "result": results,
-        "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        "error": {"message": "Null", "code": "Null"},
-    }
-    return JSONResponse(status_code=200, content=resp)
+    marketer_coll.update_one(filter, update)
+    # query_result = marketer_coll.find_one({"MarketerID": idpid}, {"_id": False})
+    query_result = marketer_coll.find_one({"MarketerID": idpid}, {"_id": False})
+    if not query_result:
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+    return ResponseListOut(
+        result=query_result,
+        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        error="",
+    )
 
 
 @marketer.get(
@@ -399,41 +200,51 @@ async def search_user_profile(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    marketer_coll = brokerage["marketers"]
-    query = {
-        "$and": [
-            {"FirstName": {"$regex": args.first_name}},
-            {"LastName": {"$regex": args.last_name}},
-            {"CreateDate": {"$regex": args.register_date}},
-        ]
-    }
+    marketer_coll = brokerage[settings.MARKETER_COLLECTION]
+    upa = []
 
-    filter = {
-        "FirstName": {"$regex": args.first_name},
-        "LastName": {"$regex": args.last_name},
-        "RegisterDate": {"$regex": args.register_date},
-    }
+    if args.UniqueId:
+        upa.append({"UniqueId": args.UniqueId})
+    if args.Mobile:
+        upa.append({"Mobile": args.Mobile})
+    if args.Title:
+        upa.append({"TbsReagentName": {"$regex": args.Title}})
+    if upa:
+        query = {"$and": upa}
+    else:
+        query = {}
+
     results = []
     try:
         query_result = marketer_coll.find_one(query, {"_id": False})
     except:
         raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
-    query_result = marketer_coll.find(query, {"_id": False})
-    marketers = dict(enumerate(query_result))
-    for i in range(len(marketers)):
-        results.append(marketer_entity(marketers[i]))
-    if not results:
-        raise RequestValidationError(TypeError, body={"code": "30008", "status": 200})
-    return ResponseListOut(
-        result=results,
-        timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-        error="",
+    query_result = (
+        marketer_coll.find(query, {"_id": False})
+        .skip(args.size * (args.page - 1))
+        .limit(args.size)
     )
+    total_count = marketer_coll.count_documents(query)
+
+    marketers = list(query_result)
+    for i in range(len(marketers)):
+        results.append(marketers[i])
+    if not results:
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
+    resp = {
+        "result": {"totalCount": total_count, "pagedData": results},  # len(marketers),
+        "timeGenerated": jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+        "error": {
+            "message": "Null",
+            "code": "Null",
+        },
+    }
+    return JSONResponse(status_code=200, content=resp)
 
 
-@marketer.post(
-    "/add-marketers-relations",
-    tags=["Marketer"],
+@marketer_relation.post(
+    "/add",
+    tags=["Marketer Relation"],
     response_model=None,
 )
 @authorize(
@@ -460,8 +271,8 @@ async def add_marketers_relations(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    marketers_relations_coll = database["mrelations"]
-    marketers_coll = database["marketers"]
+    marketers_relations_coll = database[settings.RELATIONS_COLLECTION]
+    marketers_coll = database[settings.MARKETER_COLLECTION]
     if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
     else:
@@ -482,15 +293,21 @@ async def add_marketers_relations(
         if marketers_relations_coll.find_one(
             {"LeaderMarketerID": mrel.LeaderMarketerID}
         ):
-            raise RequestValidationError(TypeError, body={"code": "30072", "status": 409})
+            raise RequestValidationError(
+                TypeError, body={"code": "30072", "status": 409}
+            )
         else:
-            raise RequestValidationError(TypeError, body={"code": "30012", "status": 406})
+            raise RequestValidationError(
+                TypeError, body={"code": "30012", "status": 406}
+            )
     try:
         d = int(mrel.CommissionCoefficient)
         if 0 < mrel.CommissionCoefficient < 1:
             update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
         else:
-            raise RequestValidationError(TypeError, body={"code": "30016", "status": 412})
+            raise RequestValidationError(
+                TypeError, body={"code": "30016", "status": 412}
+            )
     except:
         raise RequestValidationError(TypeError, body={"code": "30015", "status": 412})
     update["$set"]["CreateDate"] = datetime.now().isoformat()
@@ -502,31 +319,45 @@ async def add_marketers_relations(
     if mrel.EndDate is not None:
         update["$set"]["EndDate"] = mrel.EndDate
         try:
-            update["$set"]["GEndDate"] = jd.strptime(
-                update["$set"]["EndDate"], "%Y-%m-%d"
-            ).todatetime()
+            # update["$set"]["GEndDate"] = (
+            (jd.strptime(update["$set"]["EndDate"], "%Y-%m-%d").todatetime())
         except:
-            raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
+            raise RequestValidationError(
+                TypeError, body={"code": "30017", "status": 412}
+            )
     else:
-        update["$set"]["GEndDate"] = jd.strptime("1500-12-29", "%Y-%m-%d").todatetime()
+        # update["$set"]["GEndDate"] = (
+        jd.strptime("1500-12-29", "%Y-%m-%d").todatetime()
     try:
-        update["$set"]["GStartDate"] = jd.strptime(
-            update["$set"]["StartDate"], "%Y-%m-%d"
-        ).todatetime()
+        # update["$set"]["GStartDate"] = (
+        (jd.strptime(update["$set"]["StartDate"], "%Y-%m-%d").todatetime())
     except:
         raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
     if marketers_coll.find_one(
-        {"IdpId": mrel.FollowerMarketerID}
-    ) and marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID}):
+        # {"MarketerID": mrel.FollowerMarketerID}
+        {"MarketerID": mrel.FollowerMarketerID}
+    ) and marketers_coll.find_one(
+        # {"MarketerID": mrel.LeaderMarketerID}):
+        {"MarketerID": mrel.LeaderMarketerID}
+    ):
         pass
     else:
         raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
-    update["$set"]["FollowerMarketerName"] = get_marketer_name(
-        marketers_coll.find_one({"IdpId": mrel.FollowerMarketerID})
-    )
-    update["$set"]["LeaderMarketerName"] = get_marketer_name(
-        marketers_coll.find_one({"IdpId": mrel.LeaderMarketerID})
-    )
+    # update["$set"]["FollowerMarketerName"] = get_marketer_name(
+    #     marketers_coll.find_one({"MarketerID": mrel.FollowerMarketerID})
+    # )
+    # update["$set"]["LeaderMarketerName"] = get_marketer_name(
+    #     marketers_coll.find_one({"MarketerID": mrel.LeaderMarketerID})
+    # )
+    try:
+        update["$set"]["FollowerMarketerName"] = marketers_coll.find_one(
+            {"MarketerID": mrel.FollowerMarketerID}
+        )["TbsReagentName"]
+        update["$set"]["LeaderMarketerName"] = marketers_coll.find_one(
+            {"MarketerID": mrel.LeaderMarketerID}
+        )["TbsReagentName"]
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
 
     marketers_relations_coll.insert_one(update["$set"])
 
@@ -539,9 +370,9 @@ async def add_marketers_relations(
     )
 
 
-@marketer.put(
-    "/modify-marketers-relations",
-    tags=["Marketer"],
+@marketer_relation.put(
+    "/modify",
+    tags=["Marketer Relation"],
     response_model=None,
 )
 @authorize(
@@ -570,7 +401,7 @@ async def modify_marketers_relations(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    marketers_relations_coll = database["mrelations"]
+    marketers_relations_coll = database[settings.RELATIONS_COLLECTION]
     if mrel.LeaderMarketerID and mrel.FollowerMarketerID:
         pass
     else:
@@ -582,7 +413,7 @@ async def modify_marketers_relations(
         ]
     }
     if marketers_relations_coll.find_one(query) is None:
-        raise RequestValidationError(TypeError, body={"code": "30019", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30019", "status": 404})
     if mrel.CommissionCoefficient is None:
         raise RequestValidationError(TypeError, body={"code": "30010", "status": 412})
     update = {"$set": {}}
@@ -591,7 +422,9 @@ async def modify_marketers_relations(
         if 0 < mrel.CommissionCoefficient < 1:
             update["$set"]["CommissionCoefficient"] = mrel.CommissionCoefficient
         else:
-            raise RequestValidationError(TypeError, body={"code": "30016", "status": 412})
+            raise RequestValidationError(
+                TypeError, body={"code": "30016", "status": 412}
+            )
     except:
         raise RequestValidationError(TypeError, body={"code": "30015", "status": 412})
     update["$set"]["LeaderMarketerID"] = mrel.LeaderMarketerID
@@ -605,21 +438,26 @@ async def modify_marketers_relations(
     if mrel.StartDate is not None:
         update["$set"]["StartDate"] = mrel.StartDate
         try:
-            update["$set"]["GStartDate"] = jd.strptime(
-                update["$set"]["StartDate"], "%Y-%m-%d"
-            ).todatetime()
+            # update["$set"]["GStartDate"] = (
+            (jd.strptime(update["$set"]["StartDate"], "%Y-%m-%d").todatetime())
         except:
-            raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
+            raise RequestValidationError(
+                TypeError, body={"code": "30018", "status": 412}
+            )
     if mrel.EndDate is not None:
         update["$set"]["EndDate"] = mrel.EndDate
         try:
-            update["$set"]["GEndDate"] = jd.strptime(
-                update["$set"]["EndDate"], "%Y-%m-%d"
-            ).todatetime()
+            # update["$set"]["GEndDate"] = (
+            (jd.strptime(update["$set"]["EndDate"], "%Y-%m-%d").todatetime())
         except:
-            raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
-        if update["$set"]["GEndDate"] < update["$set"]["GStartDate"]:
-            raise RequestValidationError(TypeError, body={"code": "30071", "status": 400})
+            raise RequestValidationError(
+                TypeError, body={"code": "30017", "status": 412}
+            )
+        # if update["$set"]["GEndDate"] < update["$set"]["GStartDate"]:
+        if update["$set"]["EndDate"] < update["$set"]["StartDate"]:
+            raise RequestValidationError(
+                TypeError, body={"code": "30071", "status": 400}
+            )
 
     query = {
         "$and": [
@@ -637,9 +475,9 @@ async def modify_marketers_relations(
     )
 
 
-@marketer.get(
-    "/search-marketers-relations",
-    tags=["Marketer"],
+@marketer_relation.get(
+    "/search",
+    tags=["Marketer Relation"],
     response_model=None,
 )
 @authorize(
@@ -667,22 +505,30 @@ async def search_marketers_relations(
         _type_: _description_
     """
     user_id = role_perm["sub"]
-    try:
-        StartDate = jd(datetime.strptime(args.StartDate, '%Y-%m-%d')).date().isoformat()
-        from_gregorian_date = jd.strptime(StartDate, "%Y-%m-%d").todatetime().isoformat()
-    except:
-        raise RequestValidationError(TypeError, body={"code": "30018", "status": 412})
-    try:
-        EndDate = jd(datetime.strptime(args.EndDate, '%Y-%m-%d')).date().isoformat()
-        to_gregorian_date = (jd.strptime(EndDate, "%Y-%m-%d").todatetime() + timedelta(
-        days=1)).isoformat()
-    except:
-        raise RequestValidationError(TypeError, body={"code": "30017", "status": 412})
+    if args.StartDate or args.EndDate:
+        try:
+            StartDate = (
+                jd(datetime.strptime(args.StartDate, "%Y-%m-%d")).date().isoformat()
+            )
+            from_gregorian_date = (
+                jd.strptime(StartDate, "%Y-%m-%d").todatetime().isoformat()
+            )
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30018", "status": 412}
+            )
+        try:
+            EndDate = jd(datetime.strptime(args.EndDate, "%Y-%m-%d")).date().isoformat()
+            to_gregorian_date = (
+                jd.strptime(EndDate, "%Y-%m-%d").todatetime() + timedelta(days=1)
+            ).isoformat()
+        except:
+            raise RequestValidationError(
+                TypeError, body={"code": "30017", "status": 412}
+            )
 
-
-    marketers_relations_coll = database["mrelations"]
+    marketers_relations_coll = database[settings.RELATIONS_COLLECTION]
     upa = []
-    query = {"$and": upa}
 
     if args.LeaderMarketerName:
         upa.append({"LeaderMarketerName": {"$regex": args.LeaderMarketerName}})
@@ -692,24 +538,35 @@ async def search_marketers_relations(
         upa.append({"LeaderMarketerID": args.LeaderMarketerID})
     if args.FollowerMarketerID:
         upa.append({"FollowerMarketerID": args.FollowerMarketerID})
-    upa.append({"StartDate": {"$gte": args.StartDate}})
-    upa.append({"EndDate": {"$lte": args.EndDate}})
+    if args.StartDate:
+        upa.append({"StartDate": {"$gte": args.StartDate}})
+    if args.EndDate:
+        upa.append({"EndDate": {"$lte": args.EndDate}})
+    if upa:
+        query = {"$and": upa}
+    else:
+        query = {}
 
     results = []
     try:
         query_result = marketers_relations_coll.find_one(query, {"_id": False})
     except:
         raise RequestValidationError(TypeError, body={"code": "30050", "status": 412})
-    query_result = marketers_relations_coll.find(query, {"_id": False})
+    query_result = (
+        marketers_relations_coll.find(query, {"_id": False})
+        .skip(args.size * (args.page - 1))
+        .limit(args.size)
+    )
+    total_count = marketers_relations_coll.count_documents(query)
     marketers = dict(enumerate(query_result))
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30008", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
-    result["totalCount"] = len(marketers)
+    result["totalCount"] = total_count  # len(marketers)
     result["pagedData"] = results
     return ResponseListOut(
         result=result,
@@ -718,9 +575,9 @@ async def search_marketers_relations(
     )
 
 
-@marketer.delete(
-    "/delete-marketers-relations",
-    tags=["Marketer"],
+@marketer_relation.delete(
+    "/delete",
+    tags=["Marketer Relation"],
     response_model=None,
 )
 @authorize(
@@ -759,8 +616,8 @@ async def delete_marketers_relations(
         pass
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
-    marketers_relations_coll = database["mrelations"]
-    marketers_coll = database["marketers"]
+    marketers_relations_coll = database[settings.RELATIONS_COLLECTION]
+    marketers_coll = database[settings.MARKETER_COLLECTION]
     if args.LeaderMarketerID and args.FollowerMarketerID:
         pass
     else:
@@ -772,16 +629,25 @@ async def delete_marketers_relations(
     )
 
     if not q:
-        raise RequestValidationError(TypeError, body={"code": "30052", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30052", "status": 404})
     if not q.get("LeaderMarketerID") == args.LeaderMarketerID:
         raise RequestValidationError(TypeError, body={"code": "30012", "status": 409})
     results = []
-    FollowerMarketerName = get_marketer_name(
-        marketers_coll.find_one({"IdpId": args.FollowerMarketerID})
-    )
-    LeaderMarketerName = get_marketer_name(
-        marketers_coll.find_one({"IdpId": args.LeaderMarketerID})
-    )
+    # FollowerMarketerName = get_marketer_name(
+    #     marketers_coll.find_one({"MarketerID": args.FollowerMarketerID})
+    # )
+    # LeaderMarketerName = get_marketer_name(
+    #     marketers_coll.find_one({"MarketerID": args.LeaderMarketerID})
+    # )
+    try:
+        FollowerMarketerName = marketers_coll.find_one(
+            {"MarketerID": args.FollowerMarketerID}
+        )["TbsReagentName"]
+        LeaderMarketerName = marketers_coll.find_one(
+            {"MarketerID": args.LeaderMarketerID}
+        )["TbsReagentName"]
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
 
     qqq = marketers_relations_coll.find_one(
         {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
@@ -798,11 +664,11 @@ async def delete_marketers_relations(
     )
 
 
-@marketer.get(
-    "/users-diff-marketer",
-    tags=["Marketer"],
-    response_model=None,
-)
+# @marketer.get(
+#     "/users-diff-marketer",
+#     tags=["Marketer"],
+#     response_model=None,
+# )
 @authorize(
     [
         "MarketerAdmin.All.Read",
@@ -839,23 +705,23 @@ async def users_diff_with_tbs(
     else:
         raise HTTPException(status_code=403, detail="Not authorized.")
     customers_coll = database["customers"]
-    firms_coll = database["firms"]
+    # firms_coll = database["firms"]
     marketers_coll = database["marketers"]
     if args.IdpID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    query_result = marketers_coll.find({"IdpId": args.IdpID})
+    query_result = marketers_coll.find({"MarketerID": args.IdpID})
     marketer_dict = peek(query_result)
     marketer_fullname = get_marketer_name(marketer_dict)
     customers_records = customers_coll.find(
         {"Referer": marketer_fullname}, {"PAMCode": 1}
     )
-    firms_records = firms_coll.find({"Referer": marketer_fullname}, {"PAMCode": 1})
-    trade_codes = [c.get("PAMCode") for c in customers_records] + [
-        c.get("PAMCode") for c in firms_records
-    ]
+    # firms_records = firms_coll.find({"Referer": marketer_fullname}, {"PAMCode": 1})
+    trade_codes = [
+        c.get("PAMCode") for c in customers_records
+    ]  # + [c.get("PAMCode") for c in firms_records]
     try:
-        to_date = jd(datetime.strptime(args.to_date,'%Y-%m-%d')).date().isoformat()
-        from_date = jd(datetime.strptime(args.from_date,'%Y-%m-%d')).date().isoformat()
+        to_date = jd(datetime.strptime(args.to_date, "%Y-%m-%d")).date().isoformat()
+        from_date = jd(datetime.strptime(args.from_date, "%Y-%m-%d")).date().isoformat()
     except:
         raise RequestValidationError(TypeError, body={"code": "30090", "status": 412})
     start_date = jd.strptime(from_date, "%Y-%m-%d")
@@ -875,7 +741,7 @@ async def users_diff_with_tbs(
             else:
                 result.append(q)
     if not result:
-        raise RequestValidationError(TypeError, body={"code": "30013", "status": 200})
+        raise RequestValidationError(TypeError, body={"code": "30013", "status": 404})
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -899,14 +765,21 @@ async def users_list_by_volume(
 ):
     if not args.IdpID:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
-    query_result = brokerage.marketers.find_one({"IdpId": args.IdpID})
+    # query_result = brokerage.marketers.find_one({"MarketerID": args.IdpID})
+    marketer_col = brokerage[settings.MARKETER_COLLECTION]
+    query_result = marketer_col.find_one({"MarketerID": args.IdpID})
+
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 200})
-    marketer_fullname = get_marketer_name(query_result)
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
+    # marketer_fullname = get_marketer_name(query_result)
+    marketer_fullname = query_result["TbsReagentName"]
 
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-    query = {"Referer": {"$regex": marketer_fullname}}
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
+    # query = {"Referer": {"$regex": marketer_fullname}}
+    query = {"Referer": marketer_fullname}
     trade_codes = brokerage.customers.distinct("PAMCode", query)
 
     if args.user_type.value == "active":
@@ -921,7 +794,7 @@ async def users_list_by_volume(
             sort_stage(args.sort_by.value, args.sort_order.value),
             paginate_data(args.page, args.size),
             unwind_metadata_stage(),
-            project_total_stage()
+            project_total_stage(),
         ]
 
         active_dict = next(brokerage.trades.aggregate(pipeline=pipeline), {})
@@ -948,7 +821,7 @@ async def users_list_by_volume(
         active_users_pipeline = [
             filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
             group_by_trade_code_stage(),
-            project_by_trade_code_stage()
+            project_by_trade_code_stage(),
         ]
 
         active_users_res = brokerage.trades.aggregate(pipeline=active_users_pipeline)
@@ -963,7 +836,7 @@ async def users_list_by_volume(
             sort_stage(args.sort_by.value, args.sort_order.value),
             paginate_data(args.page, args.size),
             unwind_metadata_stage(),
-            project_total_stage()
+            project_total_stage(),
         ]
 
         inactive_dict = next(

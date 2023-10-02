@@ -4,6 +4,7 @@ Returns:
     _type_: _description_
 """
 from datetime import date
+
 from khayyam import JalaliDatetime
 
 
@@ -96,7 +97,7 @@ def marketer_entity(marketer) -> dict:
         dict: _description_
     """
     return {
-        "Id": marketer.get("Id"),
+        "MarketerID": marketer.get("MarketerID"),
         "FirstName": marketer.get("FirstName"),
         "LastName": marketer.get("LastName"),
         "IsOrganization": marketer.get("IsOrganization"),
@@ -108,7 +109,7 @@ def marketer_entity(marketer) -> dict:
         "IsCustomer": marketer.get("IsCustomer"),
         "IsEmployee": marketer.get("IsEmployee"),
         "CustomerType": marketer.get("CustomerType"),
-        "IdpId": marketer.get("IdpId"),
+        "MarketerID": marketer.get("MarketerID"),
         "InvitationLink": marketer.get("InvitationLink"),
     }
 

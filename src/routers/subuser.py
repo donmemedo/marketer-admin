@@ -4,12 +4,13 @@ Returns:
     _type_: _description_
 """
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
-
 from fastapi_pagination import add_pagination
 from fastapi_pagination.ext.pymongo import paginate
 from khayyam import JalaliDatetime as jd
+
 from src.schemas.subuser import (
     SubUserIn,
     SubCostIn,
@@ -20,9 +21,8 @@ from src.schemas.subuser import (
     ResponseListOut,
 )
 from src.tools.database import get_database
-from src.tools.utils import peek, to_gregorian_
 from src.tools.queries import *
-from pymongo import MongoClient
+from src.tools.utils import peek, to_gregorian_
 
 subuser = APIRouter(prefix="/subuser")
 
@@ -48,7 +48,7 @@ async def search_marketer_user(
     customer_coll = brokerage["customers"]
     firms_coll = brokerage["firms"]
     marketers_coll = brokerage["marketers"]
-    query_result = marketers_coll.find({"IdpId": marketer_id})
+    query_result = marketers_coll.find({"MarketerID": marketer_id})
     marketer_dict = peek(query_result)
     marketer_fullname = (
         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
@@ -89,7 +89,7 @@ async def get_user_profile(request: Request, args: SubUserIn = Depends(SubUserIn
     customer_coll = brokerage["customers"]
     firms_coll = brokerage["firms"]
     marketers_coll = brokerage["marketers"]
-    query_result = marketers_coll.find({"IdpId": marketer_id})
+    query_result = marketers_coll.find({"MarketerID": marketer_id})
 
     marketer_dict = peek(query_result)
 
@@ -135,7 +135,7 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
     customer_coll = brokerage["customers"]
     marketers_coll = brokerage["marketers"]
 
-    query_result = marketers_coll.find({"IdpId": marketer_id})
+    query_result = marketers_coll.find({"MarketerID": marketer_id})
 
     marketer_dict = peek(query_result)
 
@@ -164,9 +164,7 @@ async def search_user_profile(request: Request, args: SubUserIn = Depends(SubUse
     return paginate(customer_coll, filter, sort=[("RegisterDate", -1)])
 
 
-@subuser.get(
-    "/cost", tags=["SubUser"], response_model=None
-)
+@subuser.get("/cost", tags=["SubUser"], response_model=None)
 async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostIn)):
     """_summary_
 
@@ -182,7 +180,7 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
     customers_coll = brokerage["customers"]
     trades_coll = brokerage["trades"]
     marketers_coll = brokerage["marketers"]
-    query_result = marketers_coll.find({"IdpId": marketer_id})
+    query_result = marketers_coll.find({"MarketerID": marketer_id})
     marketer_dict = peek(query_result)
     marketer_fullname = (
         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
@@ -200,13 +198,15 @@ async def call_subuser_cost(request: Request, args: SubCostIn = Depends(SubCostI
     customers_records = customers_coll.find(query, fields)
     trade_codes = [c.get("PAMCode") for c in customers_records]
     from_gregorian_date = args.from_date
-    to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+    to_gregorian_date = (
+        datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     pipeline = [
         filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date),
         project_commission_stage(),
         group_by_total_stage("id"),
-        project_pure_stage()
+        project_pure_stage(),
     ]
 
     subuser_total = next(brokerage.trades.aggregate(pipeline=pipeline), [])
@@ -240,7 +240,7 @@ async def marketer_subuser_lists(
     trades_coll = database["trades"]
     marketers_coll = database["marketers"]
     firms_coll = database["firms"]
-    query_result = marketers_coll.find({"IdpId": marketer_id})
+    query_result = marketers_coll.find({"MarketerID": marketer_id})
     marketer_dict = peek(query_result)
     marketer_fullname = (
         marketer_dict.get("FirstName") + " " + marketer_dict.get("LastName")
@@ -515,8 +515,8 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
     firms_coll = database["firms"]
     marketers_coll = database["marketers"]
     marketers_query = marketers_coll.find(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-        {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+        {"MarketerID": {"$exists": True, "$not": {"$size": 0}}},
+        {"FirstName": 1, "LastName": 1, "_id": 0, "MarketerID": 1},
     )
     marketers_list = list(marketers_query)
 
@@ -539,7 +539,9 @@ def users_list_by_volume(request: Request, args: UsersListIn = Depends(UsersList
         ]
 
         from_gregorian_date = args.from_date
-        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        to_gregorian_date = (
+            datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+        ).strftime("%Y-%m-%d")
 
         pipeline = [
             {
@@ -682,8 +684,8 @@ def total_users_cost(
     firms_coll = database["firms"]
     marketers_coll = database["marketers"]
     marketers_query = marketers_coll.find(
-        {"IdpId": {"$exists": True, "$not": {"$size": 0}}},
-        {"FirstName": 1, "LastName": 1, "_id": 0, "IdpId": 1},
+        {"MarketerID": {"$exists": True, "$not": {"$size": 0}}},
+        {"FirstName": 1, "LastName": 1, "_id": 0, "MarketerID": 1},
     )
     marketers_list = list(marketers_query)
     results = []
@@ -698,7 +700,9 @@ def total_users_cost(
                 marketer.get("FirstName") + " " + marketer.get("LastName")
             )
         from_gregorian_date = args.from_date
-        to_gregorian_date = (datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
+        to_gregorian_date = (
+            datetime.strptime(args.to_date, "%Y-%m-%d") + timedelta(days=1)
+        ).strftime("%Y-%m-%d")
 
         query = {"$and": [{"Referer": marketer_fullname}]}
         fields = {"PAMCode": 1}
@@ -711,7 +715,6 @@ def total_users_cost(
         )
 
     for trade_codes in total_codes:
-
         pipeline = [
             {
                 "$match": {
@@ -852,8 +855,9 @@ def cost_calculator(trade_codes, from_date, to_date, page=1, size=10):
     database = get_database()
     trades_coll = database["trades"]
     from_gregorian_date = from_date
-    to_gregorian_date = (datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d")
-
+    to_gregorian_date = (
+        datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+    ).strftime("%Y-%m-%d")
 
     pipeline = [
         {

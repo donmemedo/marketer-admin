@@ -1,16 +1,11 @@
 """_summary_
 """
 from dataclasses import dataclass
-from typing import Optional, Any, List, Dict
-from enum import Enum, IntEnum
-from fastapi import Query
-from pydantic import BaseModel
-from khayyam import JalaliDatetime
-from datetime import date
+from typing import Optional
 
+from khayyam import JalaliDatetime
 
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
-# current_date = date.today().isoformat()
 current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 
@@ -33,7 +28,10 @@ from typing import Any, Dict, List
 from fastapi import Query
 from khayyam import JalaliDatetime
 from datetime import date
-current_date = date.today().isoformat()#JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+
+current_date = (
+    date.today().isoformat()
+)  # JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 
 
 @dataclass

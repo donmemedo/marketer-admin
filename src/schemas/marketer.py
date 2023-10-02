@@ -1,20 +1,20 @@
 """_summary_
 """
 from dataclasses import dataclass
-from typing import Optional, Any, List, Dict
 from enum import Enum, IntEnum
-from fastapi import Query
-from pydantic import BaseModel
-from khayyam import JalaliDatetime
-from datetime import date
+from typing import Optional, Any, List, Dict
 
+from fastapi import Query
+from khayyam import JalaliDatetime
 
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
-# current_date = date.today().isoformat()
 current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 from datetime import date
-current_date = date.today().isoformat()#JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+
+current_date = (
+    date.today().isoformat()
+)  # JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 
 
 @dataclass
@@ -54,10 +54,15 @@ class UsersTotalPureIn:
 
 @dataclass
 class MarketersProfileIn:
-    first_name: str = Query("")
-    last_name: str = Query("")
-    mobile: int = Query("")
-    register_date: str = Query("")
+    # first_name: str = Query("")
+    Title: str = Query(default=None, alias="TbsReagentName")
+    UniqueId: str = Query(default=None)
+    # last_name: str = Query("")
+    Mobile: str = Query(default=None)
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
+
+    # register_date: str = Query("")
 
 
 @dataclass
@@ -94,7 +99,6 @@ class ResponseListOut:
 
 @dataclass
 class MarketerRelations:
-
     LeaderMarketerID: str
     FollowerMarketerID: str
     CommissionCoefficient: float
@@ -104,20 +108,20 @@ class MarketerRelations:
 
 @dataclass
 class DelMarketerRelations:
-
     LeaderMarketerID: str
     FollowerMarketerID: str
 
 
 @dataclass
 class SearchMarketerRelations:
-
     LeaderMarketerName: str = None
     LeaderMarketerID: str = None
     FollowerMarketerName: str = None
     FollowerMarketerID: str = None
-    StartDate: str = Query(default="2021-01-01")
-    EndDate: str = Query(default="2521-12-29")
+    StartDate: str = Query(default=None)
+    EndDate: str = Query(default=None)
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass
@@ -143,7 +147,7 @@ class UserTypeEnum(str, Enum):
 
 @dataclass
 class UsersListIn(Pages):
-    IdpID: str = Query(alias="IdpID")
+    IdpID: str = Query(alias="MarketerID")
     sort_by: SortField = Query(SortField.REGISTRATION_DATE, alias="SortBy")
     sort_order: SortOrder = Query(SortOrder.ASCENDING, alias="SortOrder")
     user_type: UserTypeEnum = Query(UserTypeEnum.active, alias="UserType")

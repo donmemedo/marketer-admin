@@ -1,26 +1,26 @@
 """_summary_
 """
 from dataclasses import dataclass
-from typing import Optional, Any, List, Dict
 from enum import Enum, IntEnum
-from pydantic import BaseModel
+from typing import Optional, Any, List, Dict
+
 from fastapi import Query
 from khayyam import JalaliDatetime
-from datetime import date
-
 
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
-# current_date = date.today().isoformat()
 current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 from datetime import date
-current_date = date.today().isoformat()#JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
+
+current_date = (
+    date.today().isoformat()
+)  # JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 
 
 @dataclass
-class ModifyMarketerContractCoefficientIn:
-    MarketerID: str
-    ID: str = None
+class AddMarketerContractCoefficientIn:
+    MarketerID: str = None
+    # ID: str = None
     CoefficientPercentage: float = None
     ContractID: str = None
     HighThreshold: int = None
@@ -29,23 +29,35 @@ class ModifyMarketerContractCoefficientIn:
     Title: str = None
 
 
-
 @dataclass
-class SearchMarketerContractCoefficientIn:
-    MarketerID: str = Query("")
-    ID: str = None
+class ModifyMarketerContractCoefficientIn:
+    # MarketerID: str
+    # MCCID: str = None
     CoefficientPercentage: float = None
     ContractID: str = None
     HighThreshold: int = None
     LowThreshold: int = None
     StepNumber: int = None
-    Title: str = Query("")
+    Title: str = None
 
+
+@dataclass
+class SearchMarketerContractCoefficientIn:
+    MarketerID: str = None
+    ID: str = None
+    # CoefficientPercentage: float = None
+    ContractID: str = None
+    # HighThreshold: int = None
+    # LowThreshold: int = None
+    # StepNumber: int = None
+    Title: str = None
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass
 class DelMarketerMarketerContractCoefficientIn:
-    MarketerID: str
+    ContractID: str
 
 
 @dataclass
@@ -100,9 +112,10 @@ class ResponseListOut:
 
 @dataclass
 class SearchFactorIn:
-
     MarketerID: str = Query("")
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass

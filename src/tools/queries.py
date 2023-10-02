@@ -60,7 +60,11 @@ def project_pure_stage():
             "_id": 0,
             "TradeCode": "$_id",
             "TotalPureVolume": {
-                "$add": ["$TotalPriorityAcceptance", "$TotalPureVolume", "$TotalBondDividend"]
+                "$add": [
+                    "$TotalPriorityAcceptance",
+                    "$TotalPureVolume",
+                    "$TotalBondDividend",
+                ]
             },
             "TotalFee": 1,
         }
@@ -70,7 +74,6 @@ def project_pure_stage():
 def join_customers_stage():
     return {
         "$lookup": {
-            # "from": "customersbackup",
             "from": "customers",
             "localField": "TradeCode",
             # "foreignField": "TradeCodes",
@@ -141,20 +144,11 @@ def project_total_stage():
 
 
 def group_by_trade_code_stage():
-    return {
-        "$group": {
-            "_id": "$TradeCode"
-        }
-    }
+    return {"$group": {"_id": "$TradeCode"}}
 
 
 def project_by_trade_code_stage():
-    return {
-        "$project": {
-            "_id": 0,
-            "TradeCode": "$_id"
-        }
-    }
+    return {"$project": {"_id": 0, "TradeCode": "$_id"}}
 
 
 def match_inactive_users(inactive_users):
@@ -178,4 +172,15 @@ def project_inactive_users():
             "Email": 1,
             "ActivityField": 1,
         }
+    }
+
+
+def filter_trades(trade_codes, from_gregorian_date, to_gregorian_date, trade_type):
+    return {
+        "$and": [
+            {"TradeCode": {"$in": trade_codes}},
+            {"TradeDate": {"$gte": from_gregorian_date}},
+            {"TradeDate": {"$lte": to_gregorian_date}},
+            {"TradeType": trade_type},
+        ]
     }

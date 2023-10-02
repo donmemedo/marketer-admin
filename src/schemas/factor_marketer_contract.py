@@ -1,54 +1,21 @@
 """_summary_
 """
 from dataclasses import dataclass
-from typing import Optional, Any, List, Dict
 from enum import Enum, IntEnum
+from typing import Optional, Any, List, Dict
 from pydantic import BaseModel
 from fastapi import Query
 from khayyam import JalaliDatetime
-from datetime import date
-
 
 current_date = JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
-# current_date = date.today().isoformat()
 current_month = JalaliDatetime.today().month
 current_year = JalaliDatetime.today().year
 from datetime import date
-current_date = date.today().isoformat()#JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 
+current_date = (
+    date.today().isoformat()
+)  # JalaliDatetime.today().replace(day=1).strftime("%Y-%m-%d")
 
-@dataclass
-class ModifyMarketerContractIn:
-    MarketerID: str
-    ID: str = None
-    CalculationBaseType: str = None
-    CoefficientBaseType: str = None
-    ContractNumber: str = None
-    ContractType: str = None
-    Description: str = None
-    EndDate: str = None
-    StartDate: str = None
-    Title: str = None
-
-
-@dataclass
-class SearchMarketerContractIn:
-    MarketerID: str = Query("")
-    ID: str = None
-    CalculationBaseType: str = None
-    CoefficientBaseType: str = None
-    ContractNumber: str = None
-    ContractType: str = None
-    Description: str = None
-    EndDate: str = None
-    StartDate: str = None
-    Title: str = Query("")
-
-
-
-@dataclass
-class DelMarketerContractIn:
-    MarketerID: str
 
 @dataclass
 class MarketerIn:
@@ -102,9 +69,10 @@ class ResponseListOut:
 
 @dataclass
 class SearchFactorIn:
-
     MarketerID: str = Query("")
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
 
 
 @dataclass
@@ -118,6 +86,27 @@ class SortField(str, Enum):
     TotalPureVolume = "TotalPureVolume"
 
 
+class ContractTypeEnum(str, Enum):
+    Agency = "Agency"
+    Independent = "Independent"
+
+
+class CalculationBaseTypeEnum(str, Enum):
+    PlanOne = "PlanOne"
+    PlanTwo = "PlanTwo"
+    PlanThree = "PlanThree"
+    NoPlan = "NoPlan"
+    ConstOne = "ConstOne"
+    ConstTwo = "ConstTwo"
+    ConstThree = "ConstThree"
+    ConstFour = "ConstFour"
+
+
+class CoefficientBaseTypeEnum(str, Enum):
+    Plan = "Plan"
+    Const = "Const"
+
+
 class SortOrder(IntEnum):
     ASCENDING = 1
     DESCENDING = -1
@@ -127,3 +116,65 @@ class SortOrder(IntEnum):
 class FactorsListIn(Pages):
     from_date: str = Query(default=current_date, alias="StartDate")
     to_date: str = Query(default=current_date, alias="EndDate")
+
+
+@dataclass
+class AddMarketerContractIn:
+    MarketerID: str
+    CoefficientBaseType: CoefficientBaseTypeEnum = Query(
+        CoefficientBaseTypeEnum.Plan, alias="CoefficientBaseType"
+    )
+    CalculationBaseType: CalculationBaseTypeEnum = Query(
+        CalculationBaseTypeEnum.NoPlan, alias="CalculationBaseType"
+    )
+    ContractType: ContractTypeEnum = Query(
+        ContractTypeEnum.Independent, alias="ContractType"
+    )
+    ContractNumber: str = None
+    Description: str = None
+    EndDate: str = None
+    StartDate: str = None
+
+
+@dataclass
+class ModifyMarketerContractIn:
+    ContractID: str
+    CoefficientBaseType: CoefficientBaseTypeEnum = Query(
+        CoefficientBaseTypeEnum.Plan, alias="CoefficientBaseType"
+    )
+    CalculationBaseType: CalculationBaseTypeEnum = Query(
+        CalculationBaseTypeEnum.NoPlan, alias="CalculationBaseType"
+    )
+    ContractType: ContractTypeEnum = Query(
+        ContractTypeEnum.Independent, alias="ContractType"
+    )
+    ContractNumber: str = None
+    Description: str = None
+    EndDate: str = None
+    StartDate: str = None
+    Title: str = None
+
+
+@dataclass
+class SearchMarketerContractIn:
+    MarketerID: str = Query(None)
+    ContractID: str = None
+    ContractNumber: str = None
+    Description: str = None
+    EndDate: str = None
+    StartDate: str = None
+    Title: str = Query(None)
+    CoefficientBaseType: CoefficientBaseTypeEnum = Query(
+        None, alias="CoefficientBaseType"
+    )
+    CalculationBaseType: CalculationBaseTypeEnum = Query(
+        None, alias="CalculationBaseType"
+    )
+    ContractType: ContractTypeEnum = Query(None, alias="ContractType")
+    size: int = Query(10, alias="PageSize")
+    page: int = Query(1, alias="PageNumber")
+
+
+@dataclass
+class DelMarketerContractIn:
+    ContractID: str
