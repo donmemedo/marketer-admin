@@ -8,6 +8,7 @@ metadata:
 data:
   ORIGINS: "*,localhost:3000,10.233.113.128,172.24.137.10:3000,cluster.tech1a.co:9021"
   MONGO_CONNECTION_STRING: "mongodb://root:3tliSqt3tDD5Bg@mongo-marketer-headless.stg-marketer-db.svc.cluster.local:27017/"
+  CustomerManagementRPCEndPoint: "http://customer-management.stg-oms.svc.cluster.local:443/"
   MONGO_DATABASE: "brokerage"
   SWAGGER_TITLE: "Marketer Admin"
   API_PREFIX: ""
