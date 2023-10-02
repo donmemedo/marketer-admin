@@ -95,6 +95,8 @@ async def sync_marketers(
                     update["$set"][key] = value
         try:
             update["$set"]["MarketerID"] = update["$set"].pop("UserId")
+            update["$set"].pop("Id")
+
         except:
             update["$set"]["MarketerID"] = update["$set"].pop("Id")
 
