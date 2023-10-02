@@ -9,6 +9,7 @@ data:
   VERSION: "0.0.1"
   ORIGINS: "*"
   MONGO_CONNECTION_STRING: "mongodb://root:1219S4OiIhSXPJmOGfmdlFlsQ121@mongo-marketer-headless.pro-marketer-db.svc.cluster.local:27017/"
+  CustomerManagementRPCEndPoint: "http://customer-management.pro-oms.svc.cluster.local:443/"
   MONGO_DATABASE: "brokerage"
   SWAGGER_TITLE: "Marketer Admin"
   API_PREFIX: ""

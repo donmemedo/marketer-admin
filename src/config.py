@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     )
     GRPC_IP: str = "172.24.65.20"
     GRPC_PORT: int = 9035
+    CustomerManagementRPCEndPoint: str = "172.24.65.20:9035/"
     SPLUNK_HOST: str = "172.24.65.206"
     SPLUNK_PORT: int = 5141
     SPLUNK_INDEX: str = "dev"

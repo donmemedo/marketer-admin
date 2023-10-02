@@ -26,7 +26,8 @@ from src.tools.logger import logger
 
 
 grpc_services = APIRouter(prefix="/grpc")
-channel = grpc.insecure_channel(f"{settings.GRPC_IP}:{settings.GRPC_PORT}")
+# channel = grpc.insecure_channel(f"{settings.GRPC_IP}:{settings.GRPC_PORT}")
+channel = grpc.insecure_channel(settings.CustomerManagementRPCEndPoint)
 
 
 @grpc_services.get(
@@ -95,6 +96,8 @@ async def sync_marketers(
                     update["$set"][key] = value
         try:
             update["$set"]["MarketerID"] = update["$set"].pop("UserId")
+            update["$set"].pop("Id")
+
         except:
             update["$set"]["MarketerID"] = update["$set"].pop("Id")
 
