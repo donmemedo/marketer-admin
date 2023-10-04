@@ -17,7 +17,7 @@ from src.auth.authorization import authorize
 from src.schemas.factor_marketer_contract_deduction import *
 from src.tools.database import get_database
 from src.tools.utils import get_marketer_name, check_permissions
-
+from src.tools.queries import *
 # marketer_contract_deduction = APIRouter(prefix="/factor/marketer-contract-deduction")
 marketer_contract_deduction = APIRouter(prefix="/marketer-contract-deduction")
 
@@ -76,7 +76,8 @@ async def add_marketer_contract_deduction(
             except:
                 update["$set"]["Title"] = marketer["Title"]
         else:
-            raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
+            # raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
+            return error_404(0, 1, "30026")
 
     update["$set"]["ID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())
@@ -145,7 +146,8 @@ async def modify_marketer_contract_deduction(
     coll.update_one(filter, update)
     query_result = coll.find_one({"ContractID": mmcd.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        return error_404(0, 1, "30001")
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -232,7 +234,8 @@ async def search_marketer_contract_deduction(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
+        return error_404(args.size, args.page, "30008")
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
@@ -300,7 +303,8 @@ async def delete_marketer_contract_deduction(
         raise RequestValidationError(TypeError, body={"code": "30034", "status": 400})
     query_result = coll.find_one({"ContractID": args.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        return error_404(0, 1, "30001")
     result = [f"مورد مربوط به قرارداد {query_result.get('ContractID')} پاک شد."]
     coll.delete_one({"ContractID": args.ContractID})
     resp = {

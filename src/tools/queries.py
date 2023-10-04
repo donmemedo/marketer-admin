@@ -1,3 +1,6 @@
+from src.tools.errors import errors_mapping
+from datetime import datetime
+
 def filter_users_stage(trade_codes, from_gregorian_date, to_gregorian_date):
     return {
         "$match": {
@@ -184,3 +187,19 @@ def filter_trades(trade_codes, from_gregorian_date, to_gregorian_date, trade_typ
             {"TradeType": trade_type},
         ]
     }
+
+
+def error_404(size, page, code):
+    return {
+            "result": {
+                "pagedData": [],
+                "PageSize": size,
+                "PageNumber": page,
+                "totalCount": 0
+            },
+            "timeGenerated": datetime.now().isoformat(),
+            "error": {
+                "code": code,
+                "message": errors_mapping[code]
+            }
+        }

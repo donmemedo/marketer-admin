@@ -17,7 +17,7 @@ from src.auth.authorization import authorize
 from src.schemas.factor_marketer_ref_code import *
 from src.tools.database import get_database
 from src.tools.utils import get_marketer_name
-
+from src.tools.queries import *
 # marketer_ref_code = APIRouter(prefix="/factor/marketer-ref-code")
 marketer_ref_code = APIRouter(prefix="/marketer-ref-code")
 
@@ -128,7 +128,8 @@ async def modify_marketer_ref_code(
     coll.update_one(filter, update)
     query_result = coll.find_one({"MarketerID": mmrci.MarketerID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        return error_404(0, 1, "30001")
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -207,7 +208,8 @@ async def search_marketer_ref_code(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
+        return error_404(args.size, args.page, "30008")
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
@@ -263,7 +265,8 @@ async def delete_marketer_ref_code(
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 400})
     query_result = coll.find_one({"MarketerID": args.MarketerID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        return error_404(0, 1, "30001")
     result = [f"مورد مربوط به ماکتر {query_result.get('MarketerName')} پاک شد."]
     coll.delete_one({"MarketerID": args.MarketerID})
     resp = {

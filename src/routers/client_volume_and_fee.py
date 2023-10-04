@@ -232,7 +232,8 @@ async def users_list_by_volume(
     # query_result = marketers_coll.find_one({"MarketerID": args.IdpID}, {"_id": False})
     query_result = marketers_coll.find_one({"MarketerID": args.IdpID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
+        return error_404(0, 1, "30004")
 
     # marketer_fullname = get_marketer_name(query_result)
     marketer_fullname = query_result["TbsReagentName"]

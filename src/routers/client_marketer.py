@@ -17,6 +17,7 @@ from src.schemas.client_marketer import *
 from src.tools.database import get_database
 from src.tools.utils import *
 from src.tools.utils import peek, to_gregorian_
+from src.tools.queries import *
 from src.config import settings
 
 client_marketer = APIRouter(prefix="/client/marketer")
@@ -70,7 +71,8 @@ async def get_marketer_profile(
             results.append(marketer)
 
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
+        return error_404(args.size,args.page,"30004")
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"

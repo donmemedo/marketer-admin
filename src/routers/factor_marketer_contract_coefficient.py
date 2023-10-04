@@ -17,6 +17,7 @@ from src.auth.authentication import get_role_permission
 from src.auth.authorization import authorize
 from src.schemas.factor_marketer_contract_coefficient import *
 from src.tools.database import get_database
+from src.tools.queries import *
 from src.tools.utils import get_marketer_name
 
 # marketer_contract_coefficient = APIRouter(prefix="/factor/marketer-contract-coefficient")
@@ -79,7 +80,8 @@ async def add_marketer_contract_coefficient(
             except:
                 update["$set"]["Title"] = marketer["Title"]
         else:
-            raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
+            # raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
+            return error_404(0, 1, "30026")
     try:
         coll.insert_one(update["$set"])
     except:
@@ -138,7 +140,8 @@ async def modify_marketer_contract_coefficient(
     coll.update_one(filter, update)
     query_result = coll.find_one({"ContractID": mmcci.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        return error_404(0, 1, "30001")
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -205,7 +208,8 @@ async def search_marketer_contract_coefficient(
     for i in range(len(marketers)):
         results.append(marketers[i])
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        return error_404(args.size, args.page, "30001")
     result = {}
     result["code"] = "Null"
     result["message"] = "Null"
@@ -262,7 +266,8 @@ async def delete_marketer_contract_coefficient(
         raise RequestValidationError(TypeError, body={"code": "30034", "status": 400})
     query_result = coll.find_one({"ContractID": args.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        return error_404(0, 1, "30001")
     result = [f"مورد مربوط به قرارداد {query_result.get('ContractID')} پاک شد."]
     coll.delete_one({"ContractID": args.ContractID})
     resp = {
@@ -318,7 +323,8 @@ async def modify_marketer_contract_coefficient_status(
         coll.update_one(filter, update)
     query_result = coll.find_one({"ContractID": dmcci.ContractID}, {"_id": False})
     if not query_result:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        return error_404(0, 1, "30001")
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),

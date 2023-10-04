@@ -88,7 +88,8 @@ async def get_user_trades(
         results.append(trades[i])
 
     if not results:
-        raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
+        return error_404(0, 1, "30001")
     return ResponseListOut(
         result=results,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -365,7 +366,8 @@ def users_total(
     aggre_dict["size"] = args.size
     aggre_dict["pages"] = -(aggre_dict.get("totalCount") // -args.size)
     if not aggre_dict:
-        raise RequestValidationError(TypeError, body={"code": "30028", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30028", "status": 404})
+        return error_404(args.size, args.page, "30028")
     return ResponseOut(
         result=aggre_dict,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -438,7 +440,8 @@ async def users_diff_with_tbs(
         else:
             result.append(q)
     if not result:
-        raise RequestValidationError(TypeError, body={"code": "30013", "status": 404})
+        # raise RequestValidationError(TypeError, body={"code": "30013", "status": 404})
+        return error_404(0, 1, "30013")
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
