@@ -69,6 +69,8 @@ async def add_marketer_contract_coefficient(
     update["$set"]["CreateDateTime"] = str(datetime.now())
     update["$set"]["CoefficientID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())
+    if mmcci.HighThreshold < mmcci.LowThreshold:
+        raise RequestValidationError(TypeError, body={"code": "30054", "status": 412})
     update["$set"]["IsCmdConcluded"] = False
     if mmcci.MarketerID:
         marketer = marketers_coll.find_one(
@@ -137,6 +139,9 @@ async def modify_marketer_contract_coefficient(
             update["$set"][key] = value
     update["$set"]["IsCmdConcluded"] = False
     update["$set"]["UpdateDateTime"] = str(datetime.now())
+    if mmcci.HighThreshold < mmcci.LowThreshold:
+        raise RequestValidationError(TypeError, body={"code": "30054", "status": 412})
+
     coll.update_one(filter, update)
     query_result = coll.find_one({"ContractID": mmcci.ContractID}, {"_id": False})
     if not query_result:
@@ -186,7 +191,7 @@ async def search_marketer_contract_coefficient(
     upa = []
     if args.MarketerID:
         upa.append({"MarketerID": args.MarketerID})
-    if args.ID:
+    if args.CoefficientID:
         upa.append({"CoefficientID": args.CoefficientID})
     if args.ContractID:
         upa.append({"ContractID": args.ContractID})

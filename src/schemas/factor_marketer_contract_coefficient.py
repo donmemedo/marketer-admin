@@ -21,11 +21,11 @@ current_date = (
 class AddMarketerContractCoefficientIn:
     MarketerID: str = None
     # ID: str = None
-    CoefficientPercentage: float = None
+    CoefficientPercentage: float = Query(None,ge=0,lt=1)
     ContractID: str = None
-    HighThreshold: int = None
-    LowThreshold: int = None
-    StepNumber: int = None
+    HighThreshold: int = Query(None,ge=0)
+    LowThreshold: int = Query(None,ge=0)
+    StepNumber: int = Query(None,ge=0)
     Title: str = None
 
 
@@ -33,11 +33,11 @@ class AddMarketerContractCoefficientIn:
 class ModifyMarketerContractCoefficientIn:
     # MarketerID: str
     # CoefficientID: str = None
-    CoefficientPercentage: float = None
+    CoefficientPercentage: float = Query(None,ge=0,lt=1)
     ContractID: str = None
-    HighThreshold: int = None
-    LowThreshold: int = None
-    StepNumber: int = None
+    HighThreshold: int = Query(None,ge=0)
+    LowThreshold: int = Query(None,ge=0)
+    StepNumber: int = Query(None,ge=0)
     Title: str = None
 
 
