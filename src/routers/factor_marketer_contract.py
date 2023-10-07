@@ -164,6 +164,8 @@ async def modify_marketer_contract(
     """
     user_id = role_perm["sub"]
     coll = database["MarketerContract"]
+    marketers_coll = database["MarketerTable"]
+
     if mmci.ContractID is None:
         raise RequestValidationError(TypeError, body={"code": "30003", "status": 412})
     filter = {"ContractID": mmci.ContractID}
@@ -171,6 +173,23 @@ async def modify_marketer_contract(
     for key, value in vars(mmci).items():
         if value is not None:
             update["$set"][key] = value
+    if mmci.MarketerID:
+        if marketers_coll.find_one({"MarketerID": mmci.MarketerID}, {"_id": False}):
+            try:
+                update["$set"]["Title"] = marketers_coll.find_one(
+                    {"MarketerID": mmci.MarketerID}, {"_id": False}
+                )["TbsReagentName"]
+            except:
+                try:
+                    update["$set"]["Title"] = marketers_coll.find_one(
+                        {"MarketerID": mmci.MarketerID}, {"_id": False}
+                    )["Title"]
+                except:
+                    update["$set"]["Title"] = "بی‌نام"
+        else:
+            raise RequestValidationError(TypeError, body={"code": "30026", "status": 400})
+
+
     if mmci.StartDate or mmci.EndDate:
         try:
             StartDate = (

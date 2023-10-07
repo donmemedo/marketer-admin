@@ -139,6 +139,7 @@ class AddMarketerContractIn:
 @dataclass
 class ModifyMarketerContractIn:
     ContractID: str
+    MarketerID: str = None
     CoefficientBaseType: CoefficientBaseTypeEnum = Query(
         CoefficientBaseTypeEnum.Plan, alias="CoefficientBaseType"
     )
