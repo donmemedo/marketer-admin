@@ -173,6 +173,14 @@ async def modify_marketer_contract(
     for key, value in vars(mmci).items():
         if value is not None:
             update["$set"][key] = value
+    update["$set"]["CoefficientBaseType"] = CoefficientBaseType[
+        mmci.CoefficientBaseType.value
+    ]
+    update["$set"]["CalculationBaseType"] = CalculationBaseType[
+        mmci.CalculationBaseType.value
+    ]
+    update["$set"]["ContractType"] = ContractType[mmci.ContractType.value]
+
     if mmci.MarketerID:
         if marketers_coll.find_one({"MarketerID": mmci.MarketerID}, {"_id": False}):
             try:
