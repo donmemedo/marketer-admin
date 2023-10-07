@@ -64,8 +64,8 @@ class ModifyAccountingFactorIn:
     InsuranceReturnPayment: int = None
     OtherPayment: int = None
     OtherPaymentDescription: str = None
-    CreateDateTime: str = None
-    UpdateDateTime: str = None
+    # CreateDateTime: str = None
+    # UpdateDateTime: str = None
 
 
 @dataclass

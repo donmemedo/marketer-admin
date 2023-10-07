@@ -21,11 +21,11 @@ current_date = (
 class AddMarketerContractDeductionIn:
     MarketerID: str = None
     # ID: str = None
-    CollateralCoefficient: float = None
+    CollateralCoefficient: float = Query(None,ge=0,lt=1)
     ContractID: str = None
-    TaxCoefficient: float = None
-    InsuranceCoefficient: float = None
-    ReturnDuration: int = None
+    TaxCoefficient: float = Query(None,ge=0,lt=1)
+    InsuranceCoefficient: float = Query(None,ge=0,lt=1)
+    ReturnDuration: int = Query(None,ge=0,lt=13)
     Title: str = None
 
 
@@ -33,11 +33,11 @@ class AddMarketerContractDeductionIn:
 class ModifyMarketerContractDeductionIn:
     # MarketerID: str
     # ID: str = None
-    CollateralCoefficient: float = None
+    CollateralCoefficient: float = Query(None,ge=0,lt=1)
     ContractID: str = None
-    TaxCoefficient: float = None
-    InsuranceCoefficient: float = None
-    ReturnDuration: int = None
+    TaxCoefficient: float = Query(None,ge=0,lt=1)
+    InsuranceCoefficient: float = Query(None,ge=0,lt=1)
+    ReturnDuration: int = Query(None,ge=0,lt=13)
     Title: str = None
 
 

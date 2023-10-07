@@ -14,7 +14,7 @@ errors_mapping = {
     "30012": "این مارکتر زیرمجموعه نفر دیگری است.",
     "30013": "مغایرتی در تاریخ های داده شده  مشاهده نشد.",
     "30015": "کمیسیون را به درستی وارد کنید.",
-    "30016": "کمیسیون را به درستی بین صفر و یک وارد کنید.",
+    "30016": "ضریب را به درستی بین صفر و یک وارد کنید.",
     "30017": "تاریخ انتها را درست وارد کنید.",
     "30018": "تاریخ ابتدا را درست وارد کنید.",
     "30019": "این رابطه وجود ندارد.",
@@ -39,8 +39,12 @@ def get_error(type: str, code: str):
     if type == "TypeError":
         return {"code": code, "message": errors_mapping[code]}
     if type == "json_invalid":
-        return {"code": 400, "message": code}
+        return {"code": 412, "message": errors_mapping["30051"]}
     if type == "missing":
         return {"code": 412, "message": code}
     if type == "enum":
         return {"code": 412, "message": code}
+    if type == "less_than":
+        return {"code": 412, "message": errors_mapping["30016"]}
+    if type == "greater_than_equal":
+        return {"code": 412, "message": errors_mapping["30016"]}
