@@ -359,8 +359,8 @@ async def add_marketers_relations(
             {"MarketerID": mrel.LeaderMarketerID}
         )["TbsReagentName"]
     except:
-        # raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
-        return error_404(0, 1, "30004")
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
+        # return error_404(0, 1, "30004")
 
     marketers_relations_coll.insert_one(update["$set"])
 
@@ -416,8 +416,8 @@ async def modify_marketers_relations(
         ]
     }
     if marketers_relations_coll.find_one(query) is None:
-        # raise RequestValidationError(TypeError, body={"code": "30019", "status": 404})
-        return error_404(0, 1, "30019")
+        raise RequestValidationError(TypeError, body={"code": "30019", "status": 400})
+        # return error_404(0, 1, "30019")
     if mrel.CommissionCoefficient is None:
         raise RequestValidationError(TypeError, body={"code": "30010", "status": 412})
     update = {"$set": {}}
@@ -634,8 +634,8 @@ async def delete_marketers_relations(
     )
 
     if not q:
-        # raise RequestValidationError(TypeError, body={"code": "30052", "status": 404})
-        return error_404(0, 1, "30052")
+        raise RequestValidationError(TypeError, body={"code": "30052", "status": 400})
+        # return error_404(0, 1, "30052")
     if not q.get("LeaderMarketerID") == args.LeaderMarketerID:
         raise RequestValidationError(TypeError, body={"code": "30012", "status": 409})
     results = []
@@ -653,8 +653,8 @@ async def delete_marketers_relations(
             {"MarketerID": args.LeaderMarketerID}
         )["TbsReagentName"]
     except:
-        # raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
-        return error_404(0, 1, "30004")
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
+        # return error_404(0, 1, "30004")
 
     qqq = marketers_relations_coll.find_one(
         {"FollowerMarketerID": args.FollowerMarketerID}, {"_id": False}
@@ -748,8 +748,8 @@ async def users_diff_with_tbs(
             else:
                 result.append(q)
     if not result:
-        # raise RequestValidationError(TypeError, body={"code": "30013", "status": 404})
-        return error_404(0, 1, "30013")
+        raise RequestValidationError(TypeError, body={"code": "30013", "status": 400})
+        # return error_404(0, 1, "30013")
     return ResponseListOut(
         result=result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -778,8 +778,8 @@ async def users_list_by_volume(
     query_result = marketer_col.find_one({"MarketerID": args.IdpID})
 
     if not query_result:
-        # raise RequestValidationError(TypeError, body={"code": "30004", "status": 404})
-        return error_404(args.size, args.page, "30004")
+        raise RequestValidationError(TypeError, body={"code": "30004", "status": 400})
+        # return error_404(args.size, args.page, "30004")
     # marketer_fullname = get_marketer_name(query_result)
     marketer_fullname = query_result["TbsReagentName"]
 

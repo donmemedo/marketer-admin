@@ -76,8 +76,8 @@ async def add_marketer_contract_deduction(
             except:
                 update["$set"]["Title"] = marketer["Title"]
         else:
-            # raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
-            return error_404(0, 1, "30026")
+            raise RequestValidationError(TypeError, body={"code": "30026", "status": 400})
+            # return error_404(0, 1, "30026")
 
     update["$set"]["ID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())
@@ -146,8 +146,8 @@ async def modify_marketer_contract_deduction(
     coll.update_one(filter, update)
     query_result = coll.find_one({"ContractID": mmcd.ContractID}, {"_id": False})
     if not query_result:
-        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
-        return error_404(0, 1, "30001")
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 400})
+        # return error_404(0, 1, "30001")
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -303,8 +303,8 @@ async def delete_marketer_contract_deduction(
         raise RequestValidationError(TypeError, body={"code": "30034", "status": 400})
     query_result = coll.find_one({"ContractID": args.ContractID}, {"_id": False})
     if not query_result:
-        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
-        return error_404(0, 1, "30001")
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 400})
+        # return error_404(0, 1, "30001")
     result = [f"مورد مربوط به قرارداد {query_result.get('ContractID')} پاک شد."]
     coll.delete_one({"ContractID": args.ContractID})
     resp = {

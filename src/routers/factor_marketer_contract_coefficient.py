@@ -80,8 +80,8 @@ async def add_marketer_contract_coefficient(
             except:
                 update["$set"]["Title"] = marketer["Title"]
         else:
-            # raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
-            return error_404(0, 1, "30026")
+            raise RequestValidationError(TypeError, body={"code": "30026", "status": 400})
+            # return error_404(0, 1, "30026")
     try:
         coll.insert_one(update["$set"])
     except:
@@ -140,8 +140,8 @@ async def modify_marketer_contract_coefficient(
     coll.update_one(filter, update)
     query_result = coll.find_one({"ContractID": mmcci.ContractID}, {"_id": False})
     if not query_result:
-        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
-        return error_404(0, 1, "30001")
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 400})
+        # return error_404(0, 1, "30001")
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -266,8 +266,8 @@ async def delete_marketer_contract_coefficient(
         raise RequestValidationError(TypeError, body={"code": "30034", "status": 400})
     query_result = coll.find_one({"ContractID": args.ContractID}, {"_id": False})
     if not query_result:
-        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
-        return error_404(0, 1, "30001")
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 400})
+        # return error_404(0, 1, "30001")
     result = [f"مورد مربوط به قرارداد {query_result.get('ContractID')} پاک شد."]
     coll.delete_one({"ContractID": args.ContractID})
     resp = {
@@ -323,8 +323,8 @@ async def modify_marketer_contract_coefficient_status(
         coll.update_one(filter, update)
     query_result = coll.find_one({"ContractID": dmcci.ContractID}, {"_id": False})
     if not query_result:
-        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
-        return error_404(0, 1, "30001")
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 400})
+        # return error_404(0, 1, "30001")
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),

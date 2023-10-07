@@ -442,8 +442,8 @@ async def reconciliation(
         )
         marketers = dict(enumerate(marketerrs))
     if not marketers:
-        # raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
-        return error_404(0, 1, "30026")
+        raise RequestValidationError(TypeError, body={"code": "30026", "status": 400})
+        # return error_404(0, 1, "30026")
     results = []
     dates = next(
         temp_trades_coll.aggregate(

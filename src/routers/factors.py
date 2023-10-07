@@ -158,8 +158,8 @@ async def modify_base_factor(
         raise RequestValidationError(TypeError, body={"code": "30008", "status": 400})
     query_result = factor_coll.find_one(filter, {"_id": False})
     if not query_result:
-        # raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
-        return error_404(0, 1, "30008")
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 400})
+        # return error_404(0, 1, "30008")
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -298,8 +298,8 @@ async def modify_accounting_factor(
         raise RequestValidationError(TypeError, body={"code": "30008", "status": 400})
     query_result = factor_coll.find_one(filter, {"_id": False})
     if not query_result:
-        # raise RequestValidationError(TypeError, body={"code": "30008", "status": 404})
-        return error_404(0, 1, "30008")
+        raise RequestValidationError(TypeError, body={"code": "30008", "status": 400})
+        # return error_404(0, 1, "30008")
     return ResponseListOut(
         result=query_result,
         timeGenerated=jd.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -451,8 +451,8 @@ async def delete_factor(
         raise RequestValidationError(TypeError, body={"code": "30033", "status": 400})
     query_result = factor_coll.find_one(filter, {"_id": False})
     if not query_result:
-        # raise RequestValidationError(TypeError, body={"code": "30001", "status": 404})
-        return error_404(0, 1, "30001")
+        raise RequestValidationError(TypeError, body={"code": "30001", "status": 400})
+        # return error_404(0, 1, "30001")
     # if args.FactorID:
     #     result = [f"فاکتور شماره  {args.FactorID} پاک شد."]
     # else:
@@ -518,8 +518,8 @@ async def calculate_factor(
             )
         ]
         if marketers == [None]:
-            # raise RequestValidationError(TypeError, body={"code": "30026", "status": 404})
-            return error_404(0, 1, "30026")
+            raise RequestValidationError(TypeError, body={"code": "30026", "status": 400})
+            # return error_404(0, 1, "30026")
     else:
         marketerrs = marketer_coll.find(
             {"TbsReagentName": {"$exists": True, "$not": {"$size": 0}}},
@@ -574,8 +574,8 @@ async def calculate_factor(
             except:
                 cbt = "نامشخص"
         else:
-            # raise RequestValidationError(TypeError, body={"code": "30031", "status": 404})
-            return error_404(0, 1, "30031")
+            raise RequestValidationError(TypeError, body={"code": "30031", "status": 400})
+            # return error_404(0, 1, "30031")
         for plan in plans[cbt]:
             # plans[cbt][plan]["start"]
             if plans[cbt][plan]["start"] <= tpv < plans[cbt][plan]["end"]:
