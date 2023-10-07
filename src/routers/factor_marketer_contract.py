@@ -111,7 +111,7 @@ async def add_marketer_contract(
             update["$set"]["Title"] = "بی‌نام"
 
     update["$set"]["UpdateDateTime"] = str(datetime.now())
-    update["$set"]["IsDeleted"] = False
+    # update["$set"]["IsDeleted"] = False
 
     try:
         coll.insert_one(update["$set"])
@@ -385,10 +385,10 @@ async def delete_marketer_contract(
     return JSONResponse(status_code=200, content=resp)
 
 
-@marketer_contract.put(
-    "/modify-status",
-    tags=["MarketerContract"],
-)
+# @marketer_contract.put(
+#     "/modify-status",
+#     tags=["MarketerContract"],
+# )
 @authorize(
     [
         "MarketerAdmin.All.Write",
