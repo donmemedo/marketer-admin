@@ -46,7 +46,7 @@ class ModifyAccountingFactorIn:
     InsuranceCoefficient: float = None
     MarketerTotalIncome: int = Query(None, alias="MarketerTotalIncome")
     Payment: int = None
-    Status: int = Query(5, alias="Status",ge=1,lt=7)
+    Status: int = Query(5, alias="Status")#,ge=1,lt=7)
     # ContractID: str = None
     CalculationCoefficient: float = None
     TotalCMD: int = None
@@ -85,7 +85,7 @@ class ModifyBaseFactorIn:
     TotalFeeOfFollowers: int = None
     IsCmdConcluded: bool = False
     MaketerCMDIncome: int = None
-    Status: int = Query(2, alias="Status",ge=1,lt=7)
+    Status: int = Query(2, alias="Status")#,ge=1,lt=7)
     # CreateDateTime: str = None
     # UpdateDateTime: str = None
 

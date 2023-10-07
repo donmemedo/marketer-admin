@@ -151,6 +151,14 @@ async def modify_base_factor(
     update["$set"]["UpdateDateTime"] = jd.now().isoformat()
     update["$set"]["UpdateBy"] = user_id
     # update["$set"]["Status"] = 20
+    try:
+        if 1< mfi.Status <7:
+            pass
+        else:
+            raise RequestValidationError(TypeError, body={"code": "30053", "status": 400})
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30053", "status": 400})
+
 
     try:
         factor_coll.update_one(filter, update)
@@ -291,6 +299,13 @@ async def modify_accounting_factor(
             update["$set"][key] = value
     update["$set"]["UpdateDateTime"] = jd.now().isoformat()
     update["$set"]["UpdateBy"] = user_id
+    try:
+        if 1< mfi.Status <7:
+            pass
+        else:
+            raise RequestValidationError(TypeError, body={"code": "30053", "status": 400})
+    except:
+        raise RequestValidationError(TypeError, body={"code": "30053", "status": 400})
 
     try:
         factor_coll.update_one(filter, update)
