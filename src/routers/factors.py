@@ -671,7 +671,7 @@ async def calculate_factor(
             "TotalFeeOfFollowers": int(FTF),
             "SumOfAdditions": int(additions),
             "SumOfDeductions": int(deductions),
-            "Status": 10,
+            "Status": 1,
             "Payment": int(payment),
             "IsCmdConcluded": False,
             "MaketerCMDIncome": 0,

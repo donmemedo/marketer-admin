@@ -37,7 +37,7 @@ class ModifyAccountingFactorIn:
     # MarketerID: str
     # Period: str = str(current_year) + f"{current_month:02}"
     FactorID: str = None
-    Plan: str = None
+    # Plan: str = None
     TaxDeduction: int = Query(None, alias="TaxDeduction")
     TaxCoefficient: float = None
     CollateralDeduction: int = Query(None, alias="CollateralDeduction")
@@ -46,7 +46,7 @@ class ModifyAccountingFactorIn:
     InsuranceCoefficient: float = None
     MarketerTotalIncome: int = Query(None, alias="MarketerTotalIncome")
     Payment: int = None
-    Status: int = Query(30, alias="Status")
+    Status: int = Query(5, alias="Status",ge=1,lt=7)
     # ContractID: str = None
     CalculationCoefficient: float = None
     TotalCMD: int = None
@@ -85,7 +85,7 @@ class ModifyBaseFactorIn:
     TotalFeeOfFollowers: int = None
     IsCmdConcluded: bool = False
     MaketerCMDIncome: int = None
-    Status: int = Query(20, alias="Status")
+    Status: int = Query(2, alias="Status",ge=1,lt=7)
     # CreateDateTime: str = None
     # UpdateDateTime: str = None
 
@@ -114,7 +114,7 @@ class ResponseListOut:
 class SearchFactorIn:
     MarketerID: str = Query(None)
     Period: Optional[str] = str(current_year) + f"{current_month:02}"
-    FactorStatus: int = Query(None, alias="Status")
+    FactorStatus: int = Query(None, alias="Status",ge=1,lt=7)
     FactorID: str = None
     ContractID: str = None
     size: int = Query(10, alias="PageSize")
@@ -133,7 +133,7 @@ class DeleteFactorIn:
 class AllFactors:
     MarketerID: str = Query(None)
     Period: str = Query(default=None)  # str(current_year) + f"{current_month:02}"
-    FactorStatus: int = Query(None, alias="Status")
+    FactorStatus: int = Query(None, alias="Status",ge=1,lt=7)
     FactorID: str = None
     # ContractID: str = None
     size: int = Query(10, alias="PageSize")
