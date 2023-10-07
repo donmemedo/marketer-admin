@@ -32,7 +32,7 @@ class AddMarketerContractCoefficientIn:
 @dataclass
 class ModifyMarketerContractCoefficientIn:
     # MarketerID: str
-    # MCCID: str = None
+    # CoefficientID: str = None
     CoefficientPercentage: float = None
     ContractID: str = None
     HighThreshold: int = None
@@ -44,7 +44,7 @@ class ModifyMarketerContractCoefficientIn:
 @dataclass
 class SearchMarketerContractCoefficientIn:
     MarketerID: str = None
-    ID: str = None
+    CoefficientID: str = None
     # CoefficientPercentage: float = None
     ContractID: str = None
     # HighThreshold: int = None

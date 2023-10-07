@@ -79,7 +79,7 @@ async def add_marketer_contract_deduction(
             raise RequestValidationError(TypeError, body={"code": "30026", "status": 400})
             # return error_404(0, 1, "30026")
 
-    update["$set"]["ID"] = uuid.uuid1().hex
+    update["$set"]["DeductionID"] = uuid.uuid1().hex
     update["$set"]["UpdateDateTime"] = str(datetime.now())
 
     try:
@@ -211,7 +211,7 @@ async def search_marketer_contract_deduction(
     if args.MarketerID:
         upa.append({"MarketerID": args.MarketerID})
     if args.ID:
-        upa.append({"ID": args.ID})
+        upa.append({"DeductionID": args.ID})
     if args.ContractID:
         upa.append({"ContractID": {"$regex": args.ContractID}})
     if args.Title:

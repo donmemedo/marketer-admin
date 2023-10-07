@@ -32,7 +32,7 @@ class AddMarketerContractDeductionIn:
 @dataclass
 class ModifyMarketerContractDeductionIn:
     # MarketerID: str
-    # ID: str = None
+    # DeductionID: str = None
     CollateralCoefficient: float = Query(None,ge=0,lt=1)
     ContractID: str = None
     TaxCoefficient: float = Query(None,ge=0,lt=1)
@@ -44,7 +44,7 @@ class ModifyMarketerContractDeductionIn:
 @dataclass
 class SearchMarketerContractDeductionIn:
     MarketerID: str = Query(None)
-    ID: str = None
+    DeductionID: str = None
     # CollateralCoefficient: float = None
     ContractID: str = None
     # TaxCoefficient: float = None
